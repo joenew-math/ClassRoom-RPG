@@ -293,6 +293,69 @@ svg.nl{display:block;width:100%;overflow:visible;}
   .opts-grid{grid-template-columns:1fr;}
   .game-title{font-size:1.6rem;}
 }
+
+/* ── LEADERBOARD ── */
+.lb-section{margin-top:1.5rem;}
+.lb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
+.lb-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'Space Mono',monospace;}
+.lb-clear{font-size:11px;color:var(--text3);background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:color .2s,border-color .2s;}
+.lb-clear:hover{color:var(--red);border-color:var(--red);}
+.lb-empty{text-align:center;padding:1.2rem;color:var(--text3);font-size:13px;}
+.lb-list{display:flex;flex-direction:column;gap:6px;}
+.lb-row{
+  display:grid;grid-template-columns:28px 1fr auto auto;
+  align-items:center;gap:8px;
+  background:var(--s1);border:0.5px solid var(--border);
+  border-radius:10px;padding:.55rem .9rem;
+  transition:border-color .2s;
+}
+.lb-row.me{border-color:rgba(168,152,255,.4);background:rgba(124,106,247,.06);}
+.lb-rank{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text3);text-align:center;}
+.lb-rank.gold{color:var(--gold);}
+.lb-rank.silver{color:#b0b8c8;}
+.lb-rank.bronze{color:#c87533;}
+.lb-name{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-pts{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--gold);}
+.lb-time{font-family:'Space Mono',monospace;font-size:11px;color:var(--text2);}
+
+/* end-screen leaderboard preview */
+.end-lb-preview{margin-top:1rem;text-align:left;}
+.end-lb-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;}
+.end-lb-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem;border-radius:8px;font-size:13px;}
+.end-lb-row.highlight{background:rgba(124,106,247,.12);border:0.5px solid rgba(168,152,255,.3);}
+.end-lb-row.others{color:var(--text2);}
+
+/* name input modal */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:var(--s2);border:0.5px solid var(--border2);
+  border-radius:20px;padding:1.75rem 1.5rem;
+  width:min(360px,90vw);text-align:center;
+  animation:fadein .25s ease;
+}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:.4rem;}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:1.25rem;}
+.modal-input{
+  width:100%;padding:.7rem 1rem;border-radius:10px;
+  background:var(--s1);border:1.5px solid var(--border2);
+  color:var(--text);font-size:15px;font-family:'Noto Sans TC',sans-serif;
+  outline:none;transition:border-color .2s;margin-bottom:1rem;
+}
+.modal-input:focus{border-color:var(--blue);}
+.modal-btn{
+  width:100%;padding:.75rem;border-radius:12px;
+  border:1.5px solid var(--blue);background:rgba(124,106,247,.15);
+  color:var(--blue2);font-size:15px;font-family:'Noto Sans TC',sans-serif;
+  font-weight:500;cursor:pointer;transition:background .2s;
+}
+.modal-btn:hover{background:rgba(124,106,247,.3);}
+.modal-skip{font-size:12px;color:var(--text3);margin-top:.75rem;cursor:pointer;text-decoration:underline;}
+.modal-skip:hover{color:var(--text2);}
 </style>
 </head>
 <body>
@@ -303,7 +366,7 @@ svg.nl{display:block;width:100%;overflow:visible;}
   <div class="hdr">
     <div class="game-tag">Math Challenge</div>
     <h1 class="game-title">數線挑戰</h1>
-    <p class="game-sub">不等式大師 · 8關全破</p>
+    <p class="game-sub">不等式大師 · 三關挑戰</p>
   </div>
 
   <!-- Top bar -->
@@ -335,7 +398,7 @@ svg.nl{display:block;width:100%;overflow:visible;}
   <!-- Main game -->
   <div id="main-game">
     <div class="q-card">
-      <div class="q-no" id="q-no">第 1 題</div>
+      <div class="q-no" id="q-no">第 1 關 · 第 1/8 題 <span id="stage-badge" style="margin-left:8px;padding:2px 10px;border-radius:10px;font-size:10px;background:rgba(124,106,247,.15);color:var(--blue2);border:0.5px solid rgba(168,152,255,.3);">關卡 1</span></div>
       <div class="q-expr" id="q-expr">x &gt; 2</div>
       <div class="q-hint" id="q-hint"></div>
     </div>
@@ -355,10 +418,34 @@ svg.nl{display:block;width:100%;overflow:visible;}
       <div class="end-score-label">最終得分</div>
       <div class="stars" id="end-stars"></div>
       <div class="rank-badge" id="end-rank"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--text2);margin-top:.5rem;">⏱ 總時間 <span id="end-total-time" style="color:var(--blue2)">—</span></div>
+      <div class="end-lb-preview" id="end-lb-preview"></div>
     </div>
     <button class="restart-btn" onclick="restart()">再挑戰一次 ↩</button>
   </div>
 
+  <!-- Inter-stage screen (shown between stages) -->
+  <div class="stage-clear-screen" id="stage-clear-screen" style="display:none;">
+    <div class="end-bg" style="margin-bottom:1rem;">
+      <div class="end-trophy" id="sc-ico">🎯</div>
+      <div class="end-title" id="sc-title"></div>
+      <div class="end-sub" id="sc-sub"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--gold);margin:.75rem 0 .25rem;" id="sc-score"></div>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);">本關得分</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--text2);margin:.5rem 0 1rem;">⏱ 本關時間 <span id="sc-time" style="color:var(--blue2)">—</span></div>
+      <!-- per-stage leaderboard -->
+      <div id="sc-lb-preview" style="text-align:left;margin-bottom:1rem;"></div>
+      <!-- name input inline -->
+      <div id="sc-name-area">
+        <input class="modal-input" id="sc-name" type="text" maxlength="12" placeholder="輸入名字記錄本關成績" autocomplete="off" style="margin-bottom:.75rem;"/>
+        <button class="modal-btn" id="sc-submit-btn" onclick="submitStageScore()">記錄並進入下一關 →</button>
+        <div class="modal-skip" onclick="skipStageScore()">略過，直接進下一關</div>
+      </div>
+      <button class="restart-btn" id="sc-next-btn" style="display:none;margin-top:.5rem;" onclick="proceedToNextStage()">進入下一關 →</button>
+    </div>
+  </div>
+
+  <!-- Legend -->
   <!-- Legend -->
   <div class="legend">
     <div class="legend-ttl">圖例</div>
@@ -369,6 +456,26 @@ svg.nl{display:block;width:100%;overflow:visible;}
       <div class="lg-item">← 向左延伸 = 小於</div>
     </div>
   </div>
+
+  <!-- Leaderboard -->
+  <div class="lb-section">
+    <div class="lb-header">
+      <div class="lb-title">🏆 排行榜</div>
+      <button class="lb-clear" onclick="clearLB()">清除</button>
+    </div>
+    <div id="lb-list"></div>
+  </div>
+</div>
+
+<!-- Name Input Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">🎉 記錄成績</div>
+    <div class="modal-sub" id="modal-sub">輸入你的名字以加入排行榜</div>
+    <input class="modal-input" id="modal-name" type="text" maxlength="12" placeholder="你的名字" autocomplete="off"/>
+    <button class="modal-btn" onclick="submitScore()">確認送出</button>
+    <div class="modal-skip" onclick="skipScore()">略過，不記錄</div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -376,9 +483,12 @@ svg.nl{display:block;width:100%;overflow:visible;}
 
 <script>
 /* ───── CONFIG ───── */
-const TOTAL=8, MAX_HP=3, TIME_LIMIT=15;
+const STAGE_SIZE=8, NUM_STAGES=3, TOTAL=STAGE_SIZE*NUM_STAGES, MAX_HP=3, TIME_LIMIT=15;
 const GREEN='#00e676',RED='#ff5252',BLUE='#a898ff',DIM='#2a2a45',GOLD='#ffd740';
-let score=0,qIdx=0,hp=MAX_HP,streak=0,answered=false,timerID=null,timeLeft=TIME_LIMIT,allOpts=[],correctIdx=-1;
+let score=0,totalScore=0,qIdx=0,hp=MAX_HP,streak=0,answered=false,timerID=null,timeLeft=TIME_LIMIT,allOpts=[],correctIdx=-1,currentStage=1,stageScore=0,stageStartScore=0;
+// centisecond timer
+let csTimerID=null, csElapsed=0, gameStartTime=0;
+let pendingScore=null; // holds score to submit after name input
 
 /* ───── CANVAS PARTICLES ───── */
 const cvs=document.getElementById('canvas'),ctx=cvs.getContext('2d');
@@ -433,20 +543,22 @@ function showToast(msg,dur=1800){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
-/* ───── TIMER ───── */
+/* ───── TIMER (per-question countdown) ───── */
 function startTimer(){
-  clearInterval(timerID);timeLeft=TIME_LIMIT;updateTimerUI();
+  clearInterval(timerID);timeLeft=TIME_LIMIT*100; // centiseconds
+  updateTimerUI();
   timerID=setInterval(()=>{
     timeLeft--;updateTimerUI();
     if(timeLeft<=0){clearInterval(timerID);timeOut();}
-  },1000);
+  },10);
 }
 function updateTimerUI(){
-  const pct=timeLeft/TIME_LIMIT;
+  const pct=timeLeft/(TIME_LIMIT*100);
   const bar=document.getElementById('tbar');
   bar.style.width=(pct*100)+'%';
   bar.style.background=pct>.5?GREEN:pct>.25?GOLD:RED;
-  document.getElementById('tnum').textContent=timeLeft;
+  const secs=(timeLeft/100).toFixed(2);
+  document.getElementById('tnum').textContent=secs;
 }
 function timeOut(){
   if(answered)return;
@@ -458,6 +570,111 @@ function timeOut(){
   loseHP();
   showFb(false,'⏱ 時間到！');
   document.getElementById('next-btn').className='next-btn show';
+}
+
+/* ───── GAME ELAPSED TIMER ───── */
+function startGameTimer(){
+  csElapsed=0;gameStartTime=performance.now();
+  clearInterval(csTimerID);
+}
+function stopGameTimer(){
+  csElapsed=((performance.now()-gameStartTime)/1000);
+}
+function fmtTime(s){
+  const m=Math.floor(s/60),sec=(s%60).toFixed(2).padStart(5,'0');
+  return m>0?`${m}:${sec}`:`${sec}s`;
+}
+
+/* ───── LEADERBOARD (per-stage) ───── */
+function lbKey(stage){return`nlgame_s${stage}_v3`;}
+function loadLB(stage){try{return JSON.parse(localStorage.getItem(lbKey(stage)))||[];}catch{return[];}}
+function saveLB(stage,lb){localStorage.setItem(lbKey(stage),JSON.stringify(lb));}
+function renderLB(stage,elId,highlightIdx=-1){
+  const lb=loadLB(stage);
+  const el=document.getElementById(elId);
+  if(!el)return;
+  if(!lb.length){el.innerHTML='<div class="lb-empty">尚無記錄，快來挑戰！</div>';return;}
+  const rankCls=['gold','silver','bronze'];
+  el.innerHTML='<div class="lb-list">'+lb.slice(0,10).map((r,i)=>{
+    const me=i===highlightIdx;
+    const rc=rankCls[i]||'';
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return `<div class="lb-row${me?' me':''}">
+      <div class="lb-rank ${rc}">${medal}</div>
+      <div class="lb-name">${r.name}</div>
+      <div class="lb-pts">${r.score}</div>
+      <div class="lb-time">${fmtTime(r.time)}</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+function clearLB(){
+  const s=currentStage||1;
+  if(confirm(`確定清除第 ${s} 關排行榜？`)){localStorage.removeItem(lbKey(s));renderLB(s,'lb-list');}
+}
+function addToLB(stage,name,sc,tm){
+  const lb=loadLB(stage);
+  lb.push({name,score:sc,time:parseFloat(tm.toFixed(2))});
+  lb.sort((a,b)=>b.score-a.score||(a.time-b.time));
+  saveLB(stage,lb.slice(0,20));
+  return lb.findIndex(r=>r.name===name&&r.score===sc&&Math.abs(r.time-tm)<0.1);
+}
+
+/* Stage-clear name submit */
+let pendingStageScore=null;
+function submitStageScore(){
+  const name=document.getElementById('sc-name').value.trim()||'匿名';
+  document.getElementById('sc-name-area').style.display='none';
+  document.getElementById('sc-next-btn').style.display='block';
+  if(pendingStageScore){
+    const idx=addToLB(pendingStageScore.stage,name,pendingStageScore.score,pendingStageScore.time);
+    renderStageLBPreview(pendingStageScore.stage,idx);
+    renderLB(pendingStageScore.stage,'lb-list');
+    pendingStageScore=null;
+  }
+}
+function skipStageScore(){
+  document.getElementById('sc-name-area').style.display='none';
+  document.getElementById('sc-next-btn').style.display='block';
+  renderLB(currentStage,'lb-list');
+  pendingStageScore=null;
+}
+function renderStageLBPreview(stage,myIdx){
+  const lb=loadLB(stage);
+  const el=document.getElementById('sc-lb-preview');
+  if(!el||!lb.length){if(el)el.innerHTML='';return;}
+  const show=lb.slice(0,Math.min(5,lb.length));
+  el.innerHTML=`<div class="end-lb-title">第 ${stage} 關排行榜</div>`+
+    show.map((r,i)=>{
+      const me=i===myIdx;
+      return `<div class="end-lb-row ${me?'highlight':'others'}">
+        <span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}  ${r.name}</span>
+        <span>${r.score}分 · ${fmtTime(r.time)}</span>
+      </div>`;
+    }).join('');
+}
+
+/* Final end-screen leaderboard (overall = sum of stage scores not stored separately; just show stage 3) */
+function renderEndLBPreview(myIdx){
+  renderStageLBPreview(3,myIdx);
+  const el2=document.getElementById('end-lb-preview');
+  const el=document.getElementById('sc-lb-preview');
+  if(el2&&el)el2.innerHTML=el.innerHTML;
+}
+
+/* submit / skip for final end screen (re-use stage modal) */
+function submitScore(){
+  const name=document.getElementById('modal-name').value.trim()||'匿名';
+  document.getElementById('modal').className='modal-overlay';
+  if(pendingScore){
+    const idx=addToLB(pendingScore.stage,name,pendingScore.score,pendingScore.time);
+    renderEndLBPreview(idx);
+    pendingScore=null;
+  }
+}
+function skipScore(){
+  document.getElementById('modal').className='modal-overlay';
+  renderLB(currentStage,'lb-list');
+  pendingScore=null;
 }
 
 /* ───── HP ───── */
@@ -478,6 +695,11 @@ function updateHP(){
 function buildStage(){
   const row=document.getElementById('stage-row');row.innerHTML='';
   for(let i=0;i<TOTAL;i++){
+    if(i>0&&i%STAGE_SIZE===0){
+      const sep=document.createElement('div');
+      sep.style.cssText='width:3px;height:8px;background:var(--text3);border-radius:1px;align-self:center;flex-shrink:0;';
+      row.appendChild(sep);
+    }
     const d=document.createElement('div');d.className='stage-dot';d.id='sd'+i;row.appendChild(d);
   }
 }
@@ -493,16 +715,132 @@ function updateStage(){
 /* ───── QUESTION GENERATION ───── */
 function shuffle(arr){return arr.slice().sort(()=>Math.random()-.5);}
 
-function genQ(){
-  const types=['gt','lt','gte','lte','and','or'];
+/* ─ Stage 1 generator (direct inequalities) ─ */
+function genQ_s1(){
+  const types=['gt','lt','gte','lte','and','or','rgt','rlt','rgte','rlte'];
   const type=types[Math.floor(Math.random()*types.length)];
   const pool=[-4,-3,-2,-1,0,1,2,3,4];
   const a=pool[Math.floor(Math.random()*pool.length)];
   let b;do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);
   const lo=Math.min(a,b),hi=Math.max(a,b);
-  const sym={gt:`x > ${a}`,lt:`x < ${a}`,gte:`x ≥ ${a}`,lte:`x ≤ ${a}`,and:`${lo} < x < ${hi}`,or:`x ≤ ${lo} 或 x ≥ ${hi}`};
-  const hint={gt:'空心圓，箭頭向右（不含端點）',lt:'空心圓，箭頭向左（不含端點）',gte:'實心圓，箭頭向右（含端點）',lte:'實心圓，箭頭向左（含端點）',and:'兩端空心圓，取中間線段',or:'兩端實心圓，向外延伸'};
-  return{sym:sym[type],hint:hint[type],type,val:a,lo,hi};
+  const drawType={gt:'gt',lt:'lt',gte:'gte',lte:'lte',and:'and',or:'or',rgt:'gt',rlt:'lt',rgte:'gte',rlte:'lte'}[type];
+  const sym={
+    gt:`x > ${a}`, lt:`x < ${a}`, gte:`x ≥ ${a}`, lte:`x ≤ ${a}`,
+    and:`${lo} < x < ${hi}`, or:`x ≤ ${lo} 或 x ≥ ${hi}`,
+    rgt:`${a} < x`, rlt:`${a} > x`, rgte:`${a} ≤ x`, rlte:`${a} ≥ x`,
+  };
+  const hint={
+    gt:'空心圓，箭頭向右（不含端點）', lt:'空心圓，箭頭向左（不含端點）',
+    gte:'實心圓，箭頭向右（含端點）', lte:'實心圓，箭頭向左（含端點）',
+    and:'兩端空心圓，取中間線段', or:'兩端實心圓，向外延伸',
+    rgt:`反向寫法：「${a} < x」等同「x > ${a}」→ 空心圓，箭頭向右`,
+    rlt:`反向寫法：「${a} > x」等同「x < ${a}」→ 空心圓，箭頭向左`,
+    rgte:`反向寫法：「${a} ≤ x」等同「x ≥ ${a}」→ 實心圓，箭頭向右`,
+    rlte:`反向寫法：「${a} ≥ x」等同「x ≤ ${a}」→ 實心圓，箭頭向左`,
+  };
+  return{sym:sym[type],hint:hint[type],type:drawType,val:a,lo,hi};
+}
+
+/* ─ Stage 2 generator (ax > b, c ≤ dx, etc.) ─ */
+function genQ_s2(){
+  // pick a non-zero coefficient a ∈ {-4…-1, 1…4}
+  const coefPool=[-4,-3,-2,-1,1,2,3,4];
+  const a=coefPool[Math.floor(Math.random()*coefPool.length)];
+  // pick rhs b = a * answer, where answer ∈ {-4…-1,0,1…4}
+  const ansPool=[-4,-3,-2,-1,0,1,2,3,4];
+  const ans=ansPool[Math.floor(Math.random()*ansPool.length)];
+  const b=a*ans; // so that b/a = ans exactly
+  const neg=(a<0); // dividing by negative flips direction
+
+  // pick inequality symbol (4 variants, also reversed form 50/50)
+  const baseOps=['gt','lt','gte','lte'];
+  const baseOp=baseOps[Math.floor(Math.random()*baseOps.length)];
+  const reversed=(Math.random()<0.5); // c ≤ dx vs dx ≥ c
+
+  // flipped draw type when a < 0
+  const flipMap={gt:'lt',lt:'gt',gte:'lte',lte:'gte'};
+  const drawType=neg?flipMap[baseOp]:baseOp;
+
+  // build display symbol and hint
+  const opSym={gt:'>',lt:'<',gte:'≤',lte:'≥'}; // lhs symbol for "ax ? b"
+  // for "ax > b" the displayed op is >, but if reversed: "b < ax"
+  const dispOpFwd={gt:'>',lt:'<',gte:'≥',lte:'≤'};
+  const dispOpRev={gt:'<',lt:'>',gte:'≤',lte:'≥'}; // swap sides flips symbol
+  let sym, hint;
+  if(!reversed){
+    sym=`${a}x ${dispOpFwd[baseOp]} ${b}`;
+  } else {
+    sym=`${b} ${dispOpRev[baseOp]} ${a}x`;
+  }
+
+  // build step-by-step hint
+  const flippedOp={gt:'lt',lt:'gt',gte:'lte',lte:'gte'};
+  const solvedOp=neg?flippedOp[baseOp]:baseOp;
+  const solvedSym={gt:'>',lt:'<',gte:'≥',lte:'≤'}[solvedOp];
+  const flipNote=neg?`（除以負數，不等號方向改變）`:'';
+  hint=`兩邊除以 ${a}${flipNote}，得 x ${solvedSym} ${ans}`;
+
+  return{sym,hint,type:drawType,val:ans,lo:null,hi:null,stage:2};
+}
+
+/* ─ Stage 3 generator: ax+b > cx+d ─ */
+function genQ_s3(){
+  // generate ax+b OP cx+d  where answer is integer in [-4,4]
+  const coefPool=[-3,-2,-1,1,2,3];
+  const ansPool=[-4,-3,-2,-1,0,1,2,3,4];
+  const ops=['gt','lt','gte','lte'];
+  const op=ops[Math.floor(Math.random()*ops.length)];
+  const ans=ansPool[Math.floor(Math.random()*ansPool.length)];
+
+  // pick a,c so a≠c (a-c is the effective coefficient after moving)
+  let a,c;
+  do{
+    a=coefPool[Math.floor(Math.random()*coefPool.length)];
+    c=coefPool[Math.floor(Math.random()*coefPool.length)];
+  }while(a===c);
+
+  // pick b,d so that ans = (d-b)/(a-c)  =>  d = b + (a-c)*ans
+  const bPool=[-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6];
+  const b=bPool[Math.floor(Math.random()*bPool.length)];
+  const d=b+(a-c)*ans; // guarantees integer solution
+
+  const neg=(a-c)<0; // effective coefficient negative → flip
+  const flipMap={gt:'lt',lt:'gt',gte:'lte',lte:'gte'};
+  const drawType=neg?flipMap[op]:op;
+
+  // display symbol helpers
+  const dispOp={gt:'>',lt:'<',gte:'≥',lte:'≤'}[op];
+  function termStr(coef,isX,cnst){
+    // build "ax+b" or "cx+d" nicely
+    let s='';
+    if(coef===1)s='x';
+    else if(coef===-1)s='-x';
+    else s=`${coef}x`;
+    if(cnst>0)s+=`+${cnst}`;
+    else if(cnst<0)s+=`${cnst}`;
+    return s;
+  }
+  const lhs=termStr(a,true,b);
+  const rhs=termStr(c,true,d);
+  const sym=`${lhs} ${dispOp} ${rhs}`;
+
+  // hint: step-by-step
+  const diff=a-c; // move cx to left: (a-c)x > d-b
+  const rhs2=d-b;
+  const solOp=neg?flipMap[op]:op;
+  const solSym={gt:'>',lt:'<',gte:'≥',lte:'≤'}[solOp];
+  const flipNote=neg?'（係數為負，不等號翻轉）':'';
+  const step1=`移項：${diff}x ${dispOp} ${rhs2}`;
+  const step2=`÷${diff}${flipNote}，得 x ${solSym} ${ans}`;
+  const hint=`${step1} → ${step2}`;
+
+  return{sym,hint,type:drawType,val:ans,lo:null,hi:null,stage:3};
+}
+
+function genQ(){
+  if(currentStage===3)return genQ_s3();
+  if(currentStage===2)return genQ_s2();
+  return genQ_s1();
 }
 
 function makeFakes(q){
@@ -554,8 +892,21 @@ function drawSVG(type,val,lo,hi,state){
 /* ───── RENDER QUESTION ───── */
 function renderQ(){
   answered=false;
+  if(qIdx%STAGE_SIZE===0&&qIdx>0){}// handled by proceedToNextStage
+  if(qIdx===0){startGameTimer();startStageTimer();currentStage=1;stageStartScore=0;}
+  const qInStage=(qIdx%STAGE_SIZE)+1;
+  document.getElementById('q-no').innerHTML='';
+  const badge=document.getElementById('stage-badge');
+  const stageNames=['','第一關：基本不等式','第二關：解不等式','第三關：移項求解'];
+  const stageCols=[null,
+    {bg:'rgba(124,106,247,.15)',col:'var(--blue2)',bc:'rgba(168,152,255,.3)'},
+    {bg:'rgba(255,215,64,.12)',col:'var(--gold)',bc:'rgba(255,215,64,.3)'},
+    {bg:'rgba(0,230,118,.1)',col:'var(--green)',bc:'rgba(0,230,118,.3)'}
+  ];
+  const sc=stageCols[currentStage];
+  document.getElementById('q-no').textContent=`第 ${currentStage} 關 · 第 ${qInStage}/${STAGE_SIZE} 題`;
+  if(badge){badge.textContent=stageNames[currentStage];badge.style.background=sc.bg;badge.style.color=sc.col;badge.style.borderColor=sc.bc;}
   const q=genQ();
-  document.getElementById('q-no').textContent=`第 ${qIdx+1} 題 / ${TOTAL}`;
   document.getElementById('q-expr').innerHTML=q.sym;
   document.getElementById('q-hint').textContent=q.hint;
   updateStage();
@@ -597,7 +948,8 @@ function choose(i,isCorrect,btn){
     btn.innerHTML=`<div class="opt-lbl">✓ 正確</div>${drawSVG(allOpts[i].type,allOpts[i].val,allOpts[i].lo,allOpts[i].hi,'correct')}`;
     streak++;
     const bonus=streak>=5?3:streak>=3?2:1;
-    const pts=10*bonus+(timeLeft>8?5:timeLeft>4?2:0);
+    const tSecs=timeLeft/100;
+    const pts=10*bonus+(tSecs>8?5:tSecs>4?2:0);
     score+=pts;
     document.getElementById('score').textContent=score;
     burst(rect.left+rect.width/2,rect.top+rect.height/2,'rgb(0,230,118)');
@@ -625,20 +977,75 @@ function choose(i,isCorrect,btn){
 }
 
 /* ───── NEXT Q ───── */
-function nextQ(){qIdx++;if(qIdx>=TOTAL)endGame(false);else renderQ();}
+function nextQ(){
+  qIdx++;
+  const stageEnd=(qIdx%STAGE_SIZE===0);
+  if(stageEnd&&currentStage<NUM_STAGES){
+    // show stage clear screen
+    showStageClear();
+  } else if(qIdx>=TOTAL){
+    endGame(false);
+  } else {
+    renderQ();
+  }
+}
+
+/* ───── STAGE CLEAR ───── */
+let stageElapsed=0, stageStartTime=0;
+function startStageTimer(){stageStartTime=performance.now();}
+function stopStageTimer(){stageElapsed=(performance.now()-stageStartTime)/1000;}
+
+function showStageClear(){
+  clearInterval(timerID);
+  stopStageTimer();
+  const stg=currentStage;
+  const stagePts=score-stageStartScore;
+  document.getElementById('main-game').style.display='none';
+  const scr=document.getElementById('stage-clear-screen');scr.style.display='block';
+  const icons=['','🎯','⚡','🏆'];
+  const titles=['','第一關完成！','第二關完成！','第三關完成！'];
+  const subs=['','基本不等式全過，進入解不等式關卡！','解一元一次不等式掌握，挑戰移項大關！','恭喜通關全部三關！'];
+  document.getElementById('sc-ico').textContent=icons[stg];
+  document.getElementById('sc-title').textContent=titles[stg];
+  document.getElementById('sc-sub').textContent=subs[stg];
+  document.getElementById('sc-score').textContent=stagePts;
+  document.getElementById('sc-time').textContent=fmtTime(stageElapsed);
+  document.getElementById('sc-name').value='';
+  document.getElementById('sc-name-area').style.display='block';
+  document.getElementById('sc-next-btn').style.display='none';
+  document.getElementById('sc-lb-preview').innerHTML='';
+  // show existing lb for this stage
+  renderStageLBPreview(stg,-1);
+  // store pending
+  pendingStageScore={stage:stg,score:stagePts,time:stageElapsed};
+  // burst
+  for(let i=0;i<3;i++)setTimeout(()=>burst(innerWidth*.3+Math.random()*innerWidth*.4,innerHeight*.3+Math.random()*innerHeight*.2,'rgb(168,152,255)'),i*250);
+}
+
+function proceedToNextStage(){
+  document.getElementById('stage-clear-screen').style.display='none';
+  document.getElementById('main-game').style.display='';
+  currentStage++;
+  stageStartScore=score;
+  startStageTimer();
+  const toasts=['','','🚀 第二關開始！解不等式後選數線','🔥 第三關！先移項再選數線'];
+  if(toasts[currentStage])showToast(toasts[currentStage],2800);
+  renderQ();
+}
 
 /* ───── END GAME ───── */
 function endGame(dead){
   clearInterval(timerID);
+  stopGameTimer();
   document.getElementById('main-game').style.display='none';
   const end=document.getElementById('end-screen');end.className='end-screen show';
   const pct=score/(TOTAL*15);
   let ico,title,sub,stars,rank;
   if(dead){ico='💀';title='血量耗盡！';sub='不要緊，再練習一次！';stars='💔💔💔';rank='挑戰失敗';}
-  else if(score>=110){ico='🏆';title='滿分達人！';sub='完美通關，你是數線大師！';stars='⭐⭐⭐⭐⭐';rank='數線大師 S+';}
-  else if(score>=90){ico='🥇';title='非常優秀！';sub='幾乎全對，超強的！';stars='⭐⭐⭐⭐⭐';rank='高手 S';}
-  else if(score>=70){ico='🎉';title='答得很好！';sub='繼續練習，越來越強！';stars='⭐⭐⭐⭐☆';rank='進階 A';}
-  else if(score>=50){ico='💪';title='不錯喔！';sub='多練習幾次一定更好！';stars='⭐⭐⭐☆☆';rank='普通 B';}
+  else if(score>=330){ico='🏆';title='三關全破！';sub='完美通關，你是數線大師！';stars='⭐⭐⭐⭐⭐';rank='不等式大師 S+';}
+  else if(score>=270){ico='🥇';title='非常優秀！';sub='幾乎全對，超強的！';stars='⭐⭐⭐⭐⭐';rank='高手 S';}
+  else if(score>=200){ico='🎉';title='答得很好！';sub='繼續練習，越來越強！';stars='⭐⭐⭐⭐☆';rank='進階 A';}
+  else if(score>=140){ico='💪';title='不錯喔！';sub='多練習幾次一定更好！';stars='⭐⭐⭐☆☆';rank='普通 B';}
   else{ico='📚';title='繼續加油！';sub='再複習不等式的概念吧！';stars='⭐⭐☆☆☆';rank='初學 C';}
   document.getElementById('end-ico').textContent=ico;
   document.getElementById('end-title').textContent=title;
@@ -646,21 +1053,36 @@ function endGame(dead){
   document.getElementById('end-score').textContent=score;
   document.getElementById('end-stars').textContent=stars;
   document.getElementById('end-rank').textContent=rank;
-  if(!dead)for(let i=0;i<3;i++)setTimeout(()=>burst(innerWidth*.3+Math.random()*innerWidth*.4,innerHeight*.3+Math.random()*innerHeight*.2,'rgb(255,215,64)'),i*300);
+  document.getElementById('end-total-time').textContent=fmtTime(csElapsed);
+  document.getElementById('end-lb-preview').innerHTML='';
+  if(!dead){
+    for(let i=0;i<3;i++)setTimeout(()=>burst(innerWidth*.3+Math.random()*innerWidth*.4,innerHeight*.3+Math.random()*innerHeight*.2,'rgb(255,215,64)'),i*300);
+    // show name input modal
+    pendingScore={score,time:csElapsed};
+    document.getElementById('modal-sub').textContent=`得分 ${score} 分・${fmtTime(csElapsed)}，輸入名字加入排行榜`;
+    document.getElementById('modal-name').value='';
+    setTimeout(()=>{document.getElementById('modal').className='modal-overlay show';document.getElementById('modal-name').focus();},600);
+  } else {
+    renderLB();
+  }
 }
 
 /* ───── RESTART ───── */
 function restart(){
-  score=0;qIdx=0;hp=MAX_HP;streak=0;answered=false;
+  score=0;stageStartScore=0;qIdx=0;hp=MAX_HP;streak=0;answered=false;currentStage=1;
+  clearInterval(timerID);csElapsed=0;stageElapsed=0;
   document.getElementById('score').textContent='0';
   updateHP();
   document.getElementById('end-screen').className='end-screen';
+  document.getElementById('stage-clear-screen').style.display='none';
   document.getElementById('main-game').style.display='';
   buildStage();renderQ();
 }
 
 /* ───── INIT ───── */
-buildStage();renderQ();
+buildStage();renderQ();renderLB(1,'lb-list');
+document.getElementById('modal-name').addEventListener('keydown',e=>{if(e.key==='Enter')submitScore();});
+document.getElementById('sc-name').addEventListener('keydown',e=>{if(e.key==='Enter')submitStageScore();});
 </script>
 </body>
 </html>
