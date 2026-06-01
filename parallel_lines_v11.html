@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>截角探險 — 平行線與截角</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117;--bg2:#181c28;--bg3:#1e2436;--border:#2a3050;
+  --accent:#5b6ef5;--accent2:#f5a623;--green:#22c55e;--red:#ef4444;
+  --text:#e8eaf6;--muted:#7b83a8;
+  --corr:#f59e0b;--alt:#a78bfa;--same:#fb923c;--r:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 65%,rgba(255,255,255,.15) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 30%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(2px 2px at 35% 80%,rgba(255,255,255,.1) 0%,transparent 100%);
+  pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:relative;z-index:10;background:linear-gradient(90deg,#0d1220,#1a2040,#0d1220);
+  border-bottom:1px solid var(--border);padding:12px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-text{font-family:'Fredoka One',sans-serif;font-size:20px;}
+.logo-sub{font-size:11px;color:var(--muted);}
+.hdr-btns{display:flex;gap:8px;}
+.hdr-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--muted);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:inherit;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--text);}
+
+/* SCREENS */
+.screen{display:none;position:relative;z-index:1;}
+.screen.active{display:block;}
+
+/* LOBBY */
+#s-lobby{max-width:520px;margin:0 auto;padding:40px 20px;text-align:center;}
+.lobby-title{font-family:'Fredoka One',sans-serif;font-size:42px;
+  background:linear-gradient(135deg,#5b6ef5,#a78bfa,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1.2;margin-bottom:8px;}
+.lobby-sub{color:var(--muted);font-size:14px;margin-bottom:32px;}
+.stage-cards{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+.stage-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:all .2s;text-align:left;}
+.stage-card:hover{border-color:var(--accent);transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(91,110,245,.2);}
+.stage-num{width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',sans-serif;font-size:22px;}
+.stage-num.s1{background:linear-gradient(135deg,#5b6ef5,#8b5cf6);}
+.stage-num.s2{background:linear-gradient(135deg,#f59e0b,#fb923c);}
+.stage-num.s3{background:linear-gradient(135deg,#22c55e,#06b6d4);}
+/* Stage3 計算題 */
+#q3-area{display:none;}
+.q3-question{font-size:13px;font-weight:700;color:var(--text);line-height:1.65;margin-bottom:12px;word-break:break-word;overflow-wrap:break-word;}
+.q3-given{display:inline-block;background:rgba(91,110,245,.15);border:1px solid rgba(91,110,245,.4);
+  border-radius:8px;padding:6px 14px;font-size:15px;font-weight:800;color:var(--accent);
+  margin:4px 0 10px;}
+.q3-choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.q3c{padding:11px 10px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg3);
+  font-size:15px;font-weight:800;cursor:pointer;color:var(--text);
+  transition:all .14s;text-align:center;font-family:inherit;}
+.q3c:hover:not(:disabled){border-color:var(--accent);background:rgba(91,110,245,.12);}
+.q3c.ok{border-color:var(--green)!important;background:rgba(34,197,94,.18)!important;color:var(--green)!important;}
+.q3c.no{border-color:var(--red)!important;background:rgba(239,68,68,.18)!important;color:var(--red)!important;}
+.stage-info h3{font-size:15px;font-weight:700;margin-bottom:3px;}
+.stage-info p{font-size:12px;color:var(--muted);}
+.lobby-rank-btn{width:100%;padding:12px;border-radius:var(--r);
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;
+  transition:all .15s;font-family:inherit;}
+.lobby-rank-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+@keyframes fadeSlideIn{
+  from{opacity:0;transform:translateY(-12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* NAME */
+#s-name{max-width:400px;margin:80px auto;padding:0 20px;text-align:center;}
+.name-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:18px;padding:32px 28px;}
+.name-card h2{font-family:'Fredoka One',sans-serif;font-size:22px;margin-bottom:8px;}
+.name-card p{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.name-input{width:100%;padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--bg3);color:var(--text);font-size:15px;font-family:inherit;
+  outline:none;margin-bottom:14px;transition:border-color .15s;}
+.name-input:focus{border-color:var(--accent);}
+.go-btn{width:100%;padding:12px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  color:white;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .15s;font-family:inherit;}
+.go-btn:hover{opacity:.9;transform:translateY(-1px);}
+
+/* GAME */
+#s-game{max-width:1000px;margin:0 auto;padding:16px;
+  grid-template-columns:1fr 280px;gap:14px;align-items:start;}
+#s-game.active{display:grid;}
+.hud{grid-column:1/-1;display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;}
+.hud-stage{font-family:'Fredoka One',sans-serif;font-size:16px;color:var(--accent);}
+.hud-name{font-size:13px;color:var(--muted);flex:1;}
+.hud-combo{font-size:12px;font-weight:700;color:var(--accent2);
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
+  border-radius:6px;padding:3px 10px;min-width:64px;text-align:center;}
+.hud-tw{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:8px;padding:5px 12px;}
+.hud-timer{font-family:'Fredoka One',sans-serif;font-size:20px;color:var(--accent2);min-width:28px;text-align:center;}
+.hud-pts{font-family:'Fredoka One',sans-serif;font-size:18px;color:var(--green);}
+.prog-row{grid-column:1/-1;display:flex;align-items:center;gap:10px;}
+.prog-track{flex:1;height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);border-radius:99px;transition:width .4s;}
+.prog-txt{font-size:12px;color:var(--muted);white-space:nowrap;min-width:44px;text-align:right;}
+
+/* Canvas card */
+.canvas-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;
+  display:flex;flex-direction:column;gap:10px;}
+#cv{border-radius:10px;background:#111827;border:1px solid var(--border);display:block;max-width:100%;}
+
+/* Side panel */
+.side-panel{display:flex;flex-direction:column;gap:12px;}
+.qcard{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;}
+.qcard-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+#qtext{font-size:13px;font-weight:700;color:var(--text);line-height:1.6;margin-bottom:12px;min-height:44px;word-break:break-word;overflow-wrap:break-word;}
+.choices{display:flex;flex-direction:column;gap:7px;}
+.qc{padding:10px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg3);
+  font-size:13px;font-weight:600;cursor:pointer;color:var(--text);
+  transition:all .14s;text-align:left;font-family:inherit;}
+.qc:hover:not(:disabled){border-color:var(--accent);background:rgba(91,110,245,.12);}
+.qc.ok{border-color:var(--green)!important;background:rgba(34,197,94,.15)!important;color:var(--green)!important;}
+.qc.no{border-color:var(--red)!important;background:rgba(239,68,68,.15)!important;color:var(--red)!important;}
+.qc:disabled{cursor:default;opacity:.75;}
+.next-btn{width:100%;padding:10px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  color:white;font-size:13.5px;font-weight:700;cursor:pointer;
+  transition:all .15s;font-family:inherit;display:none;margin-top:8px;}
+.next-btn:hover{opacity:.9;}
+
+/* Stage2 */
+#s2-prompt{font-size:14px;font-weight:900;line-height:1.5;margin-bottom:6px;display:none;word-break:break-word;overflow-wrap:break-word;}
+#s2-prompt .atype{display:inline-block;padding:2px 10px;border-radius:6px;font-size:18px;font-family:'Fredoka One',sans-serif;}
+#s2-subtext{font-size:12px;color:var(--muted);margin-bottom:10px;display:none;}
+.ang-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.ang-btn{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border);background:var(--bg3);
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;
+  transition:all .14s;font-family:inherit;display:flex;align-items:center;justify-content:center;}
+.ang-btn:hover:not(:disabled){border-color:var(--accent);color:var(--text);background:rgba(91,110,245,.12);}
+.ang-btn.selected{border-color:var(--accent2);background:rgba(245,166,35,.18);color:var(--accent2);}
+.ang-btn.ok{border-color:var(--green)!important;background:rgba(34,197,94,.2)!important;color:var(--green)!important;}
+.ang-btn.no{border-color:var(--red)!important;background:rgba(239,68,68,.2)!important;color:var(--red)!important;}
+.ang-btn:disabled{cursor:default;}
+.s2-hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px;}
+#s2-confirm{width:100%;padding:9px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,var(--accent2),#fb923c);
+  color:white;font-size:13px;font-weight:700;cursor:pointer;
+  font-family:inherit;display:none;margin-top:8px;}
+
+/* Score chips */
+.score-chips{display:flex;gap:8px;}
+.s-chip{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;}
+.s-chip .sn{font-family:'Fredoka One',sans-serif;font-size:20px;color:var(--text);}
+.s-chip .sl{font-size:10px;color:var(--muted);}
+
+/* RESULT */
+#s-result{max-width:720px;margin:0 auto;padding:24px 16px;flex-direction:column;gap:16px;}
+#s-result.active{display:flex;}
+.res-hero{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;text-align:center;}
+.res-emoji{font-size:48px;margin-bottom:8px;}
+.res-title{font-family:'Fredoka One',sans-serif;font-size:26px;margin-bottom:6px;}
+.res-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.res-chips{display:flex;gap:12px;justify-content:center;margin-bottom:20px;}
+.r-chip{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 18px;text-align:center;min-width:90px;}
+.r-chip .rn{font-family:'Fredoka One',sans-serif;font-size:26px;}
+.r-chip .rl{font-size:10px;color:var(--muted);margin-top:2px;}
+.r-chip.gold .rn{color:var(--accent2);}
+.r-chip.grn  .rn{color:var(--green);}
+.r-chip.red  .rn{color:var(--red);}
+.res-btns{display:flex;gap:10px;}
+.res-btn{flex:1;padding:12px;border-radius:10px;border:1.5px solid;
+  font-size:13.5px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;}
+.res-btn.primary{border-color:var(--accent);background:rgba(91,110,245,.15);color:var(--accent);}
+.res-btn.primary:hover{background:var(--accent);color:white;}
+.res-btn.secondary{border-color:var(--border);background:transparent;color:var(--muted);}
+.res-btn.secondary:hover{border-color:var(--accent);color:var(--text);}
+
+/* Wrong list */
+.wrong-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;}
+.section-hd{font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;}
+.wrong-list{display:flex;flex-direction:column;gap:8px;}
+.wrong-item{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 13px;}
+.wi-pair{font-size:13px;font-weight:700;color:var(--red);margin-bottom:3px;}
+.wi-def{font-size:12px;color:var(--muted);line-height:1.65;}
+.wi-def b{color:var(--text);}
+
+/* DEF styles removed */
+
+/* RANK */
+#s-rank{max-width:600px;margin:0 auto;padding:24px 16px;}
+#s-rank.active{display:block;}
+.rank-header{text-align:center;margin-bottom:24px;}
+.rank-header h2{font-family:'Fredoka One',sans-serif;font-size:26px;color:var(--accent2);margin-bottom:4px;}
+.rank-header p{color:var(--muted);font-size:13px;}
+.rank-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.rank-tab{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:inherit;}
+.rank-tab.on{border-color:var(--accent2);background:rgba(245,166,35,.12);color:var(--accent2);}
+.rank-list{display:flex;flex-direction:column;gap:6px;}
+.rank-row{display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.rank-row.me{border-color:var(--accent);background:rgba(91,110,245,.08);}
+.rank-no{font-family:'Fredoka One',sans-serif;font-size:18px;min-width:30px;text-align:center;}
+.rank-no.gold{color:#fbbf24;}.rank-no.silver{color:#9ca3af;}.rank-no.bronze{color:#d97706;}.rank-no.other{color:var(--muted);}
+.rank-name{flex:1;font-size:14px;font-weight:600;}
+.rank-stage{font-size:11px;color:var(--muted);background:var(--bg3);border-radius:5px;padding:2px 7px;}
+.rank-pts{font-family:'Fredoka One',sans-serif;font-size:18px;color:var(--accent2);min-width:60px;text-align:right;}
+.rank-empty{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+.back-btn{display:block;margin:16px auto 0;padding:10px 28px;
+  border-radius:9px;border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+.back-btn:hover{border-color:var(--accent);color:var(--text);}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:10px 20px;font-size:14px;font-weight:600;color:var(--text);
+  opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:var(--green);color:var(--green);}
+#toast.ng{border-color:var(--red);color:var(--red);}
+#toast.pt{border-color:var(--accent2);color:var(--accent2);}
+
+/* FLOAT PTS */
+.float-pt{position:fixed;pointer-events:none;z-index:999;
+  font-family:'Fredoka One',sans-serif;font-size:22px;color:var(--accent2);
+  animation:floatUp .9s ease-out forwards;}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.3);}}
+.combo-burst{position:fixed;pointer-events:none;z-index:999;
+  font-family:'Fredoka One',sans-serif;font-size:30px;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:burstA .7s ease-out forwards;}
+@keyframes burstA{0%{opacity:1;transform:translate(-50%,-50%) scale(.5);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.3);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6);}}
+
+@media(max-width:700px){
+  #s-game{grid-template-columns:1fr;}
+  /* def-cards removed */
+  .res-chips{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📐</div>
+    <div>
+      <div class="logo-text">截角探險</div>
+      <div class="logo-sub">平行線與截角</div>
+    </div>
+  </div>
+  <div class="hdr-btns">
+    <button class="hdr-btn" onclick="goLobby()">🏠 首頁</button>
+    <button class="hdr-btn" onclick="goRank()">🏆 排行榜</button>
+  </div>
+</header>
+
+<div id="toast"></div>
+
+<!-- LOBBY -->
+<div class="screen active" id="s-lobby">
+  <div class="lobby-title">截角探險</div>
+  <div class="lobby-sub">三關連續挑戰，看看你能得幾分！</div>
+
+  <!-- 按下「開始」才展開 -->
+  <div id="stage-reveal" style="display:none;flex-direction:column;gap:12px;margin-bottom:16px;animation:fadeSlideIn .35s ease">
+    <div class="stage-card" style="pointer-events:none">
+      <div class="stage-num s1">1</div>
+      <div class="stage-info">
+        <h3>關卡一　辨別截角</h3>
+        <p>看圖中亮起的兩個角，判斷是同位角、內錯角或同側內角</p>
+      </div>
+    </div>
+    <div class="stage-card" style="pointer-events:none">
+      <div class="stage-num s2">2</div>
+      <div class="stage-info">
+        <h3>關卡二　點選角度</h3>
+        <p>看題目給的角名稱，從圖中點選出正確的兩個角</p>
+      </div>
+    </div>
+    <div class="stage-card" style="pointer-events:none">
+      <div class="stage-num s3">3</div>
+      <div class="stage-info">
+        <h3>關卡三　計算角度</h3>
+        <p>已知一個角度，利用截角關係計算另一個角的度數</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主按鈕：未展開時顯示「開始」，展開後變「輸入名字開始」 -->
+  <div id="lobby-btn-area" style="max-width:340px;margin:0 auto 14px">
+    <button class="go-btn" id="lobby-main-btn" onclick="lobbyStart()">🚀 開始挑戰</button>
+  </div>
+  <button class="lobby-rank-btn" onclick="goRank()">🏆 查看排行榜</button>
+</div>
+
+<!-- NAME -->
+<div class="screen" id="s-name">
+  <div class="name-card">
+    <h2>✏️ 輸入你的名字</h2>
+    <p>名字會出現在排行榜上</p>
+    <input class="name-input" id="name-input" type="text" placeholder="例：小明" maxlength="10"
+           onkeydown="if(event.key==='Enter')confirmName()">
+    <button class="go-btn" onclick="confirmName()">開始挑戰！</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="s-game">
+  <div class="hud">
+    <div class="hud-stage" id="hud-stage">關卡一</div>
+    <div class="hud-name" id="hud-name"></div>
+    <div class="hud-combo" id="hud-combo">連勝 ×0</div>
+    <div class="hud-tw">
+      <span style="font-size:13px;color:var(--muted)">⏱</span>
+      <span class="hud-timer" id="hud-timer">15</span>
+    </div>
+    <div class="hud-pts" id="hud-pts">0 pt</div>
+  </div>
+  <div class="prog-row">
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-txt" id="prog-txt">0/10</div>
+  </div>
+
+  <div class="canvas-card">
+    <canvas id="cv" width="560" height="430"></canvas>
+  </div>
+
+  <div class="side-panel">
+    <div class="score-chips">
+      <div class="s-chip"><div class="sn" id="g-ok">0</div><div class="sl">答對</div></div>
+      <div class="s-chip"><div class="sn" id="g-ng">0</div><div class="sl">答錯</div></div>
+      <div class="s-chip"><div class="sn" id="g-pt">0</div><div class="sl">得分</div></div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-label" id="qcard-lbl">選擇答案</div>
+
+      <!-- 關卡一 -->
+      <div id="q1-area">
+        <div id="qtext"></div>
+        <div class="choices" id="qch">
+          <button class="qc" onclick="ans1('corr')">同位角</button>
+          <button class="qc" onclick="ans1('alt')">內錯角</button>
+          <button class="qc" onclick="ans1('same')">同側內角</button>
+        </div>
+      </div>
+
+      <!-- 關卡二 -->
+      <div id="q2-area" style="display:none">
+        <div id="s2-prompt"></div>
+        <div id="s2-subtext">點選圖中對應的兩個角</div>
+        <div class="ang-grid" id="ang-grid">
+          <button class="ang-btn" onclick="angClick(1)">∠1</button>
+          <button class="ang-btn" onclick="angClick(2)">∠2</button>
+          <button class="ang-btn" onclick="angClick(3)">∠3</button>
+          <button class="ang-btn" onclick="angClick(4)">∠4</button>
+          <button class="ang-btn" onclick="angClick(5)">∠5</button>
+          <button class="ang-btn" onclick="angClick(6)">∠6</button>
+          <button class="ang-btn" onclick="angClick(7)">∠7</button>
+          <button class="ang-btn" onclick="angClick(8)">∠8</button>
+        </div>
+        <div class="s2-hint" id="s2-hint">請選兩個角</div>
+        <button id="s2-confirm" onclick="confirmS2()">確認答案</button>
+      </div>
+
+      <!-- 關卡三 -->
+      <div id="q3-area" style="display:none">
+        <div class="q3-question" id="q3text"></div>
+        <div class="q3-choices" id="q3ch"></div>
+      </div>
+
+      <button class="next-btn" id="next-btn" onclick="nextQ()">下一題 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="s-result">
+  <div class="res-hero">
+    <div class="res-emoji" id="res-emoji">🎉</div>
+    <div class="res-title" id="res-title">關卡完成！</div>
+    <div class="res-sub"   id="res-sub"></div>
+    <div class="res-chips">
+      <div class="r-chip gold"><div class="rn" id="res-pt">0</div><div class="rl">本關得分</div></div>
+      <div class="r-chip grn" ><div class="rn" id="res-ok">0</div><div class="rl">答對</div></div>
+      <div class="r-chip red" ><div class="rn" id="res-ng">0</div><div class="rl">答錯</div></div>
+    </div>
+    <!-- 階段性結算按鈕：動態產生 -->
+    <div class="res-btns" id="res-btns"></div>
+  </div>
+
+  <div class="wrong-section" id="wrong-sec" style="display:none">
+    <div class="section-hd">⚠️ 答錯的題目</div>
+    <div class="wrong-list" id="wrong-list"></div>
+  </div>
+</div>
+
+<!-- RANK -->
+<div class="screen" id="s-rank">
+  <div class="rank-header">
+    <h2>🏆 排行榜</h2>
+    <p>每人每關保留最高分</p>
+  </div>
+  <div class="rank-tabs">
+    <button class="rank-tab on" onclick="showRankTab('all',this)">三關總分</button>
+    <button class="rank-tab" onclick="showRankTab(1,this)">關卡一</button>
+    <button class="rank-tab" onclick="showRankTab(2,this)">關卡二</button>
+    <button class="rank-tab" onclick="showRankTab(3,this)">關卡三</button>
+  </div>
+  <div class="rank-list" id="rank-list"></div>
+  <button class="back-btn" onclick="goLobby()">← 返回</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════
+   Canvas 繪圖
+═══════════════════════════════════ */
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height,D2R=Math.PI/180;
+/* 兩條直線的中心錨點 y 座標（x 動態算） */
+const CY1=140, CY2=310;
+let transAngle=52,tilt1=0,tilt2=8;
+
+/*
+  動態計算截線錨點 MANC_X，使兩個交點都落在
+  畫布 x 範圍 [MARGIN, W-MARGIN] 內。
+  
+  交點 x = MANC + lineY / tan(transAngle)
+  直線 l₁ 中心 x = CX1_dynamic（由 MANC_X 決定）
+  
+  簡化：固定兩條直線的 x 中心在畫布中央，
+  改由 transAngle 反推 MANC_X 使兩交點都在合理位置。
+  
+  設計：讓 P1 的 x 落在 [W*0.25, W*0.65]，
+        P2 與 P1 的 x 差由 tilt 決定。
+  公式：P1.x = MANC + CY1/tan(θ)
+        => MANC = P1.x - CY1/tan(θ)
+  目標 P1.x = W * 0.4
+*/
+function computeMANC(){
+  const tanT = Math.tan(transAngle * D2R);
+  if(Math.abs(tanT) < 0.1) return W * 0.4; // 防止接近90度
+  const targetP1x = W * 0.40;
+  return targetP1x - CY1 / tanT;
+}
+
+function isc(Cx, Cy, td){
+  const MANC = computeMANC();
+  const tanT = Math.tan(transAngle * D2R);
+  const tanL = Math.tan(td * D2R);
+  const den = 1 - tanL / tanT;
+  if(Math.abs(den) < 0.001) return { x: MANC + Cy / tanT, y: Cy };
+  const y = (Cy + tanL * (MANC - Cx)) / den;
+  return { x: MANC + y / tanT, y };
+}
+
+/* 每條直線的「中心 x」設為其交點 x（讓直線過交點） */
+function getCX1(){ return isc(0, CY1, tilt1).x; }
+function getCX2(){ return isc(0, CY2, tilt2).x; }
+function makeSec(p,a,b){
+  a=((a%360)+360)%360;b=((b%360)+360)%360;
+  const cw=((b-a)+360)%360;
+  return cw<=180?{cx:p.x,cy:p.y,s:a,e:b}:{cx:p.x,cy:p.y,s:b,e:a};
+}
+function getSectors(){
+  // 交點就是直線的「中心」，直接用 y=CY 和 tilt 求交
+  const p1=isc(0,CY1,tilt1),p2=isc(0,CY2,tilt2);
+  const tD=transAngle,tU=(transAngle+180)%360;
+  const l1R=((tilt1%360)+360)%360,l1L=(l1R+180)%360;
+  const l2R=((tilt2%360)+360)%360,l2L=(l2R+180)%360;
+  return{
+    1:makeSec(p1,tU,l1R),2:makeSec(p1,l1L,tU),3:makeSec(p1,tD,l1L),4:makeSec(p1,l1R,tD),
+    5:makeSec(p2,tU,l2R),6:makeSec(p2,l2L,tU),7:makeSec(p2,tD,l2L),8:makeSec(p2,l2R,tD),
+  };
+}
+function midAng(s,e){const sp=((e-s)+360)%360||360;return(s+sp/2)%360;}
+
+/* 高亮角統一用亮黃色，不洩題 */
+let hlAngles=[],hlFill='rgba(255,220,0,.38)',hlStroke='#FFD700';
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const p1=isc(0,CY1,tilt1), p2=isc(0,CY2,tilt2);
+  const SEC=getSectors(), pad=18;
+  const MANC=computeMANC();
+  const tanT=Math.tan(transAngle*D2R);
+
+  // 直線端點：以交點為中心延伸
+  const lp=(px,py,t,dx)=>({x:px+dx, y:py+Math.tan(t*D2R)*dx});
+  const ext=W*0.55; // 左右延伸量
+  const a=lp(p1.x,p1.y,tilt1,-ext), b=lp(p1.x,p1.y,tilt1,ext);
+  const d2=lp(p2.x,p2.y,tilt2,-ext), c=lp(p2.x,p2.y,tilt2,ext);
+
+  // 兩線間淡色背景
+  ctx.save();ctx.fillStyle='rgba(91,110,245,.06)';
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+  ctx.lineTo(c.x,c.y);ctx.lineTo(d2.x,d2.y);ctx.closePath();ctx.fill();ctx.restore();
+
+  dline(a.x,a.y,b.x,b.y,'#8892b0',2,'l₁');
+  dline(d2.x,d2.y,c.x,c.y,'#8892b0',2,'l₂');
+
+  // 截線：從 y=4 到 y=H-4
+  const txTop=MANC+4/tanT, txBot=MANC+(H-4)/tanT;
+  dline(txTop,4,txBot,H-4,'#7c83f5',2,'M');
+
+  // 關卡三：平行刻記
+  if(currentStage===3){
+    drawParallelTicks(a,b,'#8892b0');
+    drawParallelTicks(d2,c,'#8892b0');
+  }
+
+  for(let n=1;n<=8;n++)dsec(SEC[n],hlAngles.includes(n));
+  for(let n=1;n<=8;n++)dlbl(n,SEC[n],hlAngles.includes(n));
+  ddot(p1.x,p1.y);ddot(p2.x,p2.y);
+}
+
+/* 在線段中間畫平行刻記（兩條短斜線） */
+function drawParallelTicks(p1, p2, col){
+  const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+  const angle=Math.atan2(p2.y-p1.y, p2.x-p1.x);
+  const perp=angle+Math.PI/2;
+  const L=7, gap=4;
+  ctx.save();
+  ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.lineCap='round';
+  for(let g=-1;g<=1;g+=2){
+    const ox=g*gap/2*Math.cos(angle), oy=g*gap/2*Math.sin(angle);
+    ctx.beginPath();
+    ctx.moveTo(mx+ox-L*Math.cos(perp), my+oy-L*Math.sin(perp));
+    ctx.lineTo(mx+ox+L*Math.cos(perp), my+oy+L*Math.sin(perp));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function dline(x1,y1,x2,y2,col,lw,lbl){
+  ctx.save();ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  arr(x1,y1,x2,y2,col,lw);arr(x2,y2,x1,y1,col,lw);
+  if(lbl){ctx.font='italic bold 12px serif';ctx.fillStyle=col;
+    ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(lbl,x2-18,y2-6);}
+  ctx.restore();
+}
+function arr(fx,fy,tx,ty,col,lw){
+  const a=Math.atan2(ty-fy,tx-fx),L=8,sp=Math.PI/6;
+  ctx.save();ctx.strokeStyle=col;ctx.lineWidth=lw*.75;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(tx-L*Math.cos(a-sp),ty-L*Math.sin(a-sp));
+  ctx.lineTo(tx,ty);ctx.lineTo(tx-L*Math.cos(a+sp),ty-L*Math.sin(a+sp));
+  ctx.stroke();ctx.restore();
+}
+function ddot(x,y){
+  ctx.save();ctx.fillStyle='#5b6ef5';ctx.strokeStyle='#1e2436';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+}
+function dsec(sec,hl){
+  ctx.save();ctx.beginPath();ctx.moveTo(sec.cx,sec.cy);
+  ctx.arc(sec.cx,sec.cy,30,sec.s*D2R,sec.e*D2R,false);ctx.closePath();
+  ctx.fillStyle=hl?hlFill:'rgba(139,146,176,.07)';
+  ctx.strokeStyle=hl?hlStroke:'rgba(139,146,176,.2)';
+  ctx.lineWidth=hl?2.2:.5;ctx.fill();ctx.stroke();ctx.restore();
+}
+function dlbl(n,sec,hl){
+  const R=44,mid=midAng(sec.s,sec.e);
+  const lx=sec.cx+R*Math.cos(mid*D2R), ly=sec.cy+R*Math.sin(mid*D2R);
+  ctx.save();
+  if(hl){
+    // 黃色背景上加深色文字確保可讀
+    ctx.font='bold 14px sans-serif';
+    ctx.fillStyle='#1a1400';  // 深棕黑，在黃底上對比清晰
+  } else {
+    ctx.font='11.5px sans-serif';
+    ctx.fillStyle='#64748b';
+  }
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('∠'+n,lx,ly);
+  ctx.restore();
+}
+
+
+/* ═══════════════════════════════════
+   遊戲資料
+═══════════════════════════════════ */
+const PAIRS={corr:[[1,5],[2,6],[3,7],[4,8]],alt:[[3,5],[4,6]],same:[[3,6],[4,5]]};
+const TL={corr:'同位角',alt:'內錯角',same:'同側內角'};
+const TC={corr:'#f59e0b',alt:'#a78bfa',same:'#fb923c'};
+const HINT={
+  corr:(a,b)=>`∠${a} 與 ∠${b}：截線<b>同側</b>，相對各自直線方向相同（同上或同下），稱為<b>同位角</b>。`,
+  alt: (a,b)=>`∠${a} 與 ∠${b}：夾在兩直線<b>之間</b>，截線<b>兩側</b>（一左一右），稱為<b>內錯角</b>。`,
+  same:(a,b)=>`∠${a} 與 ∠${b}：夾在兩直線<b>之間</b>，截線<b>同側</b>，稱為<b>同側內角</b>。`,
+};
+const TOTAL=10,TIME_LIMIT=15;
+let currentStage=1,playerName='',gameQ=[],gameIdx=0;
+let gPts=0,gOk=0,gNg=0,gCombo=0,gWrong=[];
+let totalPts=0; // 三關累計
+let timerID=null,timeLeft=TIME_LIMIT,answered=false;
+let s2Selected=[];
+
+/* ═══════════════════════════════════
+   畫面切換
+═══════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goLobby(){
+  clearInterval(timerID);
+  // 回首頁時重置關卡展示狀態
+  const reveal=document.getElementById('stage-reveal');
+  const btn=document.getElementById('lobby-main-btn');
+  if(reveal){ reveal.style.display='none'; }
+  if(btn){ btn.textContent='🚀 開始挑戰'; btn.onclick=lobbyStart; }
+  showScreen('s-lobby');
+}
+function goRank(){clearInterval(timerID);showScreen('s-rank');renderRank('all');}
+
+/* 首頁按鈕：第一次點擊展開關卡說明，第二次進入輸入名字 */
+function lobbyStart(){
+  const reveal=document.getElementById('stage-reveal');
+  const btn=document.getElementById('lobby-main-btn');
+  if(reveal.style.display==='none'||reveal.style.display===''){
+    // 展開關卡說明
+    reveal.style.display='flex';
+    btn.textContent='✅ 確定！開始三關挑戰';
+    btn.onclick=()=>startStage(1);
+  }
+}
+
+/* ═══════════════════════════════════
+   開始流程
+═══════════════════════════════════ */
+function startStage(n){
+  currentStage=n;
+  if(n===1) totalPts=0; // 重置三關總分
+  showScreen('s-name');
+  document.getElementById('name-input').value='';
+  setTimeout(()=>document.getElementById('name-input').focus(),200);
+}
+function confirmName(){
+  const nm=document.getElementById('name-input').value.trim();
+  if(!nm){toast('請輸入名字！','ng');return;}
+  playerName=nm;
+  initGame();
+}
+// 從結算直接進下一關（不需重新輸入名字）
+function continueNextStage(){
+  currentStage++;
+  // 重置本關資料
+  gPts=0;gOk=0;gNg=0;gCombo=0;gWrong=[];
+  gameQ=buildQueue();gameIdx=0;
+  // 更新 HUD
+  document.getElementById('hud-stage').textContent=`關卡${currentStage}`;
+  document.getElementById('hud-name').textContent=playerName;
+  document.getElementById('g-ok').textContent='0';
+  document.getElementById('g-ng').textContent='0';
+  document.getElementById('g-pt').textContent='0';
+  // 切換題目區塊
+  document.getElementById('q1-area').style.display=currentStage===1?'block':'none';
+  document.getElementById('q2-area').style.display=currentStage===2?'block':'none';
+  document.getElementById('q3-area').style.display=currentStage===3?'block':'none';
+  const lbl={1:'選擇答案',2:'點選角度',3:'計算角度'};
+  document.getElementById('qcard-lbl').textContent=lbl[currentStage]||'選擇答案';
+  if(currentStage===1){
+    document.getElementById('qtext').style.display='block';
+    document.getElementById('qch').style.display='flex';
+  }
+  // 先切畫面，再載題
+  showScreen('s-game');
+  loadQ();
+}
+function initGame(){
+  gPts=0;gOk=0;gNg=0;gCombo=0;gWrong=[];
+  gameQ=buildQueue();gameIdx=0;
+  document.getElementById('hud-stage').textContent=`關卡${currentStage}`;
+  document.getElementById('hud-name').textContent=playerName;
+  document.getElementById('g-ok').textContent='0';
+  document.getElementById('g-ng').textContent='0';
+  document.getElementById('g-pt').textContent='0';
+  document.getElementById('q1-area').style.display=currentStage===1?'block':'none';
+  document.getElementById('q2-area').style.display=currentStage===2?'block':'none';
+  document.getElementById('q3-area').style.display=currentStage===3?'block':'none';
+  const lbl={1:'選擇答案',2:'點選角度',3:'計算角度'};
+  document.getElementById('qcard-lbl').textContent=lbl[currentStage]||'選擇答案';
+  if(currentStage===1){
+    document.getElementById('qtext').style.display='block';
+    document.getElementById('qch').style.display='flex';
+  }
+  showScreen('s-game');
+  loadQ();
+}
+function buildQueue(){
+  if(currentStage===3) return buildQueueS3();
+  const all=[];
+  for(const[t,pairs]of Object.entries(PAIRS))for(const p of pairs)all.push({type:t,pair:[...p]});
+  const sh=shuffle(all);
+  return Array.from({length:TOTAL},(_,i)=>({...sh[i%sh.length],pair:[...sh[i%sh.length].pair]}));
+}
+
+/*
+  關卡三題庫
+  規則：
+    同位角   → ∠B = ∠A         （平行時相等）
+    內錯角   → ∠B = ∠A         （平行時相等）
+    同側內角 → ∠B = 180° − ∠A  （平行時互補）
+*/
+function buildQueueS3(){
+  const angles=[35,40,45,50,55,60,65,70,75,80,100,105,110,115,120,125,130,135,140];
+  const allPairs=[
+    {type:'corr',pair:[1,5]},{type:'corr',pair:[2,6]},
+    {type:'corr',pair:[3,7]},{type:'corr',pair:[4,8]},
+    {type:'alt', pair:[3,5]},{type:'alt', pair:[4,6]},
+    {type:'same',pair:[3,6]},{type:'same',pair:[4,5]},
+  ];
+  const sa=shuffle(angles), sp=shuffle(allPairs);
+  const qs=[];
+  for(let i=0;i<TOTAL;i++){
+    const ang    = sa[i % sa.length];
+    const pr     = sp[i % sp.length];
+    const correct = (pr.type==='same') ? (180-ang) : ang;
+    qs.push({
+      type:       pr.type,
+      pair:       [...pr.pair],
+      givenAngle: ang,
+      correct,
+      opts: makeOpts(correct, ang, pr.type),
+    });
+  }
+  return qs;
+}
+
+/*
+  生成四個不重複、合法（1~179°）的選項，正解必定在內。
+  干擾項：
+    - 混淆互補/相等的最常見錯誤
+    - 鄰近正解的值 ±10, ±15, ±20
+    - 常用角 30, 45, 60, 90, 120, 135
+*/
+function makeOpts(correct, given, type){
+  const isSame=(type==='same');
+  const pool=[
+    isSame ? given : 180-given,  // 混淆：把相等當互補 or 反之
+    correct===90 ? 45 : 90,
+    180-correct,
+    correct+10, correct-10,
+    correct+15, correct-15,
+    correct+20, correct-20,
+    given+5,    given-5,
+    30, 45, 60, 90, 120, 135, 150,
+  ];
+  const distractors=[];
+  for(const v of pool){
+    const n=Math.round(v);
+    if(n>=1 && n<=179 && n!==correct && !distractors.includes(n)){
+      distractors.push(n);
+    }
+    if(distractors.length>=3) break;
+  }
+  // 保底補足
+  for(let v=10; distractors.length<3; v+=10){
+    if(v!==correct && !distractors.includes(v)) distractors.push(v);
+  }
+  return shuffle([correct,...distractors.slice(0,3)].map(v=>({val:v,label:`${v}°`})));
+}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function randomSliders(){
+  // transAngle 35–70°：避免角度太小(交點跑出右邊)或太大(交點跑出左邊)
+  transAngle = 38 + Math.floor(Math.random() * 28);   // 38–65°
+  if(currentStage === 3){
+    const t = -10 + Math.floor(Math.random() * 21);   // -10~+10°，平行
+    tilt1 = t; tilt2 = t;
+  } else {
+    tilt1 = -10 + Math.floor(Math.random() * 21);
+    tilt2 = -10 + Math.floor(Math.random() * 21);
+  }
+}
+
+/* ═══════════════════════════════════
+   載入題目
+═══════════════════════════════════ */
+function loadQ(){
+  answered=false;s2Selected=[];
+  const q=gameQ[gameIdx];
+  randomSliders();
+
+  if(currentStage===1){
+    hlAngles=[...q.pair];hlFill='rgba(255,220,0,.38)';hlStroke='#FFD700';
+    draw();
+  } else if(currentStage===3){
+    // 關卡三：亮起已知角（pair[0]）
+    hlAngles=[q.pair[0]];hlFill='rgba(255,220,0,.38)';hlStroke='#FFD700';
+    draw();
+  } else {
+    // 關卡二：先空白繪製，稍後在 stage2 區塊重繪
+    hlAngles=[];
+    draw();
+  }
+
+  if(currentStage===1){
+    document.getElementById('qtext').innerHTML=
+      `第 ${gameIdx+1} 題<br>亮起了 <b style="color:#5b6ef5">∠${q.pair[0]}</b> 與 <b style="color:#5b6ef5">∠${q.pair[1]}</b>，是哪種角？`;
+    document.querySelectorAll('#qch .qc').forEach(b=>{b.className='qc';b.disabled=false;});
+  } else if(currentStage===2){
+    // 亮起已知角 pair[0]（橘色），學生要找出對應的 pair[1]
+    hlAngles=[q.pair[0]];
+    hlFill='rgba(255,220,0,.38)';
+    hlStroke='#FFD700';
+    draw();
+
+    const pr=document.getElementById('s2-prompt');
+    pr.style.display='block';
+    pr.innerHTML=
+      `圖中亮起了 <b style="color:#f5a623">∠${q.pair[0]}</b>，<br>` +
+      `請點選它的<span class="atype" style="color:${TC[q.type]};background:${TC[q.type]}22">${TL[q.type]}</span>`;
+    document.getElementById('s2-subtext').style.display='block';
+    document.getElementById('s2-subtext').textContent=`（點選圖中另一個角，共選 1 個）`;
+    document.getElementById('s2-hint').textContent='請點選一個角';
+    document.querySelectorAll('.ang-btn').forEach((b,i)=>{
+      b.className='ang-btn';
+      // 清除上一題殘留的 inline style
+      b.style.borderColor=''; b.style.background=''; b.style.color=''; b.style.opacity='1';
+      // 已知角本身不可選
+      if(i+1===q.pair[0]) { b.disabled=true; b.style.opacity='.35'; }
+      else { b.disabled=false; }
+    });
+    document.getElementById('s2-confirm').style.display='none';
+  } else if(currentStage===3){
+    loadQ3(q);
+  }
+
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('prog-fill').style.width=(gameIdx/TOTAL*100)+'%';
+  document.getElementById('prog-txt').textContent=`${gameIdx}/${TOTAL}`;
+
+  clearInterval(timerID);
+  timeLeft=TIME_LIMIT;
+  document.getElementById('hud-timer').textContent=timeLeft;
+  document.getElementById('hud-timer').style.color='var(--accent2)';
+  timerID=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('hud-timer').textContent=timeLeft;
+    if(timeLeft<=5)document.getElementById('hud-timer').style.color='var(--red)';
+    if(timeLeft<=0){clearInterval(timerID);timeoutQ();}
+  },1000);
+}
+
+function timeoutQ(){
+  if(answered)return;
+  answered=true;
+  gNg++;gCombo=0;
+  document.getElementById('g-ng').textContent=gNg;
+  const q=gameQ[gameIdx];
+  gWrong.push({pair:[...q.pair],type:q.type,chosen:'timeout'});
+  updateHUD();toast('時間到！⏱','ng');
+  if(currentStage===1){
+    document.querySelectorAll('#qch .qc').forEach((b,i)=>{
+      if(['corr','alt','same'][i]===q.type)b.classList.add('ok');
+      b.disabled=true;
+    });
+  } else if(currentStage===3){
+    // 標出正確答案按鈕
+    document.querySelectorAll('.q3c').forEach(b=>{
+      if(+b.dataset.val===q.correct)b.classList.add('ok');
+      b.disabled=true;
+    });
+    hlAngles=[...q.pair];hlFill='rgba(34,197,94,.25)';hlStroke='#22c55e';draw();
+  } else {
+    // 關卡二：亮出已知角＋正確答案
+    const correct=q.pair[1];
+    document.querySelectorAll('.ang-btn').forEach((b,i)=>{
+      const n=i+1;
+      b.disabled=true; b.style.opacity='1';
+      if(n===correct) b.classList.add('ok');
+      else if(n===q.pair[0]){
+        b.style.borderColor='#f5a623'; b.style.background='rgba(245,166,35,.2)'; b.style.color='#f5a623';
+      }
+    });
+    hlAngles=[...q.pair]; hlFill='rgba(34,197,94,.25)'; hlStroke='#22c55e'; draw();
+    const SEC2=getSectors(); dsec(SEC2[q.pair[0]],true); dlbl(q.pair[0],SEC2[q.pair[0]],true);
+  }
+  gameIdx++;
+  showNextBtn();
+}
+
+/* ═══════════════════════════════════
+   關卡一 作答
+═══════════════════════════════════ */
+function ans1(chosen){
+  if(answered)return;
+  answered=true;clearInterval(timerID);
+  const q=gameQ[gameIdx];
+  document.querySelectorAll('#qch .qc').forEach((b,i)=>{
+    const t=['corr','alt','same'][i];
+    if(t===q.type)b.classList.add('ok');
+    if(t===chosen&&chosen!==q.type)b.classList.add('no');
+    b.disabled=true;
+  });
+  processAns(chosen===q.type,q);
+  gameIdx++;showNextBtn();
+}
+
+/* ═══════════════════════════════════
+   關卡二 點角
+═══════════════════════════════════ */
+function angClick(n){
+  if(answered)return;
+  const q=gameQ[gameIdx];
+
+  // 關卡二：只選一個角（partner），點選即立即確認
+  if(currentStage===2){
+    // 不能選已知角
+    if(n===q.pair[0]) return;
+    // 直接判斷
+    confirmS2(n);
+    return;
+  }
+
+  // 關卡一以外保留多選邏輯（備用）
+  const idx=s2Selected.indexOf(n);
+  if(idx>=0){
+    s2Selected.splice(idx,1);
+    document.querySelectorAll('.ang-btn')[n-1].className='ang-btn';
+  } else if(s2Selected.length<2){
+    s2Selected.push(n);
+    document.querySelectorAll('.ang-btn')[n-1].classList.add('selected');
+  }
+  document.getElementById('s2-hint').textContent=`請選兩個角（${s2Selected.length}/2）`;
+  document.getElementById('s2-confirm').style.display=s2Selected.length===2?'block':'none';
+}
+
+function confirmS2(chosenN){
+  if(answered)return;
+  answered=true;clearInterval(timerID);
+  const q=gameQ[gameIdx];
+
+  // chosenN：學生點選的角號（partner）；正確答案是 pair[1]
+  const correct=q.pair[1];
+  const isOk=(chosenN===correct);
+
+  // 視覺回饋：亮出已知角（橘）+ 正確答案（綠）+ 若答錯標紅
+  document.querySelectorAll('.ang-btn').forEach((b,i)=>{
+    const n=i+1;
+    b.disabled=true; b.style.opacity='1';
+    if(n===q.pair[0]){
+      // 已知角：保持橘色標示
+      b.style.borderColor='#f5a623'; b.style.background='rgba(245,166,35,.2)'; b.style.color='#f5a623';
+    } else if(n===correct){
+      b.classList.add('ok');
+    } else if(n===chosenN && !isOk){
+      b.classList.add('no');
+    }
+  });
+
+  // 圖中同時亮起兩個角
+  hlAngles=[q.pair[0], correct];
+  hlFill=isOk?'rgba(34,197,94,.25)':'rgba(239,68,68,.22)';
+  hlStroke=isOk?'#22c55e':'#ef4444';
+  // 已知角維持橘色，用雙色：先畫綠/紅，再疊橘
+  draw();
+  // 覆蓋：已知角用橘色扇形
+  const SEC=getSectors();
+  const givenSec=SEC[q.pair[0]];
+  dsec(givenSec, true);
+  dlbl(q.pair[0], givenSec, true);
+
+  processAns(isOk, q, isOk?null:[chosenN]);
+  gameIdx++;
+  document.getElementById('s2-confirm').style.display='none';
+  showNextBtn();
+}
+
+/* ═══════════════════════════════════
+   關卡三 計算角度
+═══════════════════════════════════ */
+function loadQ3(q){
+  const relDesc={
+    corr:`∠${q.pair[0]} 與 ∠${q.pair[1]} 是<span style="color:var(--corr)">同位角</span>`,
+    alt: `∠${q.pair[0]} 與 ∠${q.pair[1]} 是<span style="color:var(--alt)">內錯角</span>`,
+    same:`∠${q.pair[0]} 與 ∠${q.pair[1]} 是<span style="color:var(--same)">同側內角</span>`,
+  };
+  const rule={
+    corr:'同位角相等',
+    alt: '內錯角相等',
+    same:'同側內角互補，和為 180°',
+  };
+  document.getElementById('q3text').innerHTML=
+    `第 ${gameIdx+1} 題<br>`+
+    `${relDesc[q.type]}，<br>`+
+    `已知 <span style="color:var(--accent2);font-weight:900">∠${q.pair[0]} = ${q.givenAngle}°</span>，<br>`+
+    `求 <b>∠${q.pair[1]}</b> = ?`;
+
+  const ch=document.getElementById('q3ch');
+  ch.innerHTML='';
+  q.opts.forEach(opt=>{
+    const b=document.createElement('button');
+    b.className='q3c';
+    b.textContent=opt.label;
+    b.dataset.val=opt.val;
+    b.onclick=()=>ans3(opt.val, q, rule[q.type]);
+    ch.appendChild(b);
+  });
+}
+
+function ans3(chosen, q, ruleText){
+  if(answered)return;
+  answered=true;clearInterval(timerID);
+
+  document.querySelectorAll('.q3c').forEach(b=>{
+    const v=+b.dataset.val;
+    if(v===q.correct)b.classList.add('ok');
+    else if(v===chosen&&chosen!==q.correct)b.classList.add('no');
+    b.disabled=true;
+  });
+
+  // 答題後亮起兩個角
+  hlAngles=[...q.pair];
+  hlFill=chosen===q.correct?'rgba(34,197,94,.25)':'rgba(239,68,68,.22)';
+  hlStroke=chosen===q.correct?'#22c55e':'#ef4444';
+  draw();
+
+  const isOk=chosen===q.correct;
+  if(isOk){
+    gOk++;gCombo++;
+    const pts=100+timeLeft*5+(gCombo>=3?gCombo*20:0);
+    gPts+=pts;
+    document.getElementById('g-ok').textContent=gOk;
+    document.getElementById('g-pt').textContent=gPts;
+    floatPts(`+${pts}`);
+    if(gCombo>=3)comboBurst(`🔥×${gCombo}`);
+    toast(`✅ 正確！${ruleText}，+${pts}pt`,'ok');
+  } else {
+    gNg++;gCombo=0;
+    document.getElementById('g-ng').textContent=gNg;
+    gWrong.push({
+      pair:[...q.pair], type:q.type,
+      chosen:`${chosen}°`,
+      givenAngle:q.givenAngle,
+      correct:q.correct,
+      isCalc:true,
+    });
+    toast(`❌ 答案是 ${q.correct}°，${ruleText}`,'ng');
+  }
+  updateHUD();
+  gameIdx++;showNextBtn();
+}
+
+/* ═══════════════════════════════════
+   得分處理
+═══════════════════════════════════ */
+function processAns(isOk,q,chosenPair){
+  if(isOk){
+    gOk++;gCombo++;
+    const pts=100+timeLeft*5+(gCombo>=3?gCombo*20:0);
+    gPts+=pts;
+    document.getElementById('g-ok').textContent=gOk;
+    document.getElementById('g-pt').textContent=gPts;
+    floatPts(`+${pts}`);
+    if(gCombo>=3)comboBurst(`🔥×${gCombo}`);
+    toast(gCombo>=3?`🔥 連勝×${gCombo}！+${pts}pt`:`✅ +${pts}pt`,'ok');
+  } else {
+    gNg++;gCombo=0;
+    document.getElementById('g-ng').textContent=gNg;
+    gWrong.push({pair:[...q.pair],type:q.type,chosen:chosenPair||'wrong'});
+    toast('❌ 答錯了','ng');
+  }
+  updateHUD();
+}
+function updateHUD(){
+  document.getElementById('hud-combo').textContent=`連勝 ×${gCombo}`;
+  document.getElementById('hud-pts').textContent=`${gPts} pt`;
+}
+function showNextBtn(){
+  const nb=document.getElementById('next-btn');
+  nb.style.display='block';
+  nb.textContent=gameIdx>=TOTAL?'查看結果 →':'下一題 →';
+}
+function nextQ(){
+  if(gameIdx>=TOTAL)showResult();
+  else loadQ();
+}
+
+/* ═══════════════════════════════════
+   結算
+═══════════════════════════════════ */
+function showResult(){
+  clearInterval(timerID);
+  totalPts+=gPts;
+  saveScore();
+
+  const rate=Math.round(gOk/TOTAL*100);
+
+  // ── 分數 ──
+  document.getElementById('res-pt').textContent=gPts;
+  document.getElementById('res-ok').textContent=gOk;
+  document.getElementById('res-ng').textContent=gNg;
+
+  const stageNames={1:'關卡一　辨別截角',2:'關卡二　點選角度',3:'關卡三　計算角度'};
+  const isLast=(currentStage===3);
+
+  document.getElementById('res-emoji').textContent =
+    rate===100?'🏆':rate>=70?'🎉':rate>=40?'💪':'📝';
+  document.getElementById('res-title').textContent =
+    isLast ? (rate===100?'🏆 三關全通！':'🎉 挑戰完成！')
+           : (rate===100?'全對！超強！':rate>=70?'太棒了！':rate>=40?'繼續加油！':'再練習一次！');
+  document.getElementById('res-sub').textContent =
+    isLast
+      ? `${playerName}　三關總分：${totalPts} pt　本關正確率 ${rate}%`
+      : `${stageNames[currentStage]}　${playerName}　正確率 ${rate}%　得 ${gPts} pt`;
+
+  // ── 按鈕 ──
+  const btns=document.getElementById('res-btns');
+  if(isLast){
+    btns.innerHTML=`
+      <button class="res-btn primary"   onclick="startStage(1)">🔄 再挑戰一次</button>
+      <button class="res-btn secondary" onclick="goRank()">🏆 查看排行</button>`;
+  } else {
+    const next=currentStage+1;
+    const nextNames={2:'關卡二　點選角度',3:'關卡三　計算角度'};
+    btns.innerHTML=`
+      <button class="res-btn primary" onclick="continueNextStage()">▶ 前往${nextNames[next]}</button>
+      <button class="res-btn secondary" onclick="goRank()">🏆 排行榜</button>`;
+  }
+
+  // ── 錯題複習 ──
+  const ws=document.getElementById('wrong-sec');
+  const wl=document.getElementById('wrong-list');
+  if(gWrong.length>0){
+    wl.innerHTML=gWrong.map(w=>{
+      if(w.isCalc){
+        const ruleHint={
+          corr:`同位角相等，所以 ∠${w.pair[1]} = ∠${w.pair[0]} = ${w.givenAngle}°`,
+          alt: `內錯角相等，所以 ∠${w.pair[1]} = ∠${w.pair[0]} = ${w.givenAngle}°`,
+          same:`同側內角互補，所以 ∠${w.pair[1]} = 180° − ${w.givenAngle}° = ${w.correct}°`,
+        };
+        return`<div class="wrong-item">
+          <div class="wi-pair">∠${w.pair[0]} = ${w.givenAngle}°，你答了 ${w.chosen}°，正確答案：<b>${w.correct}°</b></div>
+          <div class="wi-def">${ruleHint[w.type]}</div>
+        </div>`;
+      }
+      // 關卡一、二
+      const chosenStr = Array.isArray(w.chosen)
+        ? `∠${w.chosen[0]}` : (w.chosen==='timeout'?'時間到':'答錯');
+      return`<div class="wrong-item">
+        <div class="wi-pair">∠${w.pair[0]} 與 ∠${w.pair[1]}　正確：<b>${TL[w.type]}</b>　(${chosenStr})</div>
+        <div class="wi-def">${HINT[w.type](w.pair[0],w.pair[1])}</div>
+      </div>`;
+    }).join('');
+    // 顯示錯題區（覆蓋 inline style）
+    ws.setAttribute('style','display:block');
+  } else {
+    ws.setAttribute('style','display:none');
+  }
+
+  // ── 最後切換畫面 ──
+  showScreen('s-result');
+}
+
+/* ═══════════════════════════════════
+   排行榜
+═══════════════════════════════════ */
+const RK='pll_rank_v2';
+function getRank(){try{return JSON.parse(localStorage.getItem(RK)||'[]');}catch(e){return[];}}
+function saveScore(){
+  const data=getRank();
+  // 每關單獨記錄；第三關額外記一筆「三關總分」
+  data.push({name:playerName,pts:gPts,stage:currentStage,ok:gOk,ts:Date.now()});
+  if(currentStage===3){
+    data.push({name:playerName,pts:totalPts,stage:'all',ok:gOk,ts:Date.now()});
+  }
+  const best={};
+  data.forEach(d=>{const k=`${d.name}_${d.stage}`;if(!best[k]||d.pts>best[k].pts)best[k]=d;});
+  localStorage.setItem(RK,JSON.stringify(Object.values(best).sort((a,b)=>b.pts-a.pts).slice(0,100)));
+}
+let rankFilter='all';
+function showRankTab(f,btn){
+  rankFilter=f;
+  document.querySelectorAll('.rank-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderRank(f);
+}
+function renderRank(f){
+  const data=getRank();
+  // 'all' 顯示三關總分紀錄；數字則顯示單關
+  const list=f==='all'
+    ? data.filter(d=>d.stage==='all')
+    : data.filter(d=>d.stage===f);
+  list.sort((a,b)=>b.pts-a.pts);
+  const el=document.getElementById('rank-list');
+  if(!list.length){el.innerHTML='<div class="rank-empty">尚無紀錄，快去挑戰！</div>';return;}
+  const md=['gold','silver','bronze'];
+  el.innerHTML=list.slice(0,20).map((d,i)=>{
+    const isMe=d.name===playerName;
+    const stageLabel=d.stage==='all'?'三關總分':`關卡 ${d.stage}`;
+    return`<div class="rank-row${isMe?' me':''}">
+      <div class="rank-no ${md[i]||'other'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="rank-name">${esc(d.name)}</div>
+      <div class="rank-stage">${stageLabel}</div>
+      <div class="rank-pts">${d.pts} pt</div>
+    </div>`;
+  }).join('');
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ═══════════════════════════════════
+   動畫
+═══════════════════════════════════ */
+let _tt=null;
+function toast(msg,t='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='show '+t;
+  clearTimeout(_tt);_tt=setTimeout(()=>el.className='',2000);
+}
+function floatPts(txt){
+  const el=document.createElement('div');el.className='float-pt';el.textContent=txt;
+  el.style.cssText=`left:${window.innerWidth/2+260}px;top:${160+Math.random()*60}px`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),950);
+}
+function comboBurst(txt){
+  const el=document.createElement('div');el.className='combo-burst';el.textContent=txt;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),750);
+}
+
+/* init */
+draw();
+</script>
+</body>
+</html>
