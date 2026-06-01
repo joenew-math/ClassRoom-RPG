@@ -694,7 +694,7 @@ function renderLB(stage,elId,highlightIdx=-1){
   if(!el)return;
   if(!lb.length){el.innerHTML='<div class="lb-empty">尚無記錄，快來挑戰！</div>';return;}
   const rankCls=['gold','silver','bronze'];
-  el.innerHTML='<div class="lb-list">'+lb.slice(0,10).map((r,i)=>{
+  el.innerHTML='<div class="lb-list">'+lb.map((r,i)=>{
     const me=i===highlightIdx;
     const rc=rankCls[i]||'';
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
@@ -718,7 +718,7 @@ function addToLB(stage,name,sc,tm){
   const lb=loadLB(stage);
   lb.push({name,score:sc,time:parseFloat(tm.toFixed(2))});
   lb.sort((a,b)=>b.score-a.score||(a.time-b.time));
-  saveLB(stage,lb.slice(0,20));
+  saveLB(stage,lb);
   return lb.findIndex(r=>r.name===name&&r.score===sc&&Math.abs(r.time-tm)<0.1);
 }
 
