@@ -694,7 +694,7 @@ function renderLB(stage,elId,highlightIdx=-1){
   if(!el)return;
   if(!lb.length){el.innerHTML='<div class="lb-empty">尚無記錄，快來挑戰！</div>';return;}
   const rankCls=['gold','silver','bronze'];
-  el.innerHTML='<div class="lb-list">'+lb.map((r,i)=>{
+  el.innerHTML='<div class="lb-list">'+lb.slice(0,10).map((r,i)=>{
     const me=i===highlightIdx;
     const rc=rankCls[i]||'';
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
@@ -716,10 +716,18 @@ function clearLB(){
 }
 function addToLB(stage,name,sc,tm){
   const lb=loadLB(stage);
-  lb.push({name,score:sc,time:parseFloat(tm.toFixed(2))});
+  const t=parseFloat(tm.toFixed(2));
+  // keep best record per name (higher score wins; same score → shorter time)
+  const idx=lb.findIndex(r=>r.name===name);
+  if(idx>=0){
+    const old=lb[idx];
+    if(sc>old.score||(sc===old.score&&t<old.time)) lb[idx]={name,score:sc,time:t};
+  } else {
+    lb.push({name,score:sc,time:t});
+  }
   lb.sort((a,b)=>b.score-a.score||(a.time-b.time));
   saveLB(stage,lb);
-  return lb.findIndex(r=>r.name===name&&r.score===sc&&Math.abs(r.time-tm)<0.1);
+  return lb.findIndex(r=>r.name===name);
 }
 
 /* Stage-clear name submit */
