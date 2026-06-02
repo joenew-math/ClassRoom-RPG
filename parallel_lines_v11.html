@@ -508,10 +508,7 @@ function draw(){
   const a=lp(p1.x,p1.y,tilt1,-ext), b=lp(p1.x,p1.y,tilt1,ext);
   const d2=lp(p2.x,p2.y,tilt2,-ext), c=lp(p2.x,p2.y,tilt2,ext);
 
-  // 兩線間淡色背景
-  ctx.save();ctx.fillStyle='rgba(91,110,245,.06)';
-  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
-  ctx.lineTo(c.x,c.y);ctx.lineTo(d2.x,d2.y);ctx.closePath();ctx.fill();ctx.restore();
+  // 兩線間背景已移除
 
   dline(a.x,a.y,b.x,b.y,'#8892b0',2,'l₁');
   dline(d2.x,d2.y,c.x,c.y,'#8892b0',2,'l₂');
