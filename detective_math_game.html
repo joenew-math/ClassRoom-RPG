@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數據偵探：真相只有一個</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f14;--bg2:#14161e;--bg3:#1a1d28;--bg4:#1f2235;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8e6df;--text2:#8a8780;--text3:#4a4845;
+  --amber:#d4a843;--amber2:#f0c560;
+  --blue:#4a90d9;--green:#3db87a;--red:#d95050;--purple:#8b6fd4;--teal:#3bbfaa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 70% 50% at 15% 15%,rgba(74,144,217,.05) 0%,transparent 55%),
+  radial-gradient(ellipse 60% 40% at 85% 85%,rgba(212,168,67,.05) 0%,transparent 55%);
+  pointer-events:none;z-index:0}
+.wrap{max-width:980px;margin:0 auto;padding:0 18px 40px;position:relative;z-index:1}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.hud-logo{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;white-space:nowrap}
+.hud-logo span{color:var(--amber)}
+.hud-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0}
+.badge{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;border:1px solid;white-space:nowrap}
+.b-stage{border-color:rgba(74,144,217,.4);background:rgba(74,144,217,.08);color:var(--blue)}
+.b-type{border-color:rgba(59,191,170,.35);background:rgba(59,191,170,.07);color:var(--teal)}
+.b-score{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.08);color:var(--amber2);font-weight:700}
+.b-streak{border-color:rgba(139,111,212,.4);background:rgba(139,111,212,.08);color:var(--purple)}
+.hud-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hp-bar{display:flex;gap:4px}
+.heart{font-size:16px;transition:opacity .3s,transform .2s}
+.heart.lost{opacity:.2;transform:scale(.8)}
+.timer-box{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:700;border:1px solid rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green);min-width:58px;text-align:center;transition:background .3s,border-color .3s,color .3s}
+.timer-box.warn{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.12);color:var(--amber2)}
+.timer-box.danger{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.12);color:var(--red)}
+
+/* Progress dots */
+.prog-row{display:flex;align-items:center;gap:5px;margin-bottom:16px}
+.prog-lbl{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-right:6px}
+.pdot{width:26px;height:4px;border-radius:2px;background:var(--border);transition:background .4s}
+.pdot.done{background:var(--green)}.pdot.cur{background:var(--amber)}.pdot.fail{background:var(--red)}
+
+/* Layout */
+.main{display:grid;grid-template-columns:40% 1fr;gap:14px;align-items:start}
+@media(max-width:700px){.main{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.4),transparent)}
+.ptitle{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.ptitle::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--amber);flex-shrink:0}
+canvas{width:100%;display:block;border-radius:6px}
+
+.diff-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;border:1px solid;margin-bottom:10px}
+.diff-easy{border-color:rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green)}
+.diff-med{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--amber)}
+.diff-hard{border-color:rgba(217,80,80,.4);background:rgba(217,80,80,.1);color:var(--red)}
+
+.hint-box{margin-top:11px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:7px;padding:8px 11px;font-size:11.5px;color:#b89040;line-height:1.65;display:flex;gap:7px}
+
+/* Suspects */
+.suspects{display:flex;flex-direction:column;gap:9px}
+.suspect{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:12px;position:relative;overflow:hidden;transition:border-color .2s}
+.s-hd{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:13px;flex-shrink:0;border:1px solid}
+.av0{background:rgba(74,144,217,.15);color:var(--blue);border-color:rgba(74,144,217,.3)}
+.av1{background:rgba(61,184,122,.15);color:var(--green);border-color:rgba(61,184,122,.3)}
+.av2{background:rgba(212,168,67,.15);color:var(--amber);border-color:rgba(212,168,67,.3)}
+.s-name{font-weight:700;font-size:13px;color:var(--text)}.s-role{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* Testimony lines */
+.tline{font-size:12.5px;color:var(--text2);line-height:1.7;padding:7px 10px;background:rgba(255,255,255,.02);border-left:2px solid var(--border2);border-radius:0 5px 5px 0;margin-bottom:5px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none}
+.tline:last-child{margin-bottom:0}
+.tline:hover:not(.locked){background:rgba(255,255,255,.04)}
+.tline.ok{border-left-color:var(--green);background:rgba(61,184,122,.06)}
+.tline.sus{border-left-color:var(--red);background:rgba(217,80,80,.06)}
+.tline.locked{cursor:default}
+.tline-txt{flex:1}
+.tmark{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;transition:all .15s}
+.tline.ok .tmark{background:rgba(61,184,122,.2);border-color:rgba(61,184,122,.5);color:var(--green)}
+.tline.sus .tmark{background:rgba(217,80,80,.2);border-color:rgba(217,80,80,.5);color:var(--red)}
+
+/* Accuse */
+.accuse-section{margin-top:11px;padding-top:11px;border-top:1px solid var(--border)}
+.accuse-lbl{font-size:11px;color:var(--text3);margin-bottom:8px}
+.accuse-btns{display:flex;gap:7px}
+.accuse-btn{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.accuse-btn:not(:disabled):hover{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.08);color:#e87070}
+.accuse-btn:disabled{opacity:.35;cursor:default}
+.accuse-btn.liar-reveal{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.1);color:#e87070;opacity:1}
+.accuse-btn.truth-reveal{opacity:.3}
+
+/* Feedback */
+.fb{margin-top:11px;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.7;display:none;animation:fadeUp .3s ease}
+.fb.show{display:block}
+.fb.ok{background:rgba(61,184,122,.1);border:1px solid rgba(61,184,122,.25);color:#5bd491}
+.fb.fail{background:rgba(217,80,80,.08);border:1px solid rgba(217,80,80,.2);color:#e87070}
+
+/* Next btn */
+.next-btn{display:none;margin-top:11px;width:100%;padding:10px;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.3);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+.next-btn:hover{background:rgba(212,168,67,.15)}
+.next-btn.show{display:block}
+
+/* Toast */
+.toast{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid rgba(212,168,67,.4);border-radius:8px;padding:7px 18px;font-size:13px;color:var(--amber2);font-weight:500;pointer-events:none;opacity:0;transition:opacity .25s;z-index:100;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Screens */
+.screen{text-align:center;padding:56px 20px 36px;animation:fadeUp .4s ease}
+.screen-icon{font-size:52px;margin-bottom:14px}
+.screen-title{font-family:'Noto Serif TC',serif;font-size:23px;font-weight:700;margin-bottom:8px}
+.screen-sub{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:440px;margin:0 auto 22px}
+@media(max-width:500px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:13px 6px;text-align:center}
+.stat-v{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;color:var(--amber2)}
+.stat-l{font-size:10px;color:var(--text3);margin-top:3px}
+.cta{padding:11px 28px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.4);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;margin:4px}
+.cta:hover{background:rgba(212,168,67,.18)}
+
+/* Data chips */
+.drow{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.dchip{padding:3px 8px;border-radius:5px;font-size:12px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2)}
+.dchip.out{background:rgba(217,80,80,.1);border-color:rgba(217,80,80,.3);color:var(--red)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s ease}
+.q-wrap{animation:fadeUp .3s ease}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <div class="hud-logo">🔍 <span>數據偵探</span></div>
+    <div class="hud-sep"></div>
+    <span class="badge b-stage" id="b-stage">圖表分析</span>
+    <span class="badge b-type"  id="b-type"></span>
+    <span class="badge b-score" id="b-score">0 分</span>
+    <span class="badge b-streak" id="b-streak" style="display:none"></span>
+    <div class="hud-right">
+      <div class="hp-bar" id="hp-bar"></div>
+      <div class="timer-box" id="timer-box">3:00</div>
+    </div>
+  </div>
+  <div class="prog-row" id="prog-row"><span class="prog-lbl">進度</span></div>
+  <div id="game-area"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════ UTILS ══════ */
+const COLORS=['#4a90d9','#3db87a','#d4a843','#8b6fd4','#d95050','#3bbfaa'];
+const R5=(lo,hi)=>{ // random multiple of 5 in [lo,hi]
+  const base=Math.ceil(lo/5);
+  const top=Math.floor(hi/5);
+  return (Math.floor(Math.random()*(top-base+1))+base)*5;
+};
+
+/* ══════ FIXED QUESTIONS – each chart type, all values multiples of 5 ══════
+   9 題，每種圖各一：
+   Q0 圓餅圖  Q1 長條圖  Q2 雙組長條  Q3 折線圖  Q4 雙折線
+   Q5 直方圖  Q6 統計量  Q7 列聯表   Q8 眾數分析
+═══════════════════════════════════════════════════════════════════════════ */
+
+function makeQuestions(){
+  return [
+
+/* ── Q0 圓餅圖 ──────────────────────────────────────────────────────────
+   核心：比例 ↔ 人數換算；判斷是否真的超過 50%
+   謊言：前兩名合計宣稱「剛好一半」，實際上超過一半
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const cats=['數學','國文','英文','自然','社會'];
+  const pcts=[35,25,20,10,10]; // 加總=100，都是5的倍數
+  const total=100;
+  const vals=pcts.map(p=>p); // 總人數100，%直接等於人數
+  return {
+    type:'pie', typeLabel:'圓餅圖', diff:'easy',
+    data:{cats,vals,pcts,total},
+    hint:'重點：人數 ＝ 總人數 × 比例%；判斷兩類加總是否真的剛好等於 50%。',
+    suspects:[
+      {name:'小明',role:'班長',truth:true,
+       text:'「數學」佔 35%，全班 100 人，換算有 35 人選擇它，是五科中最多的。'},
+      {name:'小華',role:'學委',truth:true,
+       text:'「數學」加「國文」合計 60%，超過全體的一半，兩科合計人數最多。'},
+      {name:'小美',role:'同學',liar:true,
+       text:'「數學」35% 加「國文」25%，兩科合計剛好佔全體的一半（50%）。'},
+    ],
+    explanation:'35%＋25%＝60%，超過一半，不是「剛好一半（50%）」，小美的計算有誤。'
+  };
+})(),
+
+/* ── Q1 長條圖 ──────────────────────────────────────────────────────────
+   核心：不連續類別直接比大小；倍數關係要用除法
+   謊言：宣稱A是B的三倍，實際上是兩倍
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const labels=['籃球','足球','羽球','桌球','游泳'];
+  const vals=[60,30,45,15,30];
+  const unit='人', subject='社團人數';
+  return {
+    type:'bar', typeLabel:'長條圖', diff:'easy',
+    data:{labels,vals,unit,subject},
+    hint:'重點：比較各類別的大小，倍數關係用除法（大÷小）計算，不能目測。',
+    suspects:[
+      {name:'體育組長',role:'學務處',truth:true,
+       text:'「籃球」60 人最多，「桌球」15 人最少，兩者相差 45 人。'},
+      {name:'小琳',role:'活動組',truth:true,
+       text:'「籃球」60 人，「足球」30 人，籃球人數是足球的 2 倍。'},
+      {name:'阿芸',role:'學委代表',liar:true,
+       text:'「籃球」60 人，「桌球」15 人，籃球人數是桌球的 3 倍。'},
+    ],
+    explanation:'60 ÷ 15 ＝ 4 倍，不是 3 倍，阿芸的倍數計算錯誤。'
+  };
+})(),
+
+/* ── Q2 雙組長條圖 ──────────────────────────────────────────────────────
+   核心：逐項比較；某項贏 ≠ 每項都贏
+   謊言：甲班在「數學」贏，就說甲班每項都優於乙班
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const groups=['國文','數學','英文','自然'];
+  const vA=[70,85,65,75]; // 甲班：數學最高
+  const vB=[80,70,75,70]; // 乙班：國文英文較高
+  // 甲班贏：數學、自然（2項）；乙班贏：國文、英文（2項）
+  return {
+    type:'grouped', typeLabel:'雙組長條圖', diff:'easy',
+    data:{groups,valsA:vA,valsB:vB,gA:'甲班',gB:'乙班',unit:'分'},
+    hint:'重點：比較兩組時要逐項對照，某一項贏不代表每一項都贏。',
+    suspects:[
+      {name:'小雯',role:'統計組長',truth:true,
+       text:'甲班在「數學」(85分)和「自然」(75分)高於乙班，乙班在「國文」和「英文」較高，兩班各有強項。'},
+      {name:'老陳',role:'導師',truth:true,
+       text:'甲班整體平均 73.75 分，乙班整體平均 73.75 分，兩班整體平均相同。'},
+      {name:'阿強',role:'家長代表',liar:true,
+       text:'甲班「數學」得 85 分，高於乙班的 70 分，所以甲班每一科成績都優於乙班。'},
+    ],
+    explanation:'甲班只在「數學」和「自然」領先，在「國文」(70<80)和「英文」(65<75)都低於乙班，阿強以偏概全。'
+  };
+})(),
+
+/* ── Q3 折線圖 ──────────────────────────────────────────────────────────
+   核心：整體趨勢 vs. 局部下降；數值最高 ≠ 增加最快
+   謊言：宣稱「整體上升所以從未下滑」
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const labels=['1月','2月','3月','4月','5月','6月'];
+  const vals=[30,45,35,55,50,65]; // 整體上升但3月、5月有下滑
+  const unit='萬人', subject='平台用戶數';
+  // 最快增加段：1→2月 +15，或4→5月 -5（下滑），3→4月 +20 是增加最多
+  return {
+    type:'line', typeLabel:'折線圖', diff:'med',
+    data:{labels,vals,unit,subject},
+    hint:'重點：整體趨勢上升，不代表每個月都在上升；要逐段檢查有無下滑。',
+    suspects:[
+      {name:'小郁',role:'分析師',truth:true,
+       text:'從 1 月到 6 月整體呈上升趨勢，但 3 月（35萬）和 5 月（50萬）比前一個月還低，有局部下滑。'},
+      {name:'阿國',role:'研究員',truth:true,
+       text:'增加最多的一段是 3 月→4 月，增加了 20 萬人，不是數值最高的那個月。'},
+      {name:'小潔',role:'記者',liar:true,
+       text:'折線從 1 月到 6 月整體一路上升，所以每個月的用戶數都比前一個月更多，從未出現下滑。'},
+    ],
+    explanation:'3 月(35)比 2 月(45)少了 10 萬，5 月(50)比 4 月(55)少了 5 萬，確實有下滑，小潔說「從未下滑」是錯的。'
+  };
+})(),
+
+/* ── Q4 雙折線圖 ────────────────────────────────────────────────────────
+   核心：最後一段領先 ≠ 整段都領先；要看交叉點
+   謊言：最後一段A高於B，宣稱A整段都領先B
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const labels=['第1週','第2週','第3週','第4週','第5週'];
+  const vA=[40,35,45,55,65]; // A組：後半段明顯上升
+  const vB=[60,65,55,50,45]; // B組：前半段高，後半段下降（兩線有交叉）
+  // 交叉點在第2→3週之間：B(65)→B(55)，A(35)→A(45)，3週後A>B
+  return {
+    type:'dualline', typeLabel:'雙折線圖', diff:'med',
+    data:{labels,valsA:vA,valsB:vB,lineA:'A組',lineB:'B組',unit:'分',subject:'練習成績'},
+    hint:'重點：兩條折線有交叉，最後一段領先不代表整段都領先，要看完整走勢。',
+    suspects:[
+      {name:'阿文',role:'教練',truth:true,
+       text:'A組與B組的成績在第 3 週出現交叉，之前 B組領先，之後 A組領先，雙方各有領先的時段。'},
+      {name:'小慧',role:'裁判',truth:true,
+       text:'B組在第 1、2 週（60分、65分）都高於 A組（40分、35分），前兩週是B組領先。'},
+      {name:'大壯',role:'隊長',liar:true,
+       text:'第 5 週 A組得 65 分，高於 B組的 45 分，所以 A組在這五週的練習中全程都比 B組表現好。'},
+    ],
+    explanation:'前兩週 B組(60、65)都高於 A組(40、35)，A組並非「全程」領先，大壯只看最後結果忽略了前段。'
+  };
+})(),
+
+/* ── Q5 直方圖 ──────────────────────────────────────────────────────────
+   核心：連續組距比大小；人數最多的組 ≠ 組內每人都是中間值
+   謊言：20–30 組最多，宣稱這組每個人分數都是 25 分
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const groups=['0–20','20–40','40–60','60–80','80–100'];
+  const vals=[5,15,25,30,15]; // 60–80 最多（30人）
+  const step=20, subject='測驗分數', unit='分';
+  return {
+    type:'hist', typeLabel:'直方圖', diff:'med',
+    data:{groups,vals,subject,unit,step},
+    hint:'重點：直方圖每組是「連續範圍」，只知道人數，無法知道組內每人的確切分數。',
+    suspects:[
+      {name:'阿花',role:'統計員',truth:true,
+       text:'「60–80」這組有 30 人，是五組中人數最多的，組距都是 20 分，各組可以直接比較人數。'},
+      {name:'大明',role:'老師',truth:true,
+       text:'「60–80」組佔全體 90 人的 33%，未超過一半，不能說超過半數的人在這個範圍。'},
+      {name:'小芳',role:'同學',liar:true,
+       text:'「60–80」這組人數最多（30人），代表這組裡每個人的分數都大約是 70 分。'},
+    ],
+    explanation:'直方圖只知道「60–80分」共 30 人，無法得知每人確切分數，組內有人可能是 62 分、75 分或 79 分，小芳的推論錯誤。'
+  };
+})(),
+
+/* ── Q6 統計量分析 ───────────────────────────────────────────────────────
+   核心：有極端值時平均數失準；中位數需先排序
+   謊言：平均數能代表大多數人（所有數字均為5的倍數）
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  // 8個普通值(40–75，5的倍數) + 1個極端值95
+  const data=[55,60,50,70,60,65,50,45,95]; // 未排序
+  const sorted=[45,50,50,55,60,60,65,70,95];
+  const n=9;
+  const outlier=95;
+  const mean=+(data.reduce((a,b)=>a+b,0)/n).toFixed(1); // =61.1
+  const realMedian=sorted[4]; // =60
+  const unsortedMid=data[4];  // =60（巧合相同，讓謊言更聚焦在平均數）
+  return {
+    type:'stats', typeLabel:'統計分析', diff:'hard',
+    data:{data,sorted,mean,realMedian,outlier,n},
+    hint:'重點：有極端值（95分）時，平均數會被拉高，不能代表「大多數人」的水準。',
+    suspects:[
+      {name:'數學老師',role:'任課老師',liar:true,
+       text:'這組數據平均分數是 61.1 分，精準代表了大多數同學的成績水準，非常具有參考價值。'},
+      {name:'班長',role:'一年甲班',truth:true,
+       text:'數據中有一個極端值 95 分，把平均數拉高到 61.1，但多數同學成績在 45–70 之間，中位數 60 分更具代表性。'},
+      {name:'小偉',role:'同學',truth:true,
+       text:'9 個數字從小到大排列後，第 5 個是 60 分，這才是正確的中位數，平均數 61.1 因為有 95 分而偏高。'},
+    ],
+    explanation:'有極端值 95 分時，平均數 61.1 比多數人的分數偏高；中位數 60 分才能代表「大多數人」的真實水準。'
+  };
+})(),
+
+/* ── Q7 列聯表 ──────────────────────────────────────────────────────────
+   核心：交叉分類表，看「部分合計」vs「整體合計」；
+         條件比較要在相同類別內比，不能跨列混合
+   情境：全年級 120 人，按「性別」×「最喜歡的午餐」分類
+   謊言：以「雞排便當整體最多」跳結論「男生最喜歡雞排便當」，
+         但實際上男生訂最多的是排骨便當
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  //               雞排  排骨  素食  合計
+  // 男生          25    35    10    70
+  // 女生          30    10    10    50
+  // 合計          55    45    20   120
+  const rows=['男生','女生'];
+  const cols=['雞排便當','排骨便當','素食便當'];
+  const cells=[[25,35,10],[30,10,10]];
+  const rowTotals=[70,50];
+  const colTotals=[55,45,20];
+  const grandTotal=120;
+  return {
+    type:'table', typeLabel:'列聯表', diff:'med',
+    data:{rows,cols,cells,rowTotals,colTotals,grandTotal},
+    hint:'重點：列聯表要在「同一列（同一類別）」內比較，不能用整體合計來推論個別群體的喜好。',
+    suspects:[
+      {name:'營養師',role:'學校午餐組',truth:true,
+       text:'男生訂最多的是「排骨便當」（35份），女生訂最多的是「雞排便當」（30份），兩性最喜歡的品項不同。'},
+      {name:'小晴',role:'班級幹部',truth:true,
+       text:'全年級合計「雞排便當」最多（55份），但這是男女加總的結果，不代表每個性別都最喜歡雞排。'},
+      {name:'阿志',role:'總務股長',liar:true,
+       text:'全年級訂「雞排便當」最多，共 55 份，所以男生和女生都最喜歡雞排便當。'},
+    ],
+    explanation:'男生訂「排骨便當」35份 > 雞排便當25份，男生其實最喜歡排骨便當。阿志用整體合計來推論個別群體，是錯誤的。'
+  };
+})(),
+
+/* ── Q8 眾數分析 ────────────────────────────────────────────────────────
+   核心：眾數＝出現「次數最多」的那個值（不是數值最大的）
+         可以是文字類別，例如便當種類、顏色、品牌
+   情境：全班 30 人各訂一份午餐，統計結果如下：
+         雞排便當 12 份（眾數）
+         排骨便當  8 份
+         豬排便當  6 份
+         素食便當  4 份
+   謊言：把「數值最大的項目」誤當成眾數（誤解眾數定義）
+──────────────────────────────────────────────────────────────────────── */
+(()=>{
+  const items=['雞排便當','排骨便當','豬排便當','素食便當'];
+  const counts=[12,8,6,4]; // 雞排最多，是眾數
+  const total=30;
+  // 各項百分比（5的倍數）
+  const pcts=[40,25,20,15]; // 40+25+20+15=100
+  return {
+    type:'mode', typeLabel:'眾數分析', diff:'hard',
+    data:{items,counts,pcts,total,mode:'雞排便當',modeCount:12},
+    hint:'重點：眾數是出現「次數最多」的那個值，和數值大小無關；類別資料（文字）也可以有眾數。',
+    suspects:[
+      {name:'老師',role:'導師',truth:true,
+       text:'全班訂「雞排便當」最多，共 12 份，它的份數比其他便當都多，所以眾數是「雞排便當」這個品項。'},
+      {name:'小芬',role:'同學',truth:true,
+       text:'眾數是出現次數最多的項目名稱，「雞排便當」12 份是四種便當中最多的，所以眾數就是「雞排便當」。'},
+      {name:'阿哲',role:'同學',liar:true,
+       text:'「雞排便當」佔全班 40%，這個百分比最大，所以這次午餐的眾數就是 40。'},
+    ],
+    explanation:'眾數是「雞排便當」這個品項名稱，而不是它的數量（12）或百分比（40%）。阿哲把「數量的數字」當成眾數，概念錯誤。'
+  };
+})(),
+
+  ]; // end return
+}
+
+/* ══════ GAME STATE ══════ */
+const GLOBAL_TIME=180;
+const PTS=[100,100,100,150,150,150,200,150,200];
+let G={qIdx:0,hp:3,score:0,streak:0,timeLeft:GLOBAL_TIME,timerID:null,answered:false,marks:{},qs:[]};
+
+/* ══════ HUD ══════ */
+function renderHUD(){
+  document.getElementById('b-score').textContent=G.score+' 分';
+  const sb=document.getElementById('b-streak');
+  if(G.streak>=2){sb.style.display='';sb.textContent='🔥 '+G.streak+'連勝';}
+  else sb.style.display='none';
+  const bar=document.getElementById('hp-bar');
+  bar.innerHTML='';
+  for(let i=0;i<3;i++){const h=document.createElement('span');h.className='heart'+(i>=G.hp?' lost':'');h.textContent='❤️';bar.appendChild(h);}
+}
+function renderDots(){
+  const row=document.getElementById('prog-row');
+  row.innerHTML='<span class="prog-lbl">進度</span>';
+  for(let i=0;i<G.qs.length;i++){
+    const d=document.createElement('div');
+    d.className='pdot'+(i<G.qIdx?' done':i===G.qIdx?' cur':'');
+    row.appendChild(d);
+  }
+}
+
+/* ══════ TIMER ══════ */
+function startTimer(onExpire){
+  clearInterval(G.timerID);
+  const box=document.getElementById('timer-box');
+  function tick(){
+    const t=G.timeLeft;
+    const m=Math.floor(t/60),s=t%60;
+    box.textContent=m+':'+(s<10?'0':'')+s;
+    box.className='timer-box'+(t<=36?' danger':t<=60?' warn':'');
+    if(t<=0){clearInterval(G.timerID);onExpire();return;}
+    G.timeLeft--;
+  }
+  tick();
+  G.timerID=setInterval(tick,1000);
+}
+function stopTimer(){clearInterval(G.timerID);}
+
+/* ══════ TOAST ══════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ══════ CANVAS ══════ */
+function drawChart(canvas,q){
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;
+  canvas.height=220*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=canvas.offsetWidth,H=220;
+  ctx.clearRect(0,0,W,H);
+  const TC='rgba(175,170,163,0.75)';
+  const GC='rgba(255,255,255,0.04)';
+  const f=s=>`${s}px 'Noto Sans TC'`;
+
+  function gridLines(pad,maxV,steps=4){
+    for(let i=0;i<=steps;i++){
+      const v=Math.round(maxV*i/steps);
+      const y=pad.t+(1-i/steps)*(H-pad.t-pad.b);
+      ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='right';
+      ctx.fillText(v,pad.l-4,y+3);
+      ctx.beginPath();ctx.strokeStyle=GC;ctx.lineWidth=.5;
+      ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    }
+  }
+
+  if(q.type==='pie'){
+    const{cats,vals,pcts}=q.data;
+    const tot=vals.reduce((a,b)=>a+b,0);
+    let ang=-Math.PI/2;
+    const cx=W/2,cy=H/2-10,r=Math.min(W*.34,H*.34);
+    vals.forEach((v,i)=>{
+      const sw=v/tot*2*Math.PI;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sw);
+      ctx.fillStyle=COLORS[i%6];ctx.fill();
+      ctx.strokeStyle='rgba(14,15,20,.7)';ctx.lineWidth=1.5;ctx.stroke();
+      if(sw>.22){
+        const m=ang+sw/2;
+        ctx.fillStyle='rgba(255,255,255,.95)';
+        ctx.font=`bold ${Math.max(10,r*.17)}px 'Noto Sans TC'`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(pcts[i]+'%',cx+r*.62*Math.cos(m),cy+r*.62*Math.sin(m));
+      }
+      ang+=sw;
+    });
+    const lh=15,cols=3,lx0=4,ly0=H-Math.ceil(cats.length/cols)*lh-4;
+    cats.forEach((c,i)=>{
+      const col=i%cols,row=Math.floor(i/cols),lx=lx0+col*(W/cols),ly=ly0+row*lh;
+      ctx.fillStyle=COLORS[i%6];ctx.beginPath();ctx.arc(lx+5,ly+5,3.5,0,2*Math.PI);ctx.fill();
+      ctx.fillStyle=TC;ctx.font=f(10);ctx.textAlign='left';
+      ctx.fillText(c+'('+vals[i]+'人)',lx+12,ly+9);
+    });
+
+  }else if(q.type==='bar'){
+    const{labels,vals}=q.data;
+    const maxV=Math.max(...vals),pad={t:24,r:10,b:38,l:34};
+    const bw=(W-pad.l-pad.r)/labels.length,bp=bw*.12;
+    gridLines(pad,maxV);
+    labels.forEach((l,i)=>{
+      const bh=(vals[i]/maxV)*(H-pad.t-pad.b)*0.95;
+      const bx=pad.l+i*bw+bp,by=pad.t+(H-pad.t-pad.b)-bh,bwi=bw-bp*2;
+      ctx.fillStyle=COLORS[i%6]+'cc';
+      ctx.beginPath();ctx.moveTo(bx+2,by);ctx.lineTo(bx+bwi-2,by);
+      ctx.quadraticCurveTo(bx+bwi,by,bx+bwi,by+2);
+      ctx.lineTo(bx+bwi,by+bh);ctx.lineTo(bx,by+bh);ctx.lineTo(bx,by+2);
+      ctx.quadraticCurveTo(bx,by,bx+2,by);ctx.fill();
+      ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='center';ctx.fillText(l,pad.l+i*bw+bw/2,H-5);
+      ctx.fillStyle='rgba(220,215,208,.85)';ctx.font=f(9);ctx.fillText(vals[i],pad.l+i*bw+bw/2,by-4);
+    });
+
+  }else if(q.type==='grouped'){
+    const{groups,valsA,valsB,gA,gB}=q.data;
+    const maxV=Math.max(...valsA,...valsB),pad={t:28,r:10,b:38,l:34};
+    const gw=(W-pad.l-pad.r)/groups.length,bw=gw*.37,gap=gw*.05;
+    gridLines(pad,maxV);
+    groups.forEach((g,i)=>{
+      const gx=pad.l+i*gw+gw*.06;
+      [[valsA,'rgba(74,144,217,.85)'],[valsB,'rgba(61,184,122,.85)']].forEach(([vals,col],j)=>{
+        const bh=(vals[i]/maxV)*(H-pad.t-pad.b)*0.95;
+        const bx=gx+j*(bw+gap),by=pad.t+(H-pad.t-pad.b)-bh;
+        ctx.fillStyle=col;
+        ctx.beginPath();ctx.moveTo(bx+2,by);ctx.lineTo(bx+bw-2,by);
+        ctx.quadraticCurveTo(bx+bw,by,bx+bw,by+2);
+        ctx.lineTo(bx+bw,by+bh);ctx.lineTo(bx,by+bh);ctx.lineTo(bx,by+2);
+        ctx.quadraticCurveTo(bx,by,bx+2,by);ctx.fill();
+        ctx.fillStyle='rgba(220,215,208,.7)';ctx.font=f(8);ctx.textAlign='center';ctx.fillText(vals[i],bx+bw/2,by-3);
+      });
+      ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='center';ctx.fillText(g,pad.l+i*gw+gw/2,H-5);
+    });
+    ctx.fillStyle='rgba(74,144,217,.85)';ctx.fillRect(W-68,6,10,8);
+    ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='left';ctx.fillText(gA,W-55,14);
+    ctx.fillStyle='rgba(61,184,122,.85)';ctx.fillRect(W-68,19,10,8);
+    ctx.fillStyle=TC;ctx.fillText(gB,W-55,27);
+
+  }else if(q.type==='line'){
+    const{labels,vals}=q.data;
+    const maxV=Math.max(...vals)*1.12,minV=Math.min(...vals)*.88;
+    const pad={t:24,r:12,b:38,l:34};
+    const xSt=(W-pad.l-pad.r)/(labels.length-1);
+    gridLines(pad,Math.max(...vals));
+    const pts=vals.map((v,i)=>({
+      x:pad.l+i*xSt,
+      y:pad.t+(1-(v-minV)/(maxV-minV))*(H-pad.t-pad.b)
+    }));
+    // area
+    ctx.beginPath();ctx.moveTo(pts[0].x,H-pad.b);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.lineTo(pts[pts.length-1].x,H-pad.b);ctx.closePath();
+    ctx.fillStyle='rgba(74,144,217,.07)';ctx.fill();
+    // line
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle='rgba(74,144,217,.9)';ctx.lineWidth=2;ctx.stroke();
+    // dots + labels
+    pts.forEach((p,i)=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,2*Math.PI);
+      ctx.fillStyle='#4a90d9';ctx.fill();
+      ctx.strokeStyle='rgba(14,15,20,.5)';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='center';ctx.fillText(labels[i],p.x,H-5);
+      ctx.fillStyle='rgba(220,215,208,.85)';ctx.fillText(vals[i],p.x,p.y-8);
+    });
+
+  }else if(q.type==='dualline'){
+    const{labels,valsA,valsB,lineA,lineB}=q.data;
+    const all=[...valsA,...valsB];
+    const maxV=Math.max(...all)*1.12,minV=Math.min(...all)*.88;
+    const pad={t:28,r:12,b:38,l:34};
+    const xSt=(W-pad.l-pad.r)/(labels.length-1);
+    gridLines(pad,Math.max(...all));
+    [[valsA,'rgba(74,144,217,.9)',0],[valsB,'rgba(61,184,122,.9)',1]].forEach(([vals,col,j])=>{
+      const pts=vals.map((v,i)=>({
+        x:pad.l+i*xSt,
+        y:pad.t+(1-(v-minV)/(maxV-minV))*(H-pad.t-pad.b)
+      }));
+      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+      pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+      pts.forEach((p,i)=>{
+        ctx.beginPath();ctx.arc(p.x,p.y,3,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();
+        ctx.fillStyle='rgba(220,215,208,.75)';ctx.font=f(8);ctx.textAlign='center';
+        ctx.fillText(vals[i],p.x,p.y+(j===0?-8:5));
+        if(j===0){ctx.fillStyle=TC;ctx.font=f(9);ctx.fillText(labels[i],p.x,H-5);}
+      });
+    });
+    ctx.beginPath();ctx.moveTo(W-70,10);ctx.lineTo(W-57,10);ctx.strokeStyle='rgba(74,144,217,.9)';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='left';ctx.fillText(lineA,W-54,14);
+    ctx.beginPath();ctx.moveTo(W-70,22);ctx.lineTo(W-57,22);ctx.strokeStyle='rgba(61,184,122,.9)';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=TC;ctx.fillText(lineB,W-54,26);
+
+  }else if(q.type==='hist'){
+    const{groups,vals}=q.data;
+    const maxV=Math.max(...vals),pad={t:24,r:10,b:38,l:34};
+    const bw=(W-pad.l-pad.r)/groups.length;
+    gridLines(pad,maxV);
+    groups.forEach((g,i)=>{
+      const bh=(vals[i]/maxV)*(H-pad.t-pad.b)*0.95;
+      const by=pad.t+(H-pad.t-pad.b)-bh,bx=pad.l+i*bw+.5;
+      ctx.fillStyle=COLORS[i%6]+'bb';ctx.fillRect(bx,by,bw-1,bh);
+      ctx.strokeStyle='rgba(14,15,20,.5)';ctx.lineWidth=.5;ctx.strokeRect(bx,by,bw-1,bh);
+      ctx.fillStyle=TC;ctx.font=f(8.5);ctx.textAlign='center';ctx.fillText(g,pad.l+i*bw+bw/2,H-5);
+      ctx.fillStyle='rgba(220,215,208,.85)';ctx.font=f(9);ctx.fillText(vals[i],pad.l+i*bw+bw/2,by-4);
+    });
+
+  }else if(q.type==='stats'){
+    const{data,mean,realMedian,outlier}=q.data;
+    const pad={t:40,r:18,b:50,l:18};
+    const mn=Math.min(...data)-5,mx=Math.max(...data)+5;
+    const sc=v=>(v-mn)/(mx-mn)*(W-pad.l-pad.r)+pad.l;
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,H/2);ctx.lineTo(W-pad.r,H/2);ctx.stroke();
+    data.forEach(v=>{
+      const x=sc(v),isO=(v===outlier);
+      ctx.beginPath();ctx.arc(x,H/2,isO?7:4.5,0,2*Math.PI);
+      ctx.fillStyle=isO?'rgba(217,80,80,.9)':'rgba(74,144,217,.85)';ctx.fill();
+      ctx.fillStyle=isO?'#e87070':'rgba(200,195,188,.75)';
+      ctx.font=(isO?'bold ':'')+'10px \'Noto Sans TC\'';
+      ctx.textAlign='center';ctx.fillText(v,x,H/2-(isO?17:13));
+    });
+    // mean line
+    const mx2=sc(mean);
+    ctx.beginPath();ctx.strokeStyle='rgba(61,184,122,.7)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.moveTo(mx2,H/2-22);ctx.lineTo(mx2,H/2+22);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#3db87a';ctx.font=f(9);ctx.textAlign='center';
+    ctx.fillText('平均',mx2,H/2+32);ctx.fillText(mean,mx2,H/2+43);
+    // median line
+    const rx=sc(realMedian);
+    ctx.beginPath();ctx.strokeStyle='rgba(139,111,212,.7)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.moveTo(rx,H/2-22);ctx.lineTo(rx,H/2+22);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#8b6fd4';ctx.font=f(9);ctx.textAlign='center';
+    ctx.fillText('中位數',rx,H/2+32);ctx.fillText(realMedian,rx,H/2+43);
+    ctx.fillStyle='#d95050';ctx.font=f(9);ctx.textAlign='left';ctx.fillText('● 極端值',6,15);
+    ctx.fillStyle='#4a90d9';ctx.fillText('● 一般值',6,27);
+
+  }else if(q.type==='table'){
+    // ── 列聯表：文字格線表格 ──────────────────────────────────
+    const{rows,cols,cells,rowTotals,colTotals,grandTotal}=q.data;
+    // 版面：4欄（空白+3便當）×3列（2性別+合計），另加標題列
+    const nCols=cols.length+2; // 空白 + 3品項 + 合計
+    const nRows=rows.length+2; // 標題 + 2性別 + 合計
+    const cw=W/nCols, rh=(H-10)/nRows;
+    const startY=8;
+
+    // 繪製格線
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=0.5;
+    for(let r=0;r<=nRows;r++){
+      ctx.beginPath();ctx.moveTo(0,startY+r*rh);ctx.lineTo(W,startY+r*rh);ctx.stroke();
+    }
+    for(let c=0;c<=nCols;c++){
+      ctx.beginPath();ctx.moveTo(c*cw,startY);ctx.lineTo(c*cw,startY+nRows*rh);ctx.stroke();
+    }
+
+    // 標題列背景
+    ctx.fillStyle='rgba(74,144,217,0.15)';
+    ctx.fillRect(0,startY,W,rh);
+    // 合計列背景
+    ctx.fillStyle='rgba(212,168,67,0.08)';
+    ctx.fillRect(0,startY+(nRows-1)*rh,W,rh);
+    // 合計欄背景
+    ctx.fillStyle='rgba(212,168,67,0.06)';
+    ctx.fillRect((nCols-1)*cw,startY,cw,nRows*rh);
+
+    const cellText=(txt,col,row,bold,color)=>{
+      ctx.fillStyle=color||TC;
+      ctx.font=(bold?'bold ':'')+f(bold?10:9.5);
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(txt,col*cw+cw/2,startY+row*rh+rh/2);
+    };
+
+    // 標題列
+    cellText('',0,0,true,'#4a90d9');
+    cols.forEach((c,i)=>cellText(c,i+1,0,true,'#4a90d9'));
+    cellText('合計',nCols-1,0,true,'#d4a843');
+
+    // 資料列
+    rows.forEach((r,ri)=>{
+      cellText(r,0,ri+1,true,'rgba(212,168,67,0.9)');
+      cells[ri].forEach((v,ci)=>cellText(v,ci+1,ri+1,false,TC));
+      cellText(rowTotals[ri],nCols-1,ri+1,true,'rgba(212,168,67,0.8)');
+    });
+
+    // 合計列
+    cellText('合計',0,nRows-1,true,'rgba(212,168,67,0.9)');
+    colTotals.forEach((v,ci)=>cellText(v,ci+1,nRows-1,true,'rgba(212,168,67,0.8)'));
+    cellText(grandTotal,nCols-1,nRows-1,true,'#f0c560');
+
+    // 眾數標示圈出最大格
+    // 找每列最大值並畫高亮框
+    rows.forEach((r,ri)=>{
+      const maxVal=Math.max(...cells[ri]);
+      cells[ri].forEach((v,ci)=>{
+        if(v===maxVal){
+          ctx.strokeStyle='rgba(61,184,122,0.6)';ctx.lineWidth=1.5;
+          ctx.strokeRect(ci*cw+cw+1,startY+(ri+1)*rh+1,cw-2,rh-2);
+        }
+      });
+    });
+
+  }else if(q.type==='mode'){
+    // ── 眾數分析：橫向長條圖，突出顯示眾數 ──────────────────
+    const{items,counts,pcts,mode}=q.data;
+    const maxC=Math.max(...counts);
+    const pad={t:16,r:80,b:16,l:10};
+    const barH=Math.floor((H-pad.t-pad.b)/items.length)-8;
+    const gap=(H-pad.t-pad.b)/items.length;
+
+    items.forEach((item,i)=>{
+      const isMode=(item===mode);
+      const bw=(counts[i]/maxC)*(W-pad.l-pad.r-60);
+      const by=pad.t+i*gap+(gap-barH)/2;
+
+      // 長條
+      ctx.fillStyle=isMode?'rgba(212,168,67,0.85)':COLORS[i+1]+'99';
+      ctx.beginPath();
+      ctx.moveTo(pad.l+2,by);ctx.lineTo(pad.l+bw-2,by);
+      ctx.quadraticCurveTo(pad.l+bw,by,pad.l+bw,by+2);
+      ctx.lineTo(pad.l+bw,by+barH-2);
+      ctx.quadraticCurveTo(pad.l+bw,by+barH,pad.l+bw-2,by+barH);
+      ctx.lineTo(pad.l+2,by+barH);
+      ctx.quadraticCurveTo(pad.l,by+barH,pad.l,by+barH-2);
+      ctx.lineTo(pad.l,by+2);
+      ctx.quadraticCurveTo(pad.l,by,pad.l+2,by);
+      ctx.fill();
+
+      // 眾數特別標示
+      if(isMode){
+        ctx.strokeStyle='rgba(212,168,67,0.9)';ctx.lineWidth=1.5;
+        ctx.strokeRect(pad.l-1,by-2,bw+2,barH+4);
+        ctx.fillStyle='rgba(212,168,67,0.9)';ctx.font=`bold 10px 'Noto Sans TC'`;
+        ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText('★ 眾數',pad.l+bw+6,by+barH/2);
+      }
+
+      // 品項名稱（左側，垂直置中）
+      ctx.fillStyle=isMode?'#f0c560':TC;
+      ctx.font=(isMode?'bold ':'')+f(10);
+      ctx.textAlign='right';ctx.textBaseline='middle';
+      // 縮短名稱顯示（去掉「便當」）
+      const shortName=item.replace('便當','');
+      ctx.fillText(shortName,W-8,by+barH/2);
+
+      // 數量標籤
+      ctx.fillStyle='rgba(220,215,208,0.85)';ctx.font=f(9);
+      ctx.textAlign='left';
+      ctx.fillText(counts[i]+'份',pad.l+bw+6+(isMode?40:0),by+barH/2);
+    });
+
+    // 標題
+    ctx.fillStyle='rgba(175,170,163,0.5)';ctx.font=f(9);
+    ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('← 份數',pad.l,H-13);
+  }
+}
+
+/* ══════ RENDER ══════ */
+function renderQ(){
+  if(G.qIdx>=G.qs.length){showResult();return;}
+  G.answered=false;G.marks={};
+  const q=G.qs[G.qIdx];
+  const d=q.diff;
+
+  // Shuffle suspects — dynamic length, safe for any number of suspects
+  const susLen=q.suspects.length;
+  const order=Array.from({length:susLen},(_,i)=>i).sort(()=>Math.random()-.5);
+  const sus=order.map(i=>q.suspects[i]);
+  q._sus=sus;
+  q._liarIdx=sus.findIndex(s=>s.liar);
+
+  document.getElementById('b-stage').textContent=G.qIdx<6?'圖表分析':'統計分析';
+  document.getElementById('b-type').textContent=q.typeLabel;
+  renderDots();renderHUD();
+
+  const area=document.getElementById('game-area');
+  const wrap=document.createElement('div');
+  wrap.className='q-wrap';
+  wrap.innerHTML=`
+    <div class="main">
+      <div class="panel">
+        <div class="ptitle">證據圖表 · ${q.typeLabel}</div>
+        <div class="diff-tag diff-${d}">
+          ${{easy:'⭐ 初級',med:'⭐⭐ 中級',hard:'⭐⭐⭐ 高難'}[d]}
+          &nbsp;·&nbsp; 題目 ${G.qIdx+1} / ${G.qs.length}
+        </div>
+        <canvas id="cv"></canvas>
+        ${q.type==='stats'?'<div class="drow" id="dc"></div>':''}
+        <div class="hint-box"><span style="flex-shrink:0">💡</span><span>${q.hint}</span></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">嫌疑人審問</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+          點擊每條證詞標記
+          <span style="color:var(--green)">✅ 可信</span> 或
+          <span style="color:var(--red)">🔴 可疑</span>，
+          <strong style="color:var(--text2)">全部標記後</strong>才能指控。
+        </div>
+        <div class="suspects" id="sus-list"></div>
+        <div class="accuse-section">
+          <div class="accuse-lbl" id="acc-lbl" style="color:var(--text3)">▸ 請先標記所有證詞</div>
+          <div class="accuse-btns" id="acc-btns"></div>
+        </div>
+        <div class="fb" id="fb"></div>
+        <button class="next-btn" id="nxt">${G.qIdx===G.qs.length-1?'查看結果 →':'下一題 →'}</button>
+      </div>
+    </div>`;
+  area.innerHTML='';area.appendChild(wrap);
+
+  // Canvas
+  setTimeout(()=>{
+    const cv=document.getElementById('cv');
+    drawChart(cv,q);
+    if(q.type==='stats'){
+      const dc=document.getElementById('dc');
+      q.data.data.forEach(v=>{
+        const c=document.createElement('span');
+        c.className='dchip'+(v===q.data.outlier?' out':'');
+        c.textContent=v;dc.appendChild(c);
+      });
+    }
+  },50);
+
+  // Suspect cards
+  const list=document.getElementById('sus-list');
+  sus.forEach((s,si)=>{
+    G.marks[si]={};
+    const card=document.createElement('div');
+    card.className='suspect';
+    const sents=(s.text.match(/[^。！？]+[。！？]?/g)||[s.text]).filter(x=>x.trim());
+    card.innerHTML=`
+      <div class="s-hd">
+        <div class="avatar av${si}">${s.name[0]}</div>
+        <div><div class="s-name">${s.name}</div><div class="s-role">${s.role}</div></div>
+      </div>
+      <div id="tl-${si}"></div>`;
+    const tlWrap=card.querySelector(`#tl-${si}`);
+    sents.forEach((sent,li)=>{
+      const line=document.createElement('div');
+      line.className='tline';
+      line.innerHTML=`<span class="tline-txt">「${sent.trim()}」</span><span class="tmark" id="tm-${si}-${li}">?</span>`;
+      line.addEventListener('click',()=>{
+        if(G.answered)return;
+        const cur=G.marks[si][li];
+        const nxt=cur==='ok'?'sus':cur==='sus'?undefined:'ok';
+        G.marks[si][li]=nxt;
+        line.className='tline'+(nxt==='ok'?' ok':nxt==='sus'?' sus':'');
+        document.getElementById(`tm-${si}-${li}`).textContent=nxt==='ok'?'✅':nxt==='sus'?'🔴':'?';
+        checkAllMarked(sus);
+      });
+      tlWrap.appendChild(line);
+    });
+    list.appendChild(card);
+  });
+
+  // Accuse buttons (disabled initially)
+  buildAccuse(q,sus);
+
+  // Start global timer only on Q0
+  if(G.qIdx===0){
+    startTimer(()=>{if(!G.answered)resolveAnswer(null,q,sus);});
+  }
+
+  document.getElementById('nxt').addEventListener('click',()=>{G.qIdx++;renderQ();});
+}
+
+function checkAllMarked(sus){
+  let allDone=true;
+  for(let si=0;si<sus.length;si++){
+    const sents=(sus[si].text.match(/[^。！？]+[。！？]?/g)||[sus[si].text]).filter(x=>x.trim());
+    for(let li=0;li<sents.length;li++){
+      if(G.marks[si][li]===undefined){allDone=false;break;}
+    }
+    if(!allDone)break;
+  }
+  const btns=document.querySelectorAll('.accuse-btn');
+  const lbl=document.getElementById('acc-lbl');
+  btns.forEach((b,si)=>{
+    b.disabled=!allDone;
+    b.style.opacity=allDone?'1':'0.35';
+    if(allDone){
+      const hasSus=Object.values(G.marks[si]||{}).includes('sus');
+      b.style.borderColor=hasSus?'rgba(217,80,80,.5)':'';
+      b.style.color=hasSus?'#e87070':'';
+    }else{b.style.borderColor='';b.style.color='';}
+  });
+  if(lbl){
+    lbl.textContent=allDone?'▸ 你認為說謊的是？':'▸ 請先標記所有證詞';
+    lbl.style.color=allDone?'var(--amber)':'var(--text3)';
+  }
+}
+
+function buildAccuse(q,sus){
+  const c=document.getElementById('acc-btns');c.innerHTML='';
+  sus.forEach((s,si)=>{
+    const btn=document.createElement('button');
+    btn.className='accuse-btn';btn.disabled=true;btn.style.opacity='0.35';
+    btn.innerHTML=`<span class="avatar av${si}" style="width:22px;height:22px;font-size:10px">${s.name[0]}</span>${s.name}`;
+    btn.addEventListener('click',()=>{if(!G.answered)resolveAnswer(si,q,sus);});
+    c.appendChild(btn);
+  });
+}
+
+function resolveAnswer(chosen,q,sus){
+  G.answered=true;
+  const liarIdx=q._liarIdx;
+  const correct=chosen===liarIdx;
+  const timePct=G.timeLeft/GLOBAL_TIME;
+  const basePt=PTS[G.qIdx]||100;
+  const timeBonus=correct?Math.floor(timePct*basePt*.5):0;
+  const streakBonus=correct&&G.streak>=2?50:0;
+  if(correct){G.streak++;G.score+=basePt+timeBonus+streakBonus;}
+  else{G.streak=0;G.hp--;if(G.hp<0)G.hp=0;}
+
+  document.querySelectorAll('.tline').forEach(l=>l.classList.add('locked'));
+  document.querySelectorAll('.accuse-btn').forEach((b,i)=>{
+    b.disabled=true;b.style.opacity='1';
+    b.classList.add(i===liarIdx?'liar-reveal':'truth-reveal');
+  });
+  if(!correct){
+    const bar=document.getElementById('hp-bar');
+    bar.classList.add('shake');setTimeout(()=>bar.classList.remove('shake'),400);
+  }
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(correct?'ok':'fail');
+  let msg=correct
+    ?`✓ 正確指控！${sus[liarIdx].name} 就是說謊者。`
+    :(chosen===null?`⏰ 時間到！真正的說謊者是 ${sus[liarIdx].name}。`
+                   :`✗ 指控錯誤。真正的說謊者是 ${sus[liarIdx].name}。`);
+  msg+=`<br><span style="color:var(--text2)">${q.explanation}</span>`;
+  if(correct&&(timeBonus>0||streakBonus>0)){
+    msg+=`<br><span style="color:var(--amber);font-size:11px">`;
+    if(timeBonus>0)msg+=`⚡ 速度加分 +${timeBonus}　`;
+    if(streakBonus>0)msg+=`🔥 連勝加分 +${streakBonus}`;
+    msg+=`</span>`;
+  }
+  fb.innerHTML=msg;
+  if(correct&&G.streak>=3)showToast(`🔥 ${G.streak}連勝！`);
+  // Highlight liar's lines red
+  const cards=document.querySelectorAll('.suspect');
+  if(cards[liarIdx]){
+    cards[liarIdx].querySelectorAll('.tline').forEach(l=>{
+      l.className='tline sus locked';
+      const tm=l.querySelector('.tmark');if(tm)tm.textContent='🔴';
+    });
+  }
+  renderHUD();renderDots();
+  if(G.hp<=0){document.getElementById('nxt').style.display='none';stopTimer();setTimeout(showGameOver,1200);}
+  else document.getElementById('nxt').classList.add('show');
+}
+
+/* ══════ SCREENS ══════ */
+function showGameOver(){
+  document.getElementById('game-area').innerHTML=`
+    <div class="screen">
+      <div class="screen-icon">💀</div>
+      <div class="screen-title">偵探倒下了</div>
+      <div class="screen-sub">生命歸零，案件尚未結束。<br>重新整理思緒，再挑戰一次！</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-v">${G.score}</div><div class="stat-l">累計得分</div></div>
+        <div class="stat-card"><div class="stat-v">${G.qIdx}/${G.qs.length}</div><div class="stat-l">完成題數</div></div>
+        <div class="stat-card"><div class="stat-v">${3-G.hp}</div><div class="stat-l">答錯次數</div></div>
+        <div class="stat-card"><div class="stat-v">${G.streak}</div><div class="stat-l">最長連勝</div></div>
+      </div>
+      <button class="cta" onclick="startGame()">重新挑戰</button>
+    </div>`;
+}
+function showResult(){
+  stopTimer();
+  const perfect=G.hp===3;
+  document.getElementById('game-area').innerHTML=`
+    <div class="screen">
+      <div class="screen-icon">${perfect?'🏆':'🔍'}</div>
+      <div class="screen-title">${perfect?'完美破案！':'案件偵破'}</div>
+      <div class="screen-sub">${perfect?'全程零失誤，你是頂尖數據偵探！':'9 道案件全部偵破，真相大白！'}</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-v">${G.score}</div><div class="stat-l">最終得分</div></div>
+        <div class="stat-card"><div class="stat-v">9/9</div><div class="stat-l">完成題數</div></div>
+        <div class="stat-card"><div class="stat-v">${G.hp}</div><div class="stat-l">剩餘生命</div></div>
+        <div class="stat-card"><div class="stat-v">${G.streak}</div><div class="stat-l">最終連勝</div></div>
+      </div>
+      <button class="cta" onclick="startGame()">再次挑戰</button>
+    </div>`;
+}
+
+/* ══════ START ══════ */
+function startGame(){
+  clearInterval(G&&G.timerID);
+  G={qIdx:0,hp:3,score:0,streak:0,timeLeft:GLOBAL_TIME,timerID:null,answered:false,marks:{},qs:makeQuestions()};
+  renderHUD();renderDots();renderQ();
+}
+startGame();
+</script>
+</body>
+</html>
