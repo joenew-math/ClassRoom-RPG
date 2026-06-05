@@ -23,108 +23,177 @@ body::before{content:'';position:fixed;inset:0;background:
 
 /* HUD */
 .hud{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
-.hud-logo{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;white-space:nowrap}
+.hud-logo{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;white-space:nowrap}
 .hud-logo span{color:var(--amber)}
 .hud-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0}
-.badge{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;border:1px solid;white-space:nowrap}
+.badge{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:500;border:1px solid;white-space:nowrap}
 .b-stage{border-color:rgba(74,144,217,.4);background:rgba(74,144,217,.08);color:var(--blue)}
 .b-type{border-color:rgba(59,191,170,.35);background:rgba(59,191,170,.07);color:var(--teal)}
 .b-score{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.08);color:var(--amber2);font-weight:700}
 .b-streak{border-color:rgba(139,111,212,.4);background:rgba(139,111,212,.08);color:var(--purple)}
 .hud-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .hp-bar{display:flex;gap:4px}
-.heart{font-size:16px;transition:opacity .3s,transform .2s}
+.heart{font-size:18px;transition:opacity .3s,transform .2s}
 .heart.lost{opacity:.2;transform:scale(.8)}
-.timer-box{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:700;border:1px solid rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green);min-width:58px;text-align:center;transition:background .3s,border-color .3s,color .3s}
+.timer-box{padding:5px 14px;border-radius:7px;font-size:14px;font-weight:700;border:1px solid rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green);min-width:62px;text-align:center;transition:background .3s,border-color .3s,color .3s}
 .timer-box.warn{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.12);color:var(--amber2)}
 .timer-box.danger{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.12);color:var(--red)}
 
 /* Progress dots */
 .prog-row{display:flex;align-items:center;gap:5px;margin-bottom:16px}
-.prog-lbl{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-right:6px}
+.prog-lbl{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-right:6px}
 .pdot{width:26px;height:4px;border-radius:2px;background:var(--border);transition:background .4s}
 .pdot.done{background:var(--green)}.pdot.cur{background:var(--amber)}.pdot.fail{background:var(--red)}
 
 /* Layout */
 .main{display:grid;grid-template-columns:40% 1fr;gap:14px;align-items:start}
 @media(max-width:700px){.main{grid-template-columns:1fr}}
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
 .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.4),transparent)}
-.ptitle{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.ptitle::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--amber);flex-shrink:0}
+.ptitle{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.ptitle::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--amber);flex-shrink:0}
 canvas{width:100%;display:block;border-radius:6px}
 
-.diff-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;border:1px solid;margin-bottom:10px}
+.diff-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;border:1px solid;margin-bottom:10px}
 .diff-easy{border-color:rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green)}
 .diff-med{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--amber)}
 .diff-hard{border-color:rgba(217,80,80,.4);background:rgba(217,80,80,.1);color:var(--red)}
 
-.hint-box{margin-top:11px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:7px;padding:8px 11px;font-size:11.5px;color:#b89040;line-height:1.65;display:flex;gap:7px}
+.hint-box{margin-top:12px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:7px;padding:10px 13px;font-size:13px;color:#b89040;line-height:1.7;display:flex;gap:8px}
 
 /* Suspects */
-.suspects{display:flex;flex-direction:column;gap:9px}
-.suspect{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:12px;position:relative;overflow:hidden;transition:border-color .2s}
-.s-hd{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:13px;flex-shrink:0;border:1px solid}
+.suspects{display:flex;flex-direction:column;gap:10px}
+.suspect{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
+.s-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:15px;flex-shrink:0;border:1px solid}
 .av0{background:rgba(74,144,217,.15);color:var(--blue);border-color:rgba(74,144,217,.3)}
 .av1{background:rgba(61,184,122,.15);color:var(--green);border-color:rgba(61,184,122,.3)}
 .av2{background:rgba(212,168,67,.15);color:var(--amber);border-color:rgba(212,168,67,.3)}
-.s-name{font-weight:700;font-size:13px;color:var(--text)}.s-role{font-size:10px;color:var(--text3);margin-top:1px}
+.s-name{font-weight:700;font-size:15px;color:var(--text)}.s-role{font-size:11px;color:var(--text3);margin-top:1px}
 
 /* Testimony lines */
-.tline{font-size:12.5px;color:var(--text2);line-height:1.7;padding:7px 10px;background:rgba(255,255,255,.02);border-left:2px solid var(--border2);border-radius:0 5px 5px 0;margin-bottom:5px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none}
+.tline{font-size:14px;color:var(--text2);line-height:1.75;padding:9px 12px;background:rgba(255,255,255,.02);border-left:2px solid var(--border2);border-radius:0 6px 6px 0;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none;position:relative}
 .tline:last-child{margin-bottom:0}
-.tline:hover:not(.locked){background:rgba(255,255,255,.04)}
+.tline:hover:not(.locked){background:rgba(255,255,255,.05)}
 .tline.ok{border-left-color:var(--green);background:rgba(61,184,122,.06)}
 .tline.sus{border-left-color:var(--red);background:rgba(217,80,80,.06)}
 .tline.locked{cursor:default}
 .tline-txt{flex:1}
-.tmark{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;transition:all .15s}
+.tmark{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;transition:all .15s}
 .tline.ok .tmark{background:rgba(61,184,122,.2);border-color:rgba(61,184,122,.5);color:var(--green)}
 .tline.sus .tmark{background:rgba(217,80,80,.2);border-color:rgba(217,80,80,.5);color:var(--red)}
 
+/* Floating score popup - only shown after answer reveal */
+.score-pop{position:absolute;right:10px;top:4px;font-size:13px;font-weight:700;pointer-events:none;animation:scorePop .9s ease forwards;z-index:10}
+.score-pop.plus{color:#5bd491}
+@keyframes scorePop{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  60%{opacity:1;transform:translateY(-18px) scale(1.15)}
+  100%{opacity:0;transform:translateY(-30px) scale(0.9)}
+}
+
 /* Accuse */
-.accuse-section{margin-top:11px;padding-top:11px;border-top:1px solid var(--border)}
-.accuse-lbl{font-size:11px;color:var(--text3);margin-bottom:8px}
-.accuse-btns{display:flex;gap:7px}
-.accuse-btn{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.accuse-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.accuse-lbl{font-size:12px;color:var(--text3);margin-bottom:9px}
+.accuse-btns{display:flex;gap:8px}
+.accuse-btn{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
 .accuse-btn:not(:disabled):hover{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.08);color:#e87070}
 .accuse-btn:disabled{opacity:.35;cursor:default}
 .accuse-btn.liar-reveal{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.1);color:#e87070;opacity:1}
 .accuse-btn.truth-reveal{opacity:.3}
 
 /* Feedback */
-.fb{margin-top:11px;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.7;display:none;animation:fadeUp .3s ease}
+.fb{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.75;display:none;animation:fadeUp .3s ease}
 .fb.show{display:block}
 .fb.ok{background:rgba(61,184,122,.1);border:1px solid rgba(61,184,122,.25);color:#5bd491}
 .fb.fail{background:rgba(217,80,80,.08);border:1px solid rgba(217,80,80,.2);color:#e87070}
 
 /* Next btn */
-.next-btn{display:none;margin-top:11px;width:100%;padding:10px;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.3);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+.next-btn{display:none;margin-top:12px;width:100%;padding:11px;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.3);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
 .next-btn:hover{background:rgba(212,168,67,.15)}
 .next-btn.show{display:block}
 
 /* Toast */
-.toast{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid rgba(212,168,67,.4);border-radius:8px;padding:7px 18px;font-size:13px;color:var(--amber2);font-weight:500;pointer-events:none;opacity:0;transition:opacity .25s;z-index:100;white-space:nowrap}
+.toast{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid rgba(212,168,67,.4);border-radius:8px;padding:8px 20px;font-size:14px;color:var(--amber2);font-weight:500;pointer-events:none;opacity:0;transition:opacity .25s;z-index:100;white-space:nowrap}
 .toast.show{opacity:1}
 
 /* Screens */
 .screen{text-align:center;padding:56px 20px 36px;animation:fadeUp .4s ease}
 .screen-icon{font-size:52px;margin-bottom:14px}
-.screen-title{font-family:'Noto Serif TC',serif;font-size:23px;font-weight:700;margin-bottom:8px}
-.screen-sub{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:440px;margin:0 auto 22px}
+.screen-title{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:700;margin-bottom:8px}
+.screen-sub{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:24px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:460px;margin:0 auto 22px}
 @media(max-width:500px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:13px 6px;text-align:center}
-.stat-v{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;color:var(--amber2)}
-.stat-l{font-size:10px;color:var(--text3);margin-top:3px}
-.cta{padding:11px 28px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.4);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;margin:4px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:14px 8px;text-align:center}
+.stat-v{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:700;color:var(--amber2)}
+.stat-l{font-size:11px;color:var(--text3);margin-top:3px}
+.cta{padding:12px 30px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.4);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;margin:4px}
 .cta:hover{background:rgba(212,168,67,.18)}
 
 /* Data chips */
-.drow{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.dchip{padding:3px 8px;border-radius:5px;font-size:12px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2)}
+.drow{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.dchip{padding:4px 9px;border-radius:5px;font-size:13px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2)}
 .dchip.out{background:rgba(217,80,80,.1);border-color:rgba(217,80,80,.3);color:var(--red)}
+
+/* ── 第二關：計算題 input ── */
+.calc-question{animation:fadeUp .3s ease}
+.calc-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.calc-chart-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(59,191,170,.5),transparent)}
+.calc-question-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.calc-question-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.4),transparent)}
+.calc-q-text{font-size:17px;font-weight:500;color:var(--text);line-height:1.7;margin-bottom:18px}
+.calc-q-text em{color:var(--amber2);font-style:normal;font-weight:700}
+.calc-input-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.calc-input{padding:11px 16px;border-radius:8px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:500;width:160px;outline:none;transition:border-color .2s;text-align:center}
+.calc-input:focus{border-color:rgba(212,168,67,.6)}
+.calc-input.correct{border-color:rgba(61,184,122,.6);background:rgba(61,184,122,.06);color:var(--green)}
+.calc-input.wrong{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.06);color:var(--red)}
+.calc-unit{font-size:14px;color:var(--text2)}
+.calc-submit{padding:11px 22px;border-radius:8px;border:1px solid rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.calc-submit:hover:not(:disabled){background:rgba(212,168,67,.2)}
+.calc-submit:disabled{opacity:.4;cursor:default}
+.calc-hint-box{background:rgba(59,191,170,.06);border:1px solid rgba(59,191,170,.15);border-radius:7px;padding:9px 12px;font-size:13px;color:#3bbfaa;line-height:1.65;margin-bottom:14px;display:flex;gap:7px}
+.calc-fb{padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.75;margin-top:12px;display:none;animation:fadeUp .3s ease}
+.calc-fb.show{display:block}
+.calc-fb.ok{background:rgba(61,184,122,.1);border:1px solid rgba(61,184,122,.25);color:#5bd491}
+.calc-fb.fail{background:rgba(217,80,80,.08);border:1px solid rgba(217,80,80,.2);color:#e87070}
+.calc-step{background:rgba(255,255,255,.03);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text2);margin-top:8px;font-family:'Noto Serif TC',serif;line-height:1.8}
+.data-display{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.data-num{padding:5px 10px;border-radius:6px;font-size:14px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);font-family:'Noto Serif TC',serif}
+.data-num.hi{background:rgba(217,80,80,.1);border-color:rgba(217,80,80,.3);color:#e87070}
+
+/* Leaderboard tabs */
+.lb-tabs{display:flex;gap:0;margin-bottom:14px;border-radius:8px;overflow:hidden;border:1px solid var(--border2)}
+.lb-tab{flex:1;padding:9px;font-size:13px;font-weight:500;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .2s;font-family:'Noto Sans TC',sans-serif}
+.lb-tab.active{background:rgba(212,168,67,.12);color:var(--amber2)}
+.lb-tab:not(:last-child){border-right:1px solid var(--border2)}
+
+/* Stage clear interstitial */
+.inter-screen{text-align:center;padding:60px 20px 40px;animation:fadeUp .4s ease}
+.inter-icon{font-size:52px;margin-bottom:14px}
+.inter-title{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;margin-bottom:8px}
+.inter-sub{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:28px}
+.inter-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.name-screen{text-align:center;padding:64px 20px 40px;animation:fadeUp .4s ease}
+.name-screen h2{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;margin-bottom:8px}
+.name-screen p{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7}
+.name-input-wrap{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.name-input{padding:10px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:15px;width:220px;outline:none;transition:border-color .2s}
+.name-input:focus{border-color:rgba(212,168,67,.5)}
+.name-input::placeholder{color:var(--text3)}
+
+/* Leaderboard */
+.lb-wrap{max-width:440px;margin:0 auto}
+.lb-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.lb-title::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--amber);flex-shrink:0}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:13px}
+.lb-row.me{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.06)}
+.lb-rank{width:24px;font-weight:700;color:var(--text3);text-align:center;flex-shrink:0;font-family:'Noto Serif TC',serif}
+.lb-rank.gold{color:#f0c560}.lb-rank.silver{color:#a0a8b8}.lb-rank.bronze{color:#c87850}
+.lb-name{flex:1;font-weight:500;color:var(--text)}
+.lb-score{font-weight:700;color:var(--amber2);font-family:'Noto Serif TC',serif;font-size:15px}
+.lb-meta{font-size:11px;color:var(--text3);margin-left:6px}
+.lb-empty{text-align:center;padding:20px;color:var(--text3);font-size:13px}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -415,14 +484,601 @@ function makeQuestions(){
   ]; // end return
 }
 
-/* ══════ GAME STATE ══════ */
-const GLOBAL_TIME=180;
+/* ══════════════════════════════════════════════════════════════════════
+   第二關：計算題（填空）
+   題目隨機生成，數字皆為 5 的倍數
+   每題：左側圖表或數據、右側問題 + 輸入框
+   共 8 題，覆蓋各圖表讀值與統計數計算
+══════════════════════════════════════════════════════════════════════ */
+
+function makeR2Questions(){
+  const qs=[];
+
+  /* ── R2-0 圓餅圖 → 人數換算（答案必為整數）────────────────────────
+     確保 pct 能整除 total，讓 total × pct/100 一定是整數
+  ──────────────────────────────────────────────────────────────────── */
+  (()=>{
+    // 先決定百分比（5的倍數），再讓 total 是 100 的倍數，保證整除
+    const pct=R5(20,40);           // 20/25/30/35/40
+    const total=R5(2,5)*100;       // 200/300/400/500，pct/100 × total 必為整數
+    const ans=total*pct/100;       // 一定是整數
+    const cats=['數學','國文','英文','自然','社會'];
+    const pcts=[pct, R5(15,25), R5(10,20), R5(5,15), 0];
+    pcts[4]=100-pcts[0]-pcts[1]-pcts[2]-pcts[3];
+    if(pcts[4]<5){pcts[0]-=(5-pcts[4]);pcts[4]=5;}
+    const vals=pcts.map(p=>Math.round(total*p/100));
+    qs.push({
+      type:'pie', typeLabel:'圓餅圖',
+      chartData:{cats,vals,pcts,total},
+      question:`全班共 <em>${total}</em> 人，圓餅圖顯示「數學」佔 <em>${pct}%</em>，請問選擇數學的有幾人？`,
+      answer:ans, unit:'人',
+      step:`${total} × ${pct}% = ${total} × ${pct} ÷ 100 = <strong>${ans} 人</strong>`
+    });
+  })();
+
+  /* ── R2-1 長條圖 → 讀取差值 ──────────────────────────────────────── */
+  (()=>{
+    const a=R5(40,80), b=R5(10,35);
+    const labels=['籃球','足球','羽球','桌球','游泳'];
+    const vals=[a, b, R5(20,50), R5(15,40), R5(20,45)];
+    const ans=a-b;
+    qs.push({
+      type:'bar', typeLabel:'長條圖',
+      chartData:{labels,vals,unit:'人',subject:'社團人數'},
+      question:`長條圖中，「籃球」社團有 <em>${a}</em> 人，「足球」社團有 <em>${b}</em> 人，兩者相差幾人？`,
+      answer:ans, unit:'人',
+      step:`${a} − ${b} = <strong>${ans} 人</strong>`
+    });
+  })();
+
+  /* ── R2-2 折線圖 → 選擇題：哪個月份增加最多 ─────────────────────────
+     設計：確保最大增加量明顯高於第二大，讓答案唯一不模糊
+  ──────────────────────────────────────────────────────────────────── */
+  (()=>{
+    const labels=['1月','2月','3月','4月','5月','6月'];
+    // 先生成保證有一段明顯最大增加量的資料
+    const vals=[R5(20,30)];
+    for(let i=1;i<6;i++) vals.push(Math.max(5, vals[i-1]+R5(-10,20)));
+    // 計算每段差值
+    const diffs=vals.slice(1).map((v,i)=>v-vals[i]); // 5個差值
+    // 找最大正增加段
+    let maxDiff=-Infinity, maxSeg=0;
+    diffs.forEach((d,i)=>{if(d>maxDiff){maxDiff=d;maxSeg=i;}});
+    // 若最大增加量不夠明顯（<10），強制設定一段
+    if(maxDiff<10){
+      maxSeg=2; // 固定第3段（2→3月）
+      vals[3]=vals[2]+R5(20,30);
+      // 重算
+      diffs[2]=vals[3]-vals[2];
+      maxDiff=diffs[2];
+    }
+    const correctLabel=`${labels[maxSeg]} → ${labels[maxSeg+1]}`;
+    const wrongSegs=[0,1,2,3,4].filter(i=>i!==maxSeg)
+      .sort(()=>Math.random()-0.5).slice(0,3);
+    const distractors=wrongSegs.map(i=>`${labels[i]} → ${labels[i+1]}`);
+    const options=[correctLabel,...distractors].sort(()=>Math.random()-0.5);
+    qs.push({
+      type:'line', typeLabel:'折線圖',
+      chartData:{labels,vals,unit:'萬人',subject:'用戶數'},
+      question:`觀察折線圖，哪一段的斜率最陡、用戶數<em>增加最多</em>？`,
+      mcq:true, options, correctOption:correctLabel,
+      answer:correctLabel, unit:'',
+      step:`各段差值：${diffs.map((d,i)=>`${labels[i]}→${labels[i+1]}：${d>0?'+':''}${d}`).join('、')}。增加最多：<strong>${correctLabel}</strong>（+${maxDiff}萬人）`
+    });
+  })();
+
+  /* ── R2-3 直方圖 → 60分以下共幾人 ──────────────────────────────── */
+  (()=>{
+    const groups=['0–20','20–40','40–60','60–80','80–100'];
+    const vals=[R5(5,15), R5(10,20), R5(15,30), R5(20,35), R5(10,20)];
+    // 60分以下：前三組（0–20, 20–40, 40–60）
+    const ans=vals[0]+vals[1]+vals[2];
+    qs.push({
+      type:'hist', typeLabel:'直方圖',
+      chartData:{groups,vals,subject:'測驗分數',unit:'分',step:20},
+      question:`直方圖中，測驗分數在 <em>60 分以下</em>（未達60分）的同學共有幾人？`,
+      answer:ans, unit:'人',
+      step:`60分以下包含「0–20」${vals[0]}人＋「20–40」${vals[1]}人＋「40–60」${vals[2]}人 = <strong>${ans} 人</strong>`
+    });
+  })();
+
+  /* ── R2-4 列聯表 → 橫向加總（右排各異、欄總和各異）─────────────── */
+  (()=>{
+    // 確保男生3格 ≠ 女生3格，且每欄合計都不同
+    let cells, rowTotals;
+    do {
+      cells=[[R5(20,40), R5(15,30), R5(5,10)],[R5(10,25), R5(20,35), R5(10,20)]];
+      rowTotals=cells.map(r=>r.reduce((a,b)=>a+b,0));
+    } while(rowTotals[0]===rowTotals[1]);
+    const colTotals=[0,1,2].map(ci=>cells.reduce((s,r)=>s+r[ci],0));
+    const grand=rowTotals.reduce((a,b)=>a+b,0);
+    const ans=rowTotals[0];
+    qs.push({
+      type:'table', typeLabel:'列聯表',
+      chartData:{rows:['男生','女生'],cols:['雞排便當','排骨便當','素食便當'],cells,rowTotals,colTotals,grandTotal:grand},
+      question:`列聯表中，男生訂雞排 <em>${cells[0][0]}</em> 份、排骨 <em>${cells[0][1]}</em> 份、素食 <em>${cells[0][2]}</em> 份，男生共訂了幾份便當？`,
+      answer:ans, unit:'份',
+      step:`${cells[0][0]} ＋ ${cells[0][1]} ＋ ${cells[0][2]} = <strong>${ans} 份</strong>`
+    });
+  })();
+
+  /* ── R2-5 平均數：積木堆疊圖示法 ────────────────────────────────────
+     顯示 5 根積木柱（各不同高度），右側四選一猜平均高度
+  ──────────────────────────────────────────────────────────────────── */
+  (()=>{
+    const n=5;
+    let data, sum, ans;
+    do {
+      data=Array.from({length:n},()=>R5(30,80));
+      sum=data.reduce((a,b)=>a+b,0);
+    } while(sum%n!==0);
+    ans=sum/n;
+    const offsets=[10,15,20,-10,-15].filter(o=>ans+o>0&&ans+o<100);
+    offsets.sort(()=>Math.random()-0.5);
+    const wrongs=[offsets[0],offsets[1],offsets[2]].map(o=>ans+o);
+    const options=[ans,...wrongs].sort(()=>Math.random()-0.5).map(v=>`${v} 分`);
+    qs.push({
+      type:'mean_blocks', typeLabel:'平均數',
+      blockData:data,        // 積木高度陣列（5個）
+      chartData:null,
+      question:`右圖顯示 5 個積木柱的高度，如果把它們<em>堆平</em>成一樣高，每根是幾分？`,
+      mcq:true,
+      options,
+      correctOption:`${ans} 分`,
+      answer:ans, unit:'分',
+      step:`（${data.join(' ＋ ')}）÷ ${n} = ${sum} ÷ ${n} = <strong>${ans} 分</strong>`
+    });
+  })();
+
+  /* ── R2-6 中位數：顯示原始→排列後，視覺直接看出答案 ──────────────── */
+  (()=>{
+    const n=7;
+    const data=Array.from({length:n},()=>R5(30,90));
+    const sorted=[...data].sort((a,b)=>a-b);
+    const midIdx=Math.floor(n/2);
+    const ans=sorted[midIdx];
+    qs.push({
+      type:'median_visual', typeLabel:'中位數',
+      rawData:data,
+      sortedData:sorted,
+      midIdx,
+      chartData:null,
+      question:`以下 <em>${n}</em> 個數字排列後，中位數是多少？（排好後直接點選中間那格）`,
+      answer:ans, unit:'分',
+      step:`排序後：${sorted.map((v,i)=>i===midIdx?`<strong style="color:#f0c560">[&nbsp;${v}&nbsp;]</strong>`:`${v}`).join(' 、 ')}　→　中位數是 <strong>${ans} 分</strong>`
+    });
+  })();
+
+  /* ── R2-7 眾數 → 長條圖題型（文字類別）選擇題 ────────────────────────
+     設計：4 種便當，其中一種份數最多（眾數）
+     誘答選項：
+       A 正確答案（份數最多的便當「名稱」）
+       B 份數最多的「數字」（例如 12）← 最常見錯誤：把次數當眾數
+       C 份數第二多的便當名稱       ← 混淆最多次 vs 次多
+       D 所有份數的合計              ← 算錯成總數
+  ──────────────────────────────────────────────────────────────────── */
+  (()=>{
+    const items=['雞排便當','排骨便當','豬排便當','素食便當'];
+    // 確保第一個最多，且明顯多於其他
+    const modeCount=R5(10,15);
+    const others=[R5(5,8), R5(4,7), R5(2,5)];
+    const counts=[modeCount,...others];
+    const total=counts.reduce((a,b)=>a+b,0);
+    const pcts=counts.map(c=>Math.round(c/total*100));
+    const modeName=items[0]; // 雞排便當是眾數
+    const modeCountVal=counts[0];
+    const secondName=items[1]; // 次多
+    const totalAll=counts.reduce((a,b)=>a+b,0);
+    // 四個選項
+    const opts=[
+      {text:`「${modeName}」`,correct:true},
+      {text:`${modeCountVal}（份數最多的數字）`,correct:false},
+      {text:`「${secondName}」`,correct:false},
+      {text:`${totalAll}（所有便當總份數）`,correct:false},
+    ].sort(()=>Math.random()-0.5);
+    qs.push({
+      type:'mode_bar', typeLabel:'眾數',
+      chartData:{labels:items,vals:counts,unit:'份',subject:'便當訂購份數'},
+      question:`長條圖顯示全班午餐訂購情形，請問這份資料的<em>眾數</em>是什麼？`,
+      mcq:true,
+      options:opts.map(o=>o.text),
+      correctOption:opts.find(o=>o.correct).text,
+      answer:modeName, unit:'',
+      step:`各品項份數：${items.map((it,i)=>`${it} ${counts[i]}份`).join('、')}。「${modeName}」份數最多（${modeCountVal}份），眾數是品項名稱本身：<strong>「${modeName}」</strong>`
+    });
+  })();
+
+  return qs;
+}
+
+/* ══════ R2 計時器（獨立 5 分鐘）══════ */
+const R2_TIME=300;
+
+/* ══════ R2 排行榜 ══════ */
+const LB_R2_KEY='detective_lb_r2_v1';
+function loadLBR2(){try{return JSON.parse(localStorage.getItem(LB_R2_KEY))||[];}catch{return[];}}
+function saveLBR2(lb){try{localStorage.setItem(LB_R2_KEY,JSON.stringify(lb));}catch{}}
+function addToLBR2(name,score,correct,total){
+  const lb=loadLBR2();
+  lb.push({name,score,correct,total,date:new Date().toLocaleDateString('zh-TW')});
+  lb.sort((a,b)=>b.score-a.score);
+  if(lb.length>20)lb.length=20;
+  saveLBR2(lb);
+  return lb;
+}
+function renderLBR2(containerId, myScore){
+  const lb=loadLBR2();
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  if(!lb.length){el.innerHTML='<div class="lb-empty">尚無計算記錄，成為第一位！</div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  const rankClasses=['gold','silver','bronze'];
+  el.innerHTML=lb.map((r,i)=>{
+    const isMe=(r.score===myScore&&i===lb.findIndex(x=>x.score===myScore));
+    return `<div class="lb-row${isMe?' me':''}">
+      <span class="lb-rank ${rankClasses[i]||''}">${medals[i]||i+1}</span>
+      <span class="lb-name">${r.name}</span>
+      <span class="lb-score">${r.score}</span>
+      <span class="lb-meta">${r.correct}/${r.total}題 · ${r.date}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ══════ R2 GAME STATE ══════ */
+let G2={};
+
+function startR2(){
+  clearInterval(G2&&G2.timerID);
+  const name=(G&&G.playerName)||(G1&&G1.playerName)||window._playerName||'匿名偵探';
+  G2={
+    qIdx:0, score:0, correct:0,
+    timeLeft:R2_TIME, timerID:null, answered:false,
+    qs:makeR2Questions(),
+    playerName:name
+  };
+  document.getElementById('b-stage').textContent='第二關';
+  document.getElementById('b-streak').style.display='none';
+  renderR2Dots();
+  renderR2Q();
+  startR2Timer();
+}
+
+function renderR2Dots(){
+  const row=document.getElementById('prog-row');
+  row.innerHTML='<span class="prog-lbl">進度</span>';
+  for(let i=0;i<G2.qs.length;i++){
+    const d=document.createElement('div');
+    d.className='pdot'+(i<G2.qIdx?' done':i===G2.qIdx?' cur':'');
+    row.appendChild(d);
+  }
+  document.getElementById('b-score').textContent=G2.score+' 分';
+}
+
+function startR2Timer(){
+  const box=document.getElementById('timer-box');
+  function tick(){
+    const t=G2.timeLeft;
+    const m=Math.floor(t/60),s=t%60;
+    box.textContent=m+':'+(s<10?'0':'')+s;
+    box.className='timer-box'+(t<=60?' danger':t<=120?' warn':'');
+    if(t<=0){clearInterval(G2.timerID);finishR2();}
+    G2.timeLeft--;
+  }
+  tick();
+  G2.timerID=setInterval(tick,1000);
+}
+
+function renderR2Q(){
+  if(G2.qIdx>=G2.qs.length){finishR2();return;}
+  G2.answered=false;
+  const q=G2.qs[G2.qIdx];
+  document.getElementById('b-type').textContent=q.typeLabel;
+  renderR2Dots();
+
+  const area=document.getElementById('game-area');
+  const wrap=document.createElement('div');
+  wrap.className='calc-question';
+
+  // Data chips (for stats/mode rawData questions)
+  let dataSection='';
+  if(q.rawData && q.type!=='median_visual'){
+    dataSection=`<div class="data-display" id="r2-data">`
+      +q.rawData.map(v=>`<span class="data-num">${v}</span>`).join('')
+      +'</div>';
+  }
+
+  // median_visual: show unsorted → sorted with interaction
+  let medianSection='';
+  if(q.type==='median_visual'){
+    medianSection=`
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">原始數字</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+          ${q.rawData.map(v=>`<span class="data-num">${v}</span>`).join('')}
+        </div>
+        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">排列後（由小到大）—— 點選中間那格</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="sorted-row">
+          ${q.sortedData.map((v,i)=>`<span class="data-num" id="sv-${i}" style="cursor:pointer;transition:all .15s" data-val="${v}" data-idx="${i}">${v}</span>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // mean_blocks: use canvas on left
+  const showChart = !!q.chartData || q.type==='mean_blocks';
+
+  wrap.innerHTML=`
+    <div style="display:grid;grid-template-columns:${showChart?'40% 1fr':'1fr'};gap:14px;align-items:start">
+      ${showChart?`
+      <div class="calc-chart-wrap">
+        <div class="ptitle" style="margin-bottom:10px">📊 ${q.typeLabel}</div>
+        <canvas id="cv2"></canvas>
+        ${q.type==='stats'?'<div class="drow" id="dc2"></div>':''}
+      </div>`:''}
+      <div class="calc-question-panel">
+        <div class="ptitle">計算題 · ${G2.qIdx+1}/${G2.qs.length}</div>
+        ${dataSection}
+        ${medianSection}
+        <div class="calc-q-text">${q.question}</div>
+        ${q.mcq
+          ? `<div id="r2-opts" style="display:flex;flex-direction:column;gap:9px;margin-top:4px"></div>`
+          : `<div class="calc-input-row">
+               <input class="calc-input" id="r2-input" type="number" placeholder="輸入答案" autocomplete="off"/>
+               ${q.unit?`<span class="calc-unit">${q.unit}</span>`:''}
+               <button class="calc-submit" id="r2-submit">確認 →</button>
+             </div>`
+        }
+        <div class="calc-fb" id="r2-fb"></div>
+        <button class="next-btn" id="r2-nxt">${G2.qIdx===G2.qs.length-1?'查看結果 →':'下一題 →'}</button>
+      </div>
+    </div>`;
+  area.innerHTML='';area.appendChild(wrap);
+
+  // Draw chart
+  if(showChart){
+    setTimeout(()=>{
+      const cv=document.getElementById('cv2');
+      if(!cv)return;
+      if(q.type==='mean_blocks'){
+        // ── 積木堆疊圖：畫 5 根不同高度的積木柱 ──
+        const dpr=window.devicePixelRatio||1;
+        cv.width=cv.offsetWidth*dpr; cv.height=220*dpr;
+        const ctx=cv.getContext('2d');
+        ctx.scale(dpr,dpr);
+        const W=cv.offsetWidth,H=220;
+        ctx.clearRect(0,0,W,H);
+        const blocks=q.blockData;
+        const maxV=Math.max(...blocks);
+        const pad={t:20,r:10,b:40,l:30};
+        const bw=(W-pad.l-pad.r)/blocks.length;
+        const bp=bw*0.15;
+        // grid lines
+        [0,Math.round(maxV/2),maxV].forEach(v=>{
+          const y=pad.t+(1-v/maxV)*(H-pad.t-pad.b);
+          ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+          ctx.fillStyle='rgba(175,170,163,0.7)';ctx.font=`9px 'Noto Sans TC'`;
+          ctx.textAlign='right';ctx.fillText(v,pad.l-3,y+3);
+        });
+        blocks.forEach((v,i)=>{
+          const bh=(v/maxV)*(H-pad.t-pad.b);
+          const bx=pad.l+i*bw+bp;
+          const by=pad.t+(H-pad.t-pad.b)-bh;
+          const bwi=bw-bp*2;
+          // 積木顏色
+          const cols=['#4a90d9','#3db87a','#d4a843','#8b6fd4','#d95050'];
+          ctx.fillStyle=cols[i]+'cc';
+          // 畫有圓角的積木
+          ctx.beginPath();
+          ctx.moveTo(bx+3,by);ctx.lineTo(bx+bwi-3,by);
+          ctx.quadraticCurveTo(bx+bwi,by,bx+bwi,by+3);
+          ctx.lineTo(bx+bwi,by+bh);ctx.lineTo(bx,by+bh);
+          ctx.lineTo(bx,by+3);ctx.quadraticCurveTo(bx,by,bx+3,by);
+          ctx.fill();
+          // 格線（積木磚塊感）
+          const brickH=10;
+          ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=0.5;
+          for(let y2=by+brickH;y2<by+bh;y2+=brickH){
+            ctx.beginPath();ctx.moveTo(bx,y2);ctx.lineTo(bx+bwi,y2);ctx.stroke();
+          }
+          // 數值標籤
+          ctx.fillStyle='rgba(220,215,208,0.9)';ctx.font=`bold 11px 'Noto Sans TC'`;
+          ctx.textAlign='center';ctx.fillText(v,bx+bwi/2,by-5);
+          // X軸標籤
+          ctx.fillStyle='rgba(175,170,163,0.7)';ctx.font=`10px 'Noto Sans TC'`;
+          ctx.fillText(`第${i+1}人`,bx+bwi/2,H-5);
+        });
+        // 底線
+        ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(pad.l,pad.t+(H-pad.t-pad.b));ctx.lineTo(W-pad.r,pad.t+(H-pad.t-pad.b));ctx.stroke();
+      } else if(q.type==='mode_bar'){
+        drawChart(cv,{type:'bar',typeLabel:q.typeLabel,data:q.chartData});
+      } else {
+        drawChart(cv,{type:q.type,typeLabel:q.typeLabel,data:q.chartData});
+      }
+      if(q.type==='stats'&&q.chartData){
+        const dc=document.getElementById('dc2');
+        if(dc) q.chartData.data.forEach(v=>{
+          const c=document.createElement('span');
+          c.className='dchip'+(v===q.chartData.outlier?' out':'');
+          c.textContent=v;dc.appendChild(c);
+        });
+      }
+    },50);
+  }
+
+  // median_visual: clickable sorted cells
+  if(q.type==='median_visual'){
+    setTimeout(()=>{
+      q.sortedData.forEach((_,i)=>{
+        const el=document.getElementById(`sv-${i}`);
+        if(!el)return;
+        el.addEventListener('mouseenter',()=>{if(!G2.answered)el.style.borderColor='rgba(212,168,67,.6)';el.style.transform='scale(1.1)';});
+        el.addEventListener('mouseleave',()=>{if(!G2.answered&&i!==q.midIdx){el.style.borderColor='';el.style.transform='';}});
+        el.addEventListener('click',()=>{
+          if(G2.answered)return;
+          G2.answered=true;
+          // Highlight all: mid=gold, others=dim
+          q.sortedData.forEach((_,j)=>{
+            const e=document.getElementById(`sv-${j}`);
+            if(!e)return;
+            e.style.cursor='default';
+            if(j===q.midIdx){
+              e.style.background='rgba(212,168,67,.25)';
+              e.style.borderColor='rgba(212,168,67,.8)';
+              e.style.color='#f0c560';
+              e.style.fontWeight='700';
+              e.style.transform='scale(1.15)';
+            } else {
+              e.style.opacity='0.45';
+            }
+          });
+          const correct=(i===q.midIdx);
+          const timePct=G2.timeLeft/R2_TIME;
+          const basePt=150;
+          const fb=document.getElementById('r2-fb');
+          if(correct){
+            G2.correct++;
+            const timeBonus=Math.floor(timePct*basePt*0.4);
+            G2.score+=basePt+timeBonus;
+            fb.className='calc-fb show ok';
+            fb.innerHTML=`✓ 正確！第 ${q.midIdx+1} 個數（${q.answer}分）就是中位數。${timeBonus>0?`<span style="color:var(--amber);font-size:12px"> ⚡ +${timeBonus}</span>`:''}<div class="calc-step">📐 ${q.step}</div>`;
+          } else {
+            fb.className='calc-fb show fail';
+            fb.innerHTML=`✗ 中位數是第 ${q.midIdx+1} 個數：<strong>${q.answer}分</strong><div class="calc-step">📐 ${q.step}</div>`;
+          }
+          renderR2Dots();
+          document.getElementById('r2-nxt').classList.add('show');
+        });
+      });
+    },80);
+  }
+
+  const nxtBtn=document.getElementById('r2-nxt');
+
+  if(q.mcq){
+    // ── MCQ mode ──────────────────────────────────────
+    const optsDiv=document.getElementById('r2-opts');
+    q.options.forEach((opt,oi)=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='width:100%;padding:11px 14px;border-radius:9px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:"Noto Sans TC",sans-serif;font-size:14px;text-align:left;cursor:pointer;transition:all .15s;line-height:1.6';
+      btn.textContent=`${'ＡＢＣＤ'[oi]}　${opt}`;
+      btn.addEventListener('mouseenter',()=>{if(!G2.answered)btn.style.borderColor='rgba(212,168,67,.5)';});
+      btn.addEventListener('mouseleave',()=>{if(!G2.answered)btn.style.borderColor='var(--border2)';});
+      btn.addEventListener('click',()=>{
+        if(G2.answered)return;
+        G2.answered=true;
+        optsDiv.querySelectorAll('button').forEach(b=>b.style.cursor='default');
+        const correct=(opt===q.correctOption);
+        // Highlight all options
+        q.options.forEach((o,oi2)=>{
+          const b=optsDiv.querySelectorAll('button')[oi2];
+          if(o===q.correctOption){b.style.borderColor='rgba(61,184,122,.7)';b.style.background='rgba(61,184,122,.1)';b.style.color='#5bd491';}
+          else if(oi===oi2&&!correct){b.style.borderColor='rgba(217,80,80,.5)';b.style.background='rgba(217,80,80,.07)';b.style.color='#e87070';}
+        });
+        const timePct=G2.timeLeft/R2_TIME;
+        const basePt=150;
+        if(correct){
+          G2.correct++;
+          const timeBonus=Math.floor(timePct*basePt*0.4);
+          G2.score+=basePt+timeBonus;
+          const fb=document.getElementById('r2-fb');
+          fb.className='calc-fb show ok';
+          fb.innerHTML=`✓ 正確！${timeBonus>0?`<span style="color:var(--amber);font-size:12px">⚡ 速度加分 +${timeBonus}</span>`:''}<div class="calc-step">📐 ${q.step}</div>`;
+        } else {
+          const fb=document.getElementById('r2-fb');
+          fb.className='calc-fb show fail';
+          fb.innerHTML=`✗ 正確答案：<strong>${q.correctOption}</strong><div class="calc-step">📐 ${q.step}</div>`;
+        }
+        renderR2Dots();
+        nxtBtn.classList.add('show');
+      });
+      optsDiv.appendChild(btn);
+    });
+  } else {
+    // ── Input mode ─────────────────────────────────────
+    const input=document.getElementById('r2-input');
+    const submitBtn=document.getElementById('r2-submit');
+
+    function submit(){
+      if(G2.answered)return;
+      const raw=input.value.trim();
+      if(raw==='')return;
+      G2.answered=true;
+      submitBtn.disabled=true;
+      input.readOnly=true;
+      const userVal=parseFloat(raw);
+      const tolerance=q.acceptRange||0;
+      const correct=Math.abs(userVal-q.answer)<=tolerance;
+      const timePct=G2.timeLeft/R2_TIME;
+      const basePt=150;
+      if(correct){
+        G2.correct++;
+        const timeBonus=Math.floor(timePct*basePt*0.4);
+        G2.score+=basePt+timeBonus;
+        input.classList.add('correct');
+        const fb=document.getElementById('r2-fb');
+        fb.className='calc-fb show ok';
+        fb.innerHTML=`✓ 正確！${timeBonus>0?`<span style="color:var(--amber);font-size:12px">⚡ 速度加分 +${timeBonus}</span>`:''}<div class="calc-step">📐 ${q.step}</div>`;
+      } else {
+        input.classList.add('wrong');
+        const fb=document.getElementById('r2-fb');
+        fb.className='calc-fb show fail';
+        fb.innerHTML=`✗ 答案是 <strong>${q.answer}${q.unit}</strong><div class="calc-step">📐 ${q.step}</div>`;
+      }
+      renderR2Dots();
+      nxtBtn.classList.add('show');
+    }
+    submitBtn.addEventListener('click',submit);
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+    setTimeout(()=>input.focus(),100);
+  }
+
+  nxtBtn.addEventListener('click',()=>{G2.qIdx++;renderR2Q();});
+}
+
+function finishR2(){
+  clearInterval(G2.timerID);
+  const lb=addToLBR2(G2.playerName, G2.score, G2.correct, G2.qs.length);
+  const myRank=lb.findIndex(r=>r.score===G2.score)+1;
+  const area=document.getElementById('game-area');
+  area.innerHTML=`
+    <div class="screen">
+      <div class="screen-icon">${G2.correct===G2.qs.length?'🧮':'📊'}</div>
+      <div class="screen-title">${G2.correct===G2.qs.length?'計算滿分！':'第二關完成'}</div>
+      <div class="screen-sub">${G2.correct===G2.qs.length?'全部計算正確，數學功力一流！':'完成所有計算題，繼續加油！'}</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-v">${G2.score}</div><div class="stat-l">第二關得分</div></div>
+        <div class="stat-card"><div class="stat-v">${G2.correct}/${G2.qs.length}</div><div class="stat-l">答對題數</div></div>
+        <div class="stat-card"><div class="stat-v">#${myRank}</div><div class="stat-l">第二關排名</div></div>
+        <div class="stat-card"><div class="stat-v">${(G1&&G1.score||0)+G2.score}</div><div class="stat-l">兩關小計</div></div>
+      </div>
+      <div class="lb-wrap" style="margin-bottom:20px">
+        <div class="lb-tabs">
+          <button class="lb-tab" onclick="switchLBTab3('r1',this,'lb-r2-end')">🌟 第一關</button>
+          <button class="lb-tab active" onclick="switchLBTab3('r2',this,'lb-r2-end')">🧮 第二關</button>
+          <button class="lb-tab" onclick="switchLBTab3('r3',this,'lb-r2-end')">🔍 第三關</button>
+        </div>
+        <div id="lb-r2-end"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="cta" onclick="startGame()">🔍 進入第三關</button>
+        <button class="cta" style="background:transparent;border-color:var(--border2);color:var(--text2)" onclick="showNameEntry()">回到首頁</button>
+      </div>
+    </div>`;
+  renderLBR2('lb-r2-end', G2.score);
+  document.getElementById('b-stage').textContent='第二關';
+}
 const PTS=[100,100,100,150,150,150,200,150,200];
-let G={qIdx:0,hp:3,score:0,streak:0,timeLeft:GLOBAL_TIME,timerID:null,answered:false,marks:{},qs:[]};
+const MARK_PTS=10;
+const GLOBAL_TIME=180;
+let G={qIdx:0,hp:3,score:0,streak:0,timeLeft:180,timerID:null,answered:false,marks:{},qs:[],markScore:0,totalMarks:0};
 
 /* ══════ HUD ══════ */
-function renderHUD(){
+function updateScore(){
   document.getElementById('b-score').textContent=G.score+' 分';
+}
+function renderHUD(){
+  updateScore();
   const sb=document.getElementById('b-streak');
   if(G.streak>=2){sb.style.display='';sb.textContent='🔥 '+G.streak+'連勝';}
   else sb.style.display='none';
@@ -707,17 +1363,7 @@ function drawChart(canvas,q){
     colTotals.forEach((v,ci)=>cellText(v,ci+1,nRows-1,true,'rgba(212,168,67,0.8)'));
     cellText(grandTotal,nCols-1,nRows-1,true,'#f0c560');
 
-    // 眾數標示圈出最大格
-    // 找每列最大值並畫高亮框
-    rows.forEach((r,ri)=>{
-      const maxVal=Math.max(...cells[ri]);
-      cells[ri].forEach((v,ci)=>{
-        if(v===maxVal){
-          ctx.strokeStyle='rgba(61,184,122,0.6)';ctx.lineWidth=1.5;
-          ctx.strokeRect(ci*cw+cw+1,startY+(ri+1)*rh+1,cw-2,rh-2);
-        }
-      });
-    });
+    // 無綠框標示
 
   }else if(q.type==='mode'){
     // ── 眾數分析：橫向長條圖，突出顯示眾數 ──────────────────
@@ -775,10 +1421,221 @@ function drawChart(canvas,q){
   }
 }
 
-/* ══════ RENDER ══════ */
+/* ══════════════════════════════════════════════════════════════════════
+   第一關：選擇題 — 判斷統計圖表與統計量的「功用」
+   共 6 題，每題 4 個選項（單選）
+   時間：3 分鐘，答對 100 分 + 速度加分，無生命值
+══════════════════════════════════════════════════════════════════════ */
+
+const R1_QUESTIONS=[
+  {id:'pie',question:'「圓餅圖」最適合用來表達什麼？',icon:'🥧',
+   options:[
+    {text:'顯示數量隨時間的變化趨勢',correct:false},
+    {text:'比較各類別佔整體的比例（百分比）',correct:true},
+    {text:'比較兩組不連續數據的大小',correct:false},
+    {text:'顯示連續資料的分布範圍',correct:false},
+   ],
+   explanation:'圓餅圖用整圓切割成扇形，每個扇形代表一類別佔整體的比例，最適合看「各部分佔整體多少%」。'},
+  {id:'bar',question:'「長條圖」最適合用來做什麼？',icon:'📊',
+   options:[
+    {text:'顯示資料的比例關係',correct:false},
+    {text:'追蹤某個數值隨時間的上升或下降',correct:false},
+    {text:'比較不同類別的數量大小',correct:true},
+    {text:'描述連續數值的分布密度',correct:false},
+   ],
+   explanation:'長條圖每格代表一個獨立類別，長條高度直接反映數量，適合比較不同類別之間的數量差異。'},
+  {id:'line',question:'「折線圖」最適合用來表達什麼？',icon:'📈',
+   options:[
+    {text:'比較多個不同類別的數量',correct:false},
+    {text:'呈現數值隨時間的變化趨勢與增減速度',correct:true},
+    {text:'顯示各類別佔整體的比例',correct:false},
+    {text:'比較連續數值範圍內各組的人數',correct:false},
+   ],
+   explanation:'折線圖各時間點連成線，斜率代表增減速度，適合追蹤「某數值如何隨時間變化」。'},
+  {id:'hist',question:'「直方圖」和「長條圖」最主要的差異是什麼？',icon:'📉',
+   options:[
+    {text:'直方圖有顏色，長條圖沒有',correct:false},
+    {text:'直方圖的條形之間有間隔，長條圖沒有',correct:false},
+    {text:'直方圖用於連續數值組距，長條圖用於不連續類別',correct:true},
+    {text:'直方圖只能比較兩組資料',correct:false},
+   ],
+   explanation:'直方圖 X 軸是連續的數值範圍，條形緊鄰無間距，顯示連續資料分布。長條圖 X 軸是獨立類別，條形間有間距。'},
+  {id:'mean_median',question:'資料中出現一個極端值，下列哪個說法正確？',icon:'📐',
+   options:[
+    {text:'平均數不受影響，可代表大多數人的水準',correct:false},
+    {text:'中位數會被極端值大幅拉高',correct:false},
+    {text:'平均數會被拉高，此時中位數更能代表多數人',correct:true},
+    {text:'極端值不影響任何統計量',correct:false},
+   ],
+   explanation:'平均數是加總除以個數，極端值直接影響加總把平均數拉偏。中位數只看排序後的中間位置，不受極端值影響，因此更具代表性。'},
+  {id:'mode',question:'「眾數」的定義是什麼？',icon:'🍱',
+   options:[
+    {text:'所有數值加總後除以個數的結果',correct:false},
+    {text:'資料從小到大排列後，最中間的那個值',correct:false},
+    {text:'資料中數值最大的那一個',correct:false},
+    {text:'資料中出現次數最多的那個值，可以是數字或文字',correct:true},
+   ],
+   explanation:'眾數是出現「最多次」的值本身，和數值大小無關。可以是數字也可以是文字類別，例如訂購最多份的便當名稱就是眾數。'},
+];
+
+const LB_R1_KEY='detective_lb_r1_v1';
+function loadLBR1(){try{return JSON.parse(localStorage.getItem(LB_R1_KEY))||[];}catch{return[];}}
+function saveLBR1(lb){try{localStorage.setItem(LB_R1_KEY,JSON.stringify(lb));}catch{}}
+function addToLBR1(name,score,correct){
+  const lb=loadLBR1();
+  lb.push({name,score,correct,total:R1_QUESTIONS.length,date:new Date().toLocaleDateString('zh-TW')});
+  lb.sort((a,b)=>b.score-a.score);
+  if(lb.length>20)lb.length=20;
+  saveLBR1(lb);return lb;
+}
+function renderLBR1(cid,myScore){
+  const lb=loadLBR1(),el=document.getElementById(cid);
+  if(!el)return;
+  if(!lb.length){el.innerHTML='<div class="lb-empty">尚無記錄，成為第一個答題的同學！</div>';return;}
+  const medals=['🥇','🥈','🥉'],rc=['gold','silver','bronze'];
+  el.innerHTML=lb.map((r,i)=>{
+    const me=r.score===myScore&&i===lb.findIndex(x=>x.score===myScore);
+    return`<div class="lb-row${me?' me':''}"><span class="lb-rank ${rc[i]||''}">${medals[i]||i+1}</span><span class="lb-name">${r.name}</span><span class="lb-score">${r.score}</span><span class="lb-meta">${r.correct}/${r.total}題・${r.date}</span></div>`;
+  }).join('');
+}
+
+let G1={};
+const R1_TIME=180;
+
+function startR1(){
+  clearInterval(G1.timerID);
+  const name=(G&&G.playerName)||(G2&&G2.playerName)||'匿名偵探';
+  G1={qIdx:0,score:0,correct:0,answered:false,timeLeft:R1_TIME,timerID:null,
+    qs:[...R1_QUESTIONS].sort(()=>Math.random()-0.5),playerName:name};
+  document.getElementById('b-stage').textContent='第一關';
+  document.getElementById('b-type').textContent='圖表功用';
+  document.getElementById('b-streak').style.display='none';
+  document.getElementById('b-score').textContent='0 分';
+  renderR1Dots();renderR1Q();
+  G1.timerID=setInterval(()=>{
+    G1.timeLeft--;
+    const t=G1.timeLeft,m=Math.floor(t/60),s=t%60;
+    const box=document.getElementById('timer-box');
+    if(box){box.textContent=m+':'+(s<10?'0':'')+s;box.className='timer-box'+(t<=36?' danger':t<=60?' warn':'');}
+    if(t<=0){clearInterval(G1.timerID);finishR1();}
+  },1000);
+  const box=document.getElementById('timer-box');
+  if(box){const t=R1_TIME;box.textContent=Math.floor(t/60)+':'+(t%60<10?'0':'')+t%60;box.className='timer-box';}
+}
+
+function renderR1Dots(){
+  const row=document.getElementById('prog-row');
+  row.innerHTML='<span class="prog-lbl">進度</span>';
+  for(let i=0;i<G1.qs.length;i++){
+    const d=document.createElement('div');
+    d.className='pdot'+(i<G1.qIdx?' done':i===G1.qIdx?' cur':'');
+    row.appendChild(d);
+  }
+  document.getElementById('b-score').textContent=G1.score+' 分';
+}
+
+function renderR1Q(){
+  if(G1.qIdx>=G1.qs.length){finishR1();return;}
+  G1.answered=false;
+  const q=G1.qs[G1.qIdx];
+  renderR1Dots();
+  const opts=[...q.options].sort(()=>Math.random()-0.5);
+  const area=document.getElementById('game-area');
+  const wrap=document.createElement('div');
+  wrap.className='q-wrap';
+  wrap.innerHTML=`
+    <div class="calc-question-panel" style="max-width:680px;margin:0 auto">
+      <div class="ptitle">圖表功用判斷 &nbsp;·&nbsp; 題目 ${G1.qIdx+1} / ${G1.qs.length}</div>
+      <div style="font-size:44px;margin:12px 0 18px;text-align:center">${q.icon}</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text);line-height:1.65;margin-bottom:22px;text-align:center">${q.question}</div>
+      <div id="r1-opts" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="calc-fb" id="r1-fb"></div>
+      <button class="next-btn" id="r1-nxt">${G1.qIdx===G1.qs.length-1?'查看結果 →':'下一題 →'}</button>
+    </div>`;
+  area.innerHTML='';area.appendChild(wrap);
+
+  const optsDiv=document.getElementById('r1-opts');
+  opts.forEach((opt,oi)=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:"Noto Sans TC",sans-serif;font-size:14px;text-align:left;cursor:pointer;transition:all .15s;line-height:1.6';
+    btn.textContent=`${'ＡＢＣＤ'[oi]}　${opt.text}`;
+    btn.addEventListener('mouseenter',()=>{if(!G1.answered)btn.style.borderColor='rgba(212,168,67,.5)';});
+    btn.addEventListener('mouseleave',()=>{if(!G1.answered)btn.style.borderColor='var(--border2)';});
+    btn.addEventListener('click',()=>{
+      if(G1.answered)return;
+      G1.answered=true;
+      optsDiv.querySelectorAll('button').forEach(b=>b.style.cursor='default');
+      opts.forEach((o,oi2)=>{
+        const b=optsDiv.querySelectorAll('button')[oi2];
+        if(o.correct){b.style.borderColor='rgba(61,184,122,.7)';b.style.background='rgba(61,184,122,.1)';b.style.color='#5bd491';}
+        else if(oi===oi2&&!opt.correct){b.style.borderColor='rgba(217,80,80,.5)';b.style.background='rgba(217,80,80,.07)';b.style.color='#e87070';}
+      });
+      const timePct=G1.timeLeft/R1_TIME;
+      if(opt.correct){
+        G1.correct++;
+        const tb=Math.floor(timePct*100*0.5);
+        G1.score+=100+tb;
+        const fb=document.getElementById('r1-fb');
+        fb.className='calc-fb show ok';
+        fb.innerHTML=`✓ 答對了！${tb>0?`<span style="color:var(--amber);font-size:12px"> ⚡ 速度加分 +${tb}</span>`:''}<br><span style="font-size:13px;color:rgba(200,255,220,.8)">${q.explanation}</span>`;
+      } else {
+        const fb=document.getElementById('r1-fb');
+        fb.className='calc-fb show fail';
+        fb.innerHTML=`✗ 答錯了。<br><span style="font-size:13px;color:rgba(255,200,200,.8)">${q.explanation}</span>`;
+      }
+      renderR1Dots();
+      document.getElementById('r1-nxt').classList.add('show');
+    });
+    optsDiv.appendChild(btn);
+  });
+  document.getElementById('r1-nxt').addEventListener('click',()=>{G1.qIdx++;renderR1Q();});
+}
+
+function finishR1(){
+  clearInterval(G1.timerID);
+  const lb=addToLBR1(G1.playerName,G1.score,G1.correct);
+  const myRank=lb.findIndex(r=>r.score===G1.score)+1;
+  const perfect=G1.correct===G1.qs.length;
+  const area=document.getElementById('game-area');
+  area.innerHTML=`
+    <div class="screen">
+      <div class="screen-icon">${perfect?'🌟':'📊'}</div>
+      <div class="screen-title">${perfect?'全對！概念精通':'第一關完成'}</div>
+      <div class="screen-sub">${perfect?'所有圖表功用都掌握了，繼續挑戰第二關！':'複習一下答錯的概念，再進入第二關吧！'}</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-v">${G1.score}</div><div class="stat-l">第一關得分</div></div>
+        <div class="stat-card"><div class="stat-v">${G1.correct}/${G1.qs.length}</div><div class="stat-l">答對題數</div></div>
+        <div class="stat-card"><div class="stat-v">#${myRank}</div><div class="stat-l">排名</div></div>
+        <div class="stat-card"><div class="stat-v">${G1.qs.length-G1.correct}</div><div class="stat-l">答錯題數</div></div>
+      </div>
+      <div class="lb-wrap" style="margin-bottom:20px">
+        <div class="lb-tabs">
+          <button class="lb-tab active" onclick="switchLBTab3('r1',this,'lb-r1e')">🌟 第一關</button>
+          <button class="lb-tab" onclick="switchLBTab3('r2',this,'lb-r1e')">🧮 第二關</button>
+          <button class="lb-tab" onclick="switchLBTab3('r3',this,'lb-r1e')">🔍 第三關</button>
+        </div>
+        <div id="lb-r1e"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="cta" onclick="startR2()">🧮 進入第二關</button>
+        <button class="cta" style="background:transparent;border-color:var(--border2);color:var(--text2)" onclick="startR1()">重玩第一關</button>
+      </div>
+    </div>`;
+  renderLBR1('lb-r1e',G1.score);
+  document.getElementById('b-stage').textContent='第一關';
+  document.getElementById('b-score').textContent=G1.score+' 分';
+}
+
+function switchLBTab3(which,btn,cid){
+  document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  if(which==='r1') renderLBR1(cid, G1&&G1.score||0);
+  else if(which==='r2') renderLBR2(cid, G2&&G2.score||0);  // 第二關=計算
+  else renderLB(cid, G&&G.score||0);                       // 第三關=偵探
+}
 function renderQ(){
   if(G.qIdx>=G.qs.length){showResult();return;}
-  G.answered=false;G.marks={};
+  G.answered=false;G.marks={};G.markScore=0;
   const q=G.qs[G.qIdx];
   const d=q.diff;
 
@@ -789,7 +1646,7 @@ function renderQ(){
   q._sus=sus;
   q._liarIdx=sus.findIndex(s=>s.liar);
 
-  document.getElementById('b-stage').textContent=G.qIdx<6?'圖表分析':'統計分析';
+  document.getElementById('b-stage').textContent='第三關';
   document.getElementById('b-type').textContent=q.typeLabel;
   renderDots();renderHUD();
 
@@ -841,13 +1698,15 @@ function renderQ(){
     }
   },50);
 
-  // Suspect cards
+  // Suspect cards — sentences shuffled per person, NO score hints during marking
   const list=document.getElementById('sus-list');
   sus.forEach((s,si)=>{
     G.marks[si]={};
     const card=document.createElement('div');
     card.className='suspect';
-    const sents=(s.text.match(/[^。！？]+[。！？]?/g)||[s.text]).filter(x=>x.trim());
+    const rawSents=(s.text.match(/[^。！？]+[。！？]?/g)||[s.text]).filter(x=>x.trim());
+    const sentOrder=Array.from({length:rawSents.length},(_,i)=>i).sort(()=>Math.random()-.5);
+    const sents=sentOrder.map(i=>rawSents[i]);
     card.innerHTML=`
       <div class="s-hd">
         <div class="avatar av${si}">${s.name[0]}</div>
@@ -929,8 +1788,18 @@ function resolveAnswer(chosen,q,sus){
   const basePt=PTS[G.qIdx]||100;
   const timeBonus=correct?Math.floor(timePct*basePt*.5):0;
   const streakBonus=correct&&G.streak>=2?50:0;
-  if(correct){G.streak++;G.score+=basePt+timeBonus+streakBonus;}
-  else{G.streak=0;G.hp--;if(G.hp<0)G.hp=0;}
+
+  // Calculate mark score AFTER answer (hidden until now)
+  let markPts=0;
+  sus.forEach((s,si)=>{
+    const isLiar=s.liar===true;
+    const correctMark=isLiar?'sus':'ok';
+    Object.values(G.marks[si]||{}).forEach(v=>{if(v===correctMark)markPts+=MARK_PTS;});
+  });
+  G.markScore+=markPts;
+
+  if(correct){G.streak++;G.score+=basePt+timeBonus+streakBonus+markPts;}
+  else{G.streak=0;G.hp--;if(G.hp<0)G.hp=0;G.score+=markPts;}
 
   document.querySelectorAll('.tline').forEach(l=>l.classList.add('locked'));
   document.querySelectorAll('.accuse-btn').forEach((b,i)=>{
@@ -941,6 +1810,34 @@ function resolveAnswer(chosen,q,sus){
     const bar=document.getElementById('hp-bar');
     bar.classList.add('shake');setTimeout(()=>bar.classList.remove('shake'),400);
   }
+
+  // Reveal all correct marks + floating score pops
+  const cards=document.querySelectorAll('.suspect');
+  sus.forEach((s,si)=>{
+    const isLiar=s.liar===true;
+    const correctMark=isLiar?'sus':'ok';
+    if(cards[si]){
+      cards[si].querySelectorAll('.tline').forEach((l,li)=>{
+        const cur=G.marks[si]&&G.marks[si][li];
+        const wasCorrect=(cur===correctMark);
+        if(isLiar){
+          l.className='tline sus locked';
+          const tm=l.querySelector('.tmark');if(tm)tm.textContent='🔴';
+        } else {
+          l.className='tline ok locked';
+          const tm=l.querySelector('.tmark');if(tm)tm.textContent='✅';
+        }
+        // Show +10 pop only for lines that were correctly marked
+        if(wasCorrect){
+          const pop=document.createElement('span');
+          pop.className='score-pop plus';pop.textContent='+'+MARK_PTS;
+          l.style.position='relative';l.appendChild(pop);
+          setTimeout(()=>pop.remove(),950);
+        }
+      });
+    }
+  });
+
   const fb=document.getElementById('fb');
   fb.className='fb show '+(correct?'ok':'fail');
   let msg=correct
@@ -948,68 +1845,142 @@ function resolveAnswer(chosen,q,sus){
     :(chosen===null?`⏰ 時間到！真正的說謊者是 ${sus[liarIdx].name}。`
                    :`✗ 指控錯誤。真正的說謊者是 ${sus[liarIdx].name}。`);
   msg+=`<br><span style="color:var(--text2)">${q.explanation}</span>`;
-  if(correct&&(timeBonus>0||streakBonus>0)){
-    msg+=`<br><span style="color:var(--amber);font-size:11px">`;
-    if(timeBonus>0)msg+=`⚡ 速度加分 +${timeBonus}　`;
-    if(streakBonus>0)msg+=`🔥 連勝加分 +${streakBonus}`;
-    msg+=`</span>`;
-  }
+  const bonuses=[];
+  if(correct) bonuses.push(`🎯 指控 +${basePt}`);
+  if(timeBonus>0) bonuses.push(`⚡ 速度 +${timeBonus}`);
+  if(streakBonus>0) bonuses.push(`🔥 連勝 +${streakBonus}`);
+  if(markPts>0) bonuses.push(`🔍 標記 +${markPts}`);
+  if(bonuses.length)msg+=`<br><span style="color:var(--amber);font-size:12px">${bonuses.join('　')}</span>`;
   fb.innerHTML=msg;
   if(correct&&G.streak>=3)showToast(`🔥 ${G.streak}連勝！`);
-  // Highlight liar's lines red
-  const cards=document.querySelectorAll('.suspect');
-  if(cards[liarIdx]){
-    cards[liarIdx].querySelectorAll('.tline').forEach(l=>{
-      l.className='tline sus locked';
-      const tm=l.querySelector('.tmark');if(tm)tm.textContent='🔴';
-    });
-  }
   renderHUD();renderDots();
-  if(G.hp<=0){document.getElementById('nxt').style.display='none';stopTimer();setTimeout(showGameOver,1200);}
+  if(G.hp<=0){document.getElementById('nxt').style.display='none';stopTimer();setTimeout(()=>showEndScreen(false),1200);}
   else document.getElementById('nxt').classList.add('show');
 }
 
-/* ══════ SCREENS ══════ */
-function showGameOver(){
-  document.getElementById('game-area').innerHTML=`
-    <div class="screen">
-      <div class="screen-icon">💀</div>
-      <div class="screen-title">偵探倒下了</div>
-      <div class="screen-sub">生命歸零，案件尚未結束。<br>重新整理思緒，再挑戰一次！</div>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-v">${G.score}</div><div class="stat-l">累計得分</div></div>
-        <div class="stat-card"><div class="stat-v">${G.qIdx}/${G.qs.length}</div><div class="stat-l">完成題數</div></div>
-        <div class="stat-card"><div class="stat-v">${3-G.hp}</div><div class="stat-l">答錯次數</div></div>
-        <div class="stat-card"><div class="stat-v">${G.streak}</div><div class="stat-l">最長連勝</div></div>
-      </div>
-      <button class="cta" onclick="startGame()">重新挑戰</button>
-    </div>`;
+/* ══════ LEADERBOARD (localStorage) ══════ */
+const LB_KEY='detective_lb_v1';
+function loadLB(){try{return JSON.parse(localStorage.getItem(LB_KEY))||[];}catch{return[];}}
+function saveLB(lb){try{localStorage.setItem(LB_KEY,JSON.stringify(lb));}catch{}}
+function addToLB(name,score,hp,completed){
+  const lb=loadLB();
+  lb.push({name,score,hp,completed,date:new Date().toLocaleDateString('zh-TW')});
+  lb.sort((a,b)=>b.score-a.score);
+  if(lb.length>20)lb.length=20;
+  saveLB(lb);
+  return lb;
 }
-function showResult(){
-  stopTimer();
-  const perfect=G.hp===3;
-  document.getElementById('game-area').innerHTML=`
-    <div class="screen">
-      <div class="screen-icon">${perfect?'🏆':'🔍'}</div>
-      <div class="screen-title">${perfect?'完美破案！':'案件偵破'}</div>
-      <div class="screen-sub">${perfect?'全程零失誤，你是頂尖數據偵探！':'9 道案件全部偵破，真相大白！'}</div>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-v">${G.score}</div><div class="stat-l">最終得分</div></div>
-        <div class="stat-card"><div class="stat-v">9/9</div><div class="stat-l">完成題數</div></div>
-        <div class="stat-card"><div class="stat-v">${G.hp}</div><div class="stat-l">剩餘生命</div></div>
-        <div class="stat-card"><div class="stat-v">${G.streak}</div><div class="stat-l">最終連勝</div></div>
-      </div>
-      <button class="cta" onclick="startGame()">再次挑戰</button>
+function renderLB(containerId, myScore){
+  const lb=loadLB();
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  if(!lb.length){el.innerHTML='<div class="lb-empty">尚無記錄，成為第一位偵探！</div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  const rankClasses=['gold','silver','bronze'];
+  el.innerHTML=lb.map((r,i)=>{
+    const isMe=(r.score===myScore&&i===lb.findIndex(x=>x.score===myScore));
+    return `<div class="lb-row${isMe?' me':''}">
+      <span class="lb-rank ${rankClasses[i]||''}">${medals[i]||i+1}</span>
+      <span class="lb-name">${r.name}</span>
+      <span class="lb-score">${r.score}</span>
+      <span class="lb-meta">${r.hp}❤️ · ${r.date}</span>
     </div>`;
+  }).join('');
 }
 
-/* ══════ START ══════ */
+/* ══════ SCREENS ══════ */
+function showNameEntry(){
+  stopTimer();
+  clearInterval(G1&&G1.timerID);
+  clearInterval(G&&G.timerID);
+  clearInterval(G2&&G2.timerID);
+  const area=document.getElementById('game-area');
+  area.innerHTML=`
+    <div class="name-screen">
+      <div style="font-size:48px;margin-bottom:12px">🔍</div>
+      <h2>數據偵探：真相只有一個</h2>
+      <p>
+        🌟 <strong>第一關</strong>：判斷統計圖表與統計量的功用，共 6 題・3 分鐘<br>
+        🧮 <strong>第二關</strong>：計算統計數值（圖表讀值、平均數、中位數、眾數），共 8 題・5 分鐘<br>
+        🔍 <strong>第三關</strong>：找出說謊者，標記證詞得分，共 9 題・3 分鐘・3 條命
+      </p>
+      <div class="name-input-wrap">
+        <input class="name-input" id="player-name" maxlength="12" placeholder="輸入你的偵探名稱" autocomplete="off"/>
+        <button class="cta" onclick="confirmName()">從第一關開始 →</button>
+      </div>
+      <div style="margin-top:28px">
+        <div class="lb-wrap">
+          <div class="lb-tabs">
+            <button class="lb-tab active" onclick="switchLBTab3('r1',this,'lb-home')">🌟 第一關</button>
+            <button class="lb-tab" onclick="switchLBTab3('r2',this,'lb-home')">🧮 第二關</button>
+            <button class="lb-tab" onclick="switchLBTab3('r3',this,'lb-home')">🔍 第三關</button>
+          </div>
+          <div id="lb-home"></div>
+        </div>
+      </div>
+    </div>`;
+  renderLBR1('lb-home',-1);
+  const inp=document.getElementById('player-name');
+  if(inp){inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')confirmName();});}
+}
+
+function confirmName(){
+  const inp=document.getElementById('player-name');
+  const name=(inp&&inp.value.trim())||'匿名偵探';
+  // store name globally so all rounds can access it
+  if(!window._playerName) window._playerName=name;
+  window._playerName=name;
+  G={playerName:name};G1={playerName:name};G2={playerName:name};
+  startR1();
+}
+
+function showEndScreen(completed){
+  stopTimer();
+  const lb=addToLB(G.playerName||window._playerName||'匿名偵探', G.score, G.hp, completed);
+  const myRank=lb.findIndex(r=>r.score===G.score)+1;
+  const perfect=G.hp===3&&completed;
+  const area=document.getElementById('game-area');
+  area.innerHTML=`
+    <div class="screen">
+      <div class="screen-icon">${completed?(perfect?'🏆':'🔍'):'💀'}</div>
+      <div class="screen-title">${completed?(perfect?'完美破案！':'偵探任務完成'):'偵探倒下了'}</div>
+      <div class="screen-sub">${completed
+        ?(perfect?'全程零失誤，真相大白！':'9 道案件全部偵破！')
+        :'生命歸零，繼續加油！'}</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-v">${G.score}</div><div class="stat-l">第三關得分</div></div>
+        <div class="stat-card"><div class="stat-v">${completed?'9/9':G.qIdx+'/9'}</div><div class="stat-l">完成題數</div></div>
+        <div class="stat-card"><div class="stat-v">${G.hp}</div><div class="stat-l">剩餘生命</div></div>
+        <div class="stat-card"><div class="stat-v">${(G1&&G1.score||0)+(G2&&G2.score||0)+G.score}</div><div class="stat-l">三關總分</div></div>
+      </div>
+      <div class="lb-wrap" style="margin-bottom:20px">
+        <div class="lb-tabs">
+          <button class="lb-tab" onclick="switchLBTab3('r1',this,'lb-end')">🌟 第一關</button>
+          <button class="lb-tab" onclick="switchLBTab3('r2',this,'lb-end')">🧮 第二關</button>
+          <button class="lb-tab active" onclick="switchLBTab3('r3',this,'lb-end')">🔍 第三關</button>
+        </div>
+        <div id="lb-end"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="cta" onclick="startGame()">重玩第三關</button>
+        <button class="cta" style="background:transparent;border-color:var(--border2);color:var(--text2)" onclick="showNameEntry()">回首頁</button>
+      </div>
+    </div>`;
+  renderLB('lb-end',G.score);
+}
+
+function showGameOver(){ showEndScreen(false); }
+function showResult(){ showEndScreen(true); }
+
+/* ══════ START R2 (偵探關) ══════ */
 function startGame(){
   clearInterval(G&&G.timerID);
-  G={qIdx:0,hp:3,score:0,streak:0,timeLeft:GLOBAL_TIME,timerID:null,answered:false,marks:{},qs:makeQuestions()};
+  const name=G&&G.playerName||G1&&G1.playerName||G2&&G2.playerName||window._playerName||'匿名偵探';
+  G={qIdx:0,hp:3,score:0,streak:0,timeLeft:GLOBAL_TIME,timerID:null,answered:false,marks:{},qs:makeQuestions(),markScore:0,totalMarks:0,playerName:name};
+  document.getElementById('b-stage').textContent='第三關';
   renderHUD();renderDots();renderQ();
 }
-startGame();
+showNameEntry();
 </script>
 </body>
 </html>
