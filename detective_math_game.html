@@ -4,215 +4,232 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>數據偵探：真相只有一個</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0e0f14;--bg2:#14161e;--bg3:#1a1d28;--bg4:#1f2235;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --text:#e8e6df;--text2:#8a8780;--text3:#4a4845;
-  --amber:#d4a843;--amber2:#f0c560;
-  --blue:#4a90d9;--green:#3db87a;--red:#d95050;--purple:#8b6fd4;--teal:#3bbfaa;
+  --bg:#0b0c12;--bg2:#12141f;--bg3:#181b28;--bg4:#1e2130;--bg5:#232638;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --text:#ede9e0;--text2:#9a9690;--text3:#52505a;
+  --amber:#c9983a;--amber2:#f0c560;--amber3:#ffd97a;
+  --blue:#4a8fd4;--blue2:#6aaef5;
+  --green:#2eaa6a;--green2:#4cd49a;
+  --red:#c94040;--red2:#f06060;
+  --purple:#7a5fd0;--teal:#2aadaa;--teal2:#4eddda;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 70% 50% at 15% 15%,rgba(74,144,217,.05) 0%,transparent 55%),
-  radial-gradient(ellipse 60% 40% at 85% 85%,rgba(212,168,67,.05) 0%,transparent 55%);
-  pointer-events:none;z-index:0}
-.wrap{max-width:980px;margin:0 auto;padding:0 18px 40px;position:relative;z-index:1}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 90% 60% at 10% 5%,rgba(201,152,58,.07) 0%,transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 90%,rgba(74,143,212,.05) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(122,95,208,.03) 0%,transparent 60%);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:32px 32px;}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 48px;position:relative;z-index:1}
 
-/* HUD */
-.hud{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
-.hud-logo{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;white-space:nowrap}
-.hud-logo span{color:var(--amber)}
-.hud-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0}
-.badge{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:500;border:1px solid;white-space:nowrap}
-.b-stage{border-color:rgba(74,144,217,.4);background:rgba(74,144,217,.08);color:var(--blue)}
-.b-type{border-color:rgba(59,191,170,.35);background:rgba(59,191,170,.07);color:var(--teal)}
-.b-score{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.08);color:var(--amber2);font-weight:700}
-.b-streak{border-color:rgba(139,111,212,.4);background:rgba(139,111,212,.08);color:var(--purple)}
-.hud-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.hp-bar{display:flex;gap:4px}
-.heart{font-size:18px;transition:opacity .3s,transform .2s}
-.heart.lost{opacity:.2;transform:scale(.8)}
-.timer-box{padding:5px 14px;border-radius:7px;font-size:14px;font-weight:700;border:1px solid rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green);min-width:62px;text-align:center;transition:background .3s,border-color .3s,color .3s}
-.timer-box.warn{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.12);color:var(--amber2)}
-.timer-box.danger{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.12);color:var(--red)}
+/* ── HUD ── */
+.hud{display:flex;align-items:center;gap:10px;padding:14px 18px;margin-bottom:20px;
+  background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);
+  border:1px solid var(--border2);border-radius:16px;
+  box-shadow:0 4px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
+  flex-wrap:wrap;position:sticky;top:10px;z-index:50;backdrop-filter:blur(12px);}
+.hud-logo{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.hud-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,rgba(201,152,58,.3),rgba(201,152,58,.08));border:1px solid rgba(201,152,58,.4);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 14px rgba(201,152,58,.2)}
+.hud-logo-txt{display:flex;flex-direction:column}
+.hud-logo-txt span{color:var(--amber2)}
+.hud-logo-sub{font-size:9px;color:var(--text3);letter-spacing:2px;font-family:'Noto Sans TC',sans-serif;font-weight:400;margin-top:1px}
+.hud-sep{width:1px;height:22px;background:var(--border2);flex-shrink:0;margin:0 2px}
+.badge{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid;white-space:nowrap;letter-spacing:.3px;transition:all .2s}
+.b-stage{border-color:rgba(74,143,212,.45);background:linear-gradient(135deg,rgba(74,143,212,.15),rgba(74,143,212,.05));color:var(--blue2);box-shadow:0 0 10px rgba(74,143,212,.12)}
+.b-type{border-color:rgba(42,173,170,.4);background:linear-gradient(135deg,rgba(42,173,170,.12),rgba(42,173,170,.04));color:var(--teal2)}
+.b-score{border-color:rgba(201,152,58,.5);background:linear-gradient(135deg,rgba(201,152,58,.2),rgba(201,152,58,.07));color:var(--amber2);font-weight:700;box-shadow:0 0 10px rgba(201,152,58,.12)}
+.b-streak{border-color:rgba(122,95,208,.45);background:linear-gradient(135deg,rgba(122,95,208,.18),rgba(122,95,208,.06));color:#a090f0}
+.hud-right{margin-left:auto;display:flex;align-items:center;gap:11px;flex-shrink:0}
+.hp-bar{display:flex;gap:3px}
+.heart{font-size:20px;transition:all .3s;filter:drop-shadow(0 0 4px rgba(217,80,80,.5))}
+.heart.lost{opacity:.18;transform:scale(.75);filter:none}
+.timer-box{padding:6px 15px;border-radius:20px;font-size:15px;font-weight:700;min-width:66px;text-align:center;letter-spacing:.5px;border:1px solid rgba(46,170,106,.5);background:linear-gradient(135deg,rgba(46,170,106,.18),rgba(46,170,106,.06));color:var(--green2);box-shadow:0 0 12px rgba(46,170,106,.18);transition:all .3s}
+.timer-box.warn{border-color:rgba(201,152,58,.55);background:linear-gradient(135deg,rgba(201,152,58,.2),rgba(201,152,58,.07));color:var(--amber2);box-shadow:0 0 12px rgba(201,152,58,.18)}
+.timer-box.danger{border-color:rgba(201,64,64,.6);background:linear-gradient(135deg,rgba(201,64,64,.22),rgba(201,64,64,.08));color:var(--red2);box-shadow:0 0 14px rgba(201,64,64,.25);animation:timerPulse 1s ease infinite}
+@keyframes timerPulse{0%,100%{box-shadow:0 0 14px rgba(201,64,64,.25)}50%{box-shadow:0 0 24px rgba(201,64,64,.55)}}
 
-/* Progress dots */
-.prog-row{display:flex;align-items:center;gap:5px;margin-bottom:16px}
-.prog-lbl{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-right:6px}
-.pdot{width:26px;height:4px;border-radius:2px;background:var(--border);transition:background .4s}
-.pdot.done{background:var(--green)}.pdot.cur{background:var(--amber)}.pdot.fail{background:var(--red)}
+/* ── Progress ── */
+.prog-row{display:flex;align-items:center;gap:5px;margin-bottom:18px;padding:0 2px}
+.prog-lbl{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-right:8px}
+.pdot{height:5px;border-radius:3px;background:var(--border2);transition:all .4s cubic-bezier(.4,0,.2,1);flex:1;max-width:30px}
+.pdot.done{background:linear-gradient(90deg,var(--green),var(--green2));box-shadow:0 0 7px rgba(46,170,106,.4)}
+.pdot.cur{background:linear-gradient(90deg,var(--amber),var(--amber2));box-shadow:0 0 9px rgba(201,152,58,.5);animation:dotPulse 1.5s ease infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.6}}
 
-/* Layout */
-.main{display:grid;grid-template-columns:40% 1fr;gap:14px;align-items:start}
-@media(max-width:700px){.main{grid-template-columns:1fr}}
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
-.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.4),transparent)}
-.ptitle{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.ptitle::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--amber);flex-shrink:0}
-canvas{width:100%;display:block;border-radius:6px}
+/* ── Layout ── */
+.main{display:grid;grid-template-columns:40% 1fr;gap:16px;align-items:start}
+@media(max-width:720px){.main{grid-template-columns:1fr}}
+.panel{background:linear-gradient(160deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border2);border-radius:18px;padding:20px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05)}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,rgba(201,152,58,.6) 40%,rgba(240,197,96,.85) 50%,rgba(201,152,58,.6) 60%,transparent 100%)}
+.ptitle{font-size:10px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:600}
+.ptitle-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;box-shadow:0 0 7px rgba(201,152,58,.6)}
+canvas{width:100%;display:block;border-radius:10px}
+.diff-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid;margin-bottom:12px;letter-spacing:.3px}
+.diff-easy{border-color:rgba(46,170,106,.45);background:rgba(46,170,106,.12);color:var(--green2)}
+.diff-med{border-color:rgba(201,152,58,.45);background:rgba(201,152,58,.12);color:var(--amber2)}
+.diff-hard{border-color:rgba(201,64,64,.45);background:rgba(201,64,64,.12);color:var(--red2)}
+.hint-box{margin-top:14px;background:linear-gradient(135deg,rgba(201,152,58,.08),rgba(201,152,58,.03));border:1px solid rgba(201,152,58,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:rgba(201,152,58,.9);line-height:1.7;display:flex;gap:9px}
 
-.diff-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;border:1px solid;margin-bottom:10px}
-.diff-easy{border-color:rgba(61,184,122,.4);background:rgba(61,184,122,.1);color:var(--green)}
-.diff-med{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--amber)}
-.diff-hard{border-color:rgba(217,80,80,.4);background:rgba(217,80,80,.1);color:var(--red)}
-
-.hint-box{margin-top:12px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:7px;padding:10px 13px;font-size:13px;color:#b89040;line-height:1.7;display:flex;gap:8px}
-
-/* Suspects */
-.suspects{display:flex;flex-direction:column;gap:10px}
-.suspect{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
-.s-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:15px;flex-shrink:0;border:1px solid}
-.av0{background:rgba(74,144,217,.15);color:var(--blue);border-color:rgba(74,144,217,.3)}
-.av1{background:rgba(61,184,122,.15);color:var(--green);border-color:rgba(61,184,122,.3)}
-.av2{background:rgba(212,168,67,.15);color:var(--amber);border-color:rgba(212,168,67,.3)}
-.s-name{font-weight:700;font-size:15px;color:var(--text)}.s-role{font-size:11px;color:var(--text3);margin-top:1px}
-
-/* Testimony lines */
-.tline{font-size:14px;color:var(--text2);line-height:1.75;padding:9px 12px;background:rgba(255,255,255,.02);border-left:2px solid var(--border2);border-radius:0 6px 6px 0;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none;position:relative}
+/* ── Suspects ── */
+.suspects{display:flex;flex-direction:column;gap:11px}
+.suspect{background:linear-gradient(135deg,var(--bg3) 0%,var(--bg4) 100%);border:1px solid var(--border);border-radius:14px;padding:15px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.4,0,.2,1)}
+.suspect:hover:not(.disabled){border-color:rgba(201,152,58,.3);box-shadow:0 0 18px rgba(201,152,58,.1);transform:translateY(-1px)}
+.suspect::before{content:'';position:absolute;top:0;right:0;bottom:0;left:0;background:repeating-linear-gradient(-45deg,transparent,transparent 20px,rgba(255,255,255,.006) 20px,rgba(255,255,255,.006) 21px);pointer-events:none}
+.s-hd{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:16px;flex-shrink:0;border:1.5px solid;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.av0{background:linear-gradient(135deg,rgba(74,143,212,.25),rgba(74,143,212,.1));color:var(--blue2);border-color:rgba(74,143,212,.4);box-shadow:0 0 10px rgba(74,143,212,.2)}
+.av1{background:linear-gradient(135deg,rgba(46,170,106,.25),rgba(46,170,106,.1));color:var(--green2);border-color:rgba(46,170,106,.4);box-shadow:0 0 10px rgba(46,170,106,.2)}
+.av2{background:linear-gradient(135deg,rgba(201,152,58,.25),rgba(201,152,58,.1));color:var(--amber2);border-color:rgba(201,152,58,.4);box-shadow:0 0 10px rgba(201,152,58,.2)}
+.s-name{font-weight:700;font-size:15px;color:var(--text)}
+.s-role{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:.3px}
+.tline{font-size:14px;color:var(--text2);line-height:1.75;padding:10px 13px;background:rgba(0,0,0,.18);border-left:2px solid var(--border2);border-radius:0 8px 8px 0;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:all .15s;user-select:none;position:relative}
 .tline:last-child{margin-bottom:0}
-.tline:hover:not(.locked){background:rgba(255,255,255,.05)}
-.tline.ok{border-left-color:var(--green);background:rgba(61,184,122,.06)}
-.tline.sus{border-left-color:var(--red);background:rgba(217,80,80,.06)}
+.tline:hover:not(.locked){background:rgba(255,255,255,.04);border-left-color:rgba(201,152,58,.4)}
+.tline.ok{border-left-color:var(--green2);background:rgba(46,170,106,.07)}
+.tline.sus{border-left-color:var(--red2);background:rgba(201,64,64,.07)}
 .tline.locked{cursor:default}
 .tline-txt{flex:1}
-.tmark{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;transition:all .15s}
-.tline.ok .tmark{background:rgba(61,184,122,.2);border-color:rgba(61,184,122,.5);color:var(--green)}
-.tline.sus .tmark{background:rgba(217,80,80,.2);border-color:rgba(217,80,80,.5);color:var(--red)}
+.tmark{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;transition:all .2s;background:rgba(0,0,0,.2)}
+.tline.ok .tmark{background:rgba(46,170,106,.25);border-color:rgba(46,170,106,.6);color:var(--green2);box-shadow:0 0 8px rgba(46,170,106,.3)}
+.tline.sus .tmark{background:rgba(201,64,64,.25);border-color:rgba(201,64,64,.6);color:var(--red2);box-shadow:0 0 8px rgba(201,64,64,.3)}
+.score-pop{position:absolute;right:12px;top:6px;font-size:13px;font-weight:700;pointer-events:none;animation:scorePop .9s ease forwards;z-index:10}
+.score-pop.plus{color:var(--green2);text-shadow:0 0 8px rgba(46,170,106,.6)}
+@keyframes scorePop{0%{opacity:1;transform:translateY(0) scale(1)}60%{opacity:1;transform:translateY(-20px) scale(1.2)}100%{opacity:0;transform:translateY(-34px) scale(.85)}}
 
-/* Floating score popup - only shown after answer reveal */
-.score-pop{position:absolute;right:10px;top:4px;font-size:13px;font-weight:700;pointer-events:none;animation:scorePop .9s ease forwards;z-index:10}
-.score-pop.plus{color:#5bd491}
-@keyframes scorePop{
-  0%{opacity:1;transform:translateY(0) scale(1)}
-  60%{opacity:1;transform:translateY(-18px) scale(1.15)}
-  100%{opacity:0;transform:translateY(-30px) scale(0.9)}
-}
+/* ── Accuse ── */
+.accuse-section{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)}
+.accuse-lbl{font-size:12px;color:var(--text3);margin-bottom:10px;letter-spacing:.5px}
+.accuse-btns{display:flex;gap:9px}
+.accuse-btn{flex:1;padding:11px 8px;border-radius:10px;border:1px solid var(--border2);background:linear-gradient(135deg,var(--bg4),var(--bg5));color:var(--text2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.accuse-btn:not(:disabled):hover{border-color:rgba(201,64,64,.55);background:linear-gradient(135deg,rgba(201,64,64,.12),rgba(201,64,64,.05));color:var(--red2);box-shadow:0 0 14px rgba(201,64,64,.2);transform:translateY(-1px)}
+.accuse-btn:disabled{opacity:.3;cursor:default}
+.accuse-btn.liar-reveal{border-color:rgba(201,64,64,.6);background:linear-gradient(135deg,rgba(201,64,64,.18),rgba(201,64,64,.07));color:var(--red2);opacity:1;box-shadow:0 0 16px rgba(201,64,64,.25)}
+.accuse-btn.truth-reveal{opacity:.25}
 
-/* Accuse */
-.accuse-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.accuse-lbl{font-size:12px;color:var(--text3);margin-bottom:9px}
-.accuse-btns{display:flex;gap:8px}
-.accuse-btn{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
-.accuse-btn:not(:disabled):hover{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.08);color:#e87070}
-.accuse-btn:disabled{opacity:.35;cursor:default}
-.accuse-btn.liar-reveal{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.1);color:#e87070;opacity:1}
-.accuse-btn.truth-reveal{opacity:.3}
-
-/* Feedback */
-.fb{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.75;display:none;animation:fadeUp .3s ease}
+/* ── Feedback ── */
+.fb{padding:13px 16px;border-radius:11px;font-size:13px;line-height:1.8;margin-top:13px;display:none;animation:fadeUp .3s ease}
 .fb.show{display:block}
-.fb.ok{background:rgba(61,184,122,.1);border:1px solid rgba(61,184,122,.25);color:#5bd491}
-.fb.fail{background:rgba(217,80,80,.08);border:1px solid rgba(217,80,80,.2);color:#e87070}
+.fb.ok{background:linear-gradient(135deg,rgba(46,170,106,.12),rgba(46,170,106,.05));border:1px solid rgba(46,170,106,.3);color:#6de8ae;box-shadow:0 0 16px rgba(46,170,106,.1)}
+.fb.fail{background:linear-gradient(135deg,rgba(201,64,64,.1),rgba(201,64,64,.04));border:1px solid rgba(201,64,64,.3);color:var(--red2)}
 
-/* Next btn */
-.next-btn{display:none;margin-top:12px;width:100%;padding:11px;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.3);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
-.next-btn:hover{background:rgba(212,168,67,.15)}
+/* ── Next btn ── */
+.next-btn{display:none;margin-top:13px;width:100%;padding:12px;background:linear-gradient(135deg,rgba(201,152,58,.12),rgba(201,152,58,.05));border:1px solid rgba(201,152,58,.35);border-radius:10px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.3px;box-shadow:0 0 10px rgba(201,152,58,.1)}
+.next-btn:hover{background:linear-gradient(135deg,rgba(201,152,58,.22),rgba(201,152,58,.1));border-color:rgba(201,152,58,.6);box-shadow:0 0 18px rgba(201,152,58,.2)}
 .next-btn.show{display:block}
 
-/* Toast */
-.toast{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid rgba(212,168,67,.4);border-radius:8px;padding:8px 20px;font-size:14px;color:var(--amber2);font-weight:500;pointer-events:none;opacity:0;transition:opacity .25s;z-index:100;white-space:nowrap}
+/* ── Toast ── */
+.toast{position:fixed;top:74px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid rgba(201,152,58,.45);border-radius:24px;padding:9px 22px;font-size:14px;color:var(--amber2);font-weight:600;pointer-events:none;opacity:0;transition:opacity .25s;z-index:200;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 14px rgba(201,152,58,.2)}
 .toast.show{opacity:1}
 
-/* Screens */
-.screen{text-align:center;padding:56px 20px 36px;animation:fadeUp .4s ease}
-.screen-icon{font-size:52px;margin-bottom:14px}
-.screen-title{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:700;margin-bottom:8px}
-.screen-sub{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:24px}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;max-width:460px;margin:0 auto 22px}
-@media(max-width:500px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:14px 8px;text-align:center}
-.stat-v{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:700;color:var(--amber2)}
-.stat-l{font-size:11px;color:var(--text3);margin-top:3px}
-.cta{padding:12px 30px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.4);border-radius:8px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;margin:4px}
-.cta:hover{background:rgba(212,168,67,.18)}
+/* ── Data Chips ── */
+.drow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dchip{padding:5px 11px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);font-family:'Noto Serif TC',serif;transition:all .2s}
+.dchip.out{background:rgba(201,64,64,.12);border-color:rgba(201,64,64,.35);color:var(--red2);box-shadow:0 0 8px rgba(201,64,64,.18)}
 
-/* Data chips */
-.drow{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
-.dchip{padding:4px 9px;border-radius:5px;font-size:13px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2)}
-.dchip.out{background:rgba(217,80,80,.1);border-color:rgba(217,80,80,.3);color:var(--red)}
-
-/* ── 第二關：計算題 input ── */
-.calc-question{animation:fadeUp .3s ease}
-.calc-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
-.calc-chart-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(59,191,170,.5),transparent)}
-.calc-question-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
-.calc-question-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.4),transparent)}
-.calc-q-text{font-size:17px;font-weight:500;color:var(--text);line-height:1.7;margin-bottom:18px}
-.calc-q-text em{color:var(--amber2);font-style:normal;font-weight:700}
-.calc-input-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-.calc-input{padding:11px 16px;border-radius:8px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:500;width:160px;outline:none;transition:border-color .2s;text-align:center}
-.calc-input:focus{border-color:rgba(212,168,67,.6)}
-.calc-input.correct{border-color:rgba(61,184,122,.6);background:rgba(61,184,122,.06);color:var(--green)}
-.calc-input.wrong{border-color:rgba(217,80,80,.5);background:rgba(217,80,80,.06);color:var(--red)}
-.calc-unit{font-size:14px;color:var(--text2)}
-.calc-submit{padding:11px 22px;border-radius:8px;border:1px solid rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
-.calc-submit:hover:not(:disabled){background:rgba(212,168,67,.2)}
-.calc-submit:disabled{opacity:.4;cursor:default}
-.calc-hint-box{background:rgba(59,191,170,.06);border:1px solid rgba(59,191,170,.15);border-radius:7px;padding:9px 12px;font-size:13px;color:#3bbfaa;line-height:1.65;margin-bottom:14px;display:flex;gap:7px}
-.calc-fb{padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.75;margin-top:12px;display:none;animation:fadeUp .3s ease}
+/* ── 第二關 計算題 ── */
+.calc-question{animation:fadeUp .35s ease}
+.calc-chart-wrap{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:18px;padding:20px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
+.calc-chart-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(42,173,170,.7),transparent)}
+.calc-question-panel{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:18px;padding:22px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
+.calc-question-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(201,152,58,.7),transparent)}
+.calc-q-text{font-size:18px;font-weight:500;color:var(--text);line-height:1.75;margin-bottom:20px}
+.calc-q-text em{color:var(--amber3);font-style:normal;font-weight:700;text-shadow:0 0 12px rgba(201,152,58,.4)}
+.calc-input-row{display:flex;gap:11px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.calc-input{padding:12px 18px;border-radius:10px;border:1.5px solid var(--border2);background:rgba(0,0,0,.25);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:18px;font-weight:600;width:170px;outline:none;transition:all .2s;text-align:center;box-shadow:inset 0 2px 8px rgba(0,0,0,.3)}
+.calc-input:focus{border-color:rgba(201,152,58,.65);box-shadow:inset 0 2px 8px rgba(0,0,0,.3),0 0 12px rgba(201,152,58,.2)}
+.calc-input.correct{border-color:rgba(46,170,106,.65);background:rgba(46,170,106,.08);color:var(--green2);box-shadow:0 0 12px rgba(46,170,106,.2)}
+.calc-input.wrong{border-color:rgba(201,64,64,.55);background:rgba(201,64,64,.07);color:var(--red2)}
+.calc-unit{font-size:15px;color:var(--text2);font-weight:500}
+.calc-submit{padding:12px 24px;border-radius:10px;border:1px solid rgba(201,152,58,.45);background:linear-gradient(135deg,rgba(201,152,58,.2),rgba(201,152,58,.08));color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 0 10px rgba(201,152,58,.12)}
+.calc-submit:hover:not(:disabled){background:linear-gradient(135deg,rgba(201,152,58,.35),rgba(201,152,58,.15));box-shadow:0 0 18px rgba(201,152,58,.28)}
+.calc-submit:disabled{opacity:.35;cursor:default}
+.calc-hint-box{background:rgba(42,173,170,.07);border:1px solid rgba(42,173,170,.2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--teal2);line-height:1.65;margin-bottom:14px;display:flex;gap:7px}
+.calc-fb{padding:13px 16px;border-radius:11px;font-size:13px;line-height:1.8;margin-top:13px;display:none;animation:fadeUp .3s ease}
 .calc-fb.show{display:block}
-.calc-fb.ok{background:rgba(61,184,122,.1);border:1px solid rgba(61,184,122,.25);color:#5bd491}
-.calc-fb.fail{background:rgba(217,80,80,.08);border:1px solid rgba(217,80,80,.2);color:#e87070}
-.calc-step{background:rgba(255,255,255,.03);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text2);margin-top:8px;font-family:'Noto Serif TC',serif;line-height:1.8}
-.data-display{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.data-num{padding:5px 10px;border-radius:6px;font-size:14px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);font-family:'Noto Serif TC',serif}
-.data-num.hi{background:rgba(217,80,80,.1);border-color:rgba(217,80,80,.3);color:#e87070}
+.calc-fb.ok{background:linear-gradient(135deg,rgba(46,170,106,.12),rgba(46,170,106,.05));border:1px solid rgba(46,170,106,.3);color:#6de8ae;box-shadow:0 0 14px rgba(46,170,106,.1)}
+.calc-fb.fail{background:linear-gradient(135deg,rgba(201,64,64,.1),rgba(201,64,64,.04));border:1px solid rgba(201,64,64,.3);color:var(--red2)}
+.calc-step{background:rgba(0,0,0,.25);border-radius:8px;padding:9px 13px;font-size:13px;color:var(--text2);margin-top:9px;font-family:'Noto Serif TC',serif;line-height:1.9;border-left:2px solid rgba(201,152,58,.3)}
+.data-display{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.data-num{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:600;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text);font-family:'Noto Serif TC',serif;transition:all .15s}
+.data-num:hover{border-color:rgba(201,152,58,.3);background:rgba(201,152,58,.06)}
 
-/* Leaderboard tabs */
-.lb-tabs{display:flex;gap:0;margin-bottom:14px;border-radius:8px;overflow:hidden;border:1px solid var(--border2)}
-.lb-tab{flex:1;padding:9px;font-size:13px;font-weight:500;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .2s;font-family:'Noto Sans TC',sans-serif}
-.lb-tab.active{background:rgba(212,168,67,.12);color:var(--amber2)}
+/* ── LB ── */
+.lb-tabs{display:flex;gap:0;margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid var(--border2);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.lb-tab{flex:1;padding:10px;font-size:13px;font-weight:600;border:none;background:var(--bg3);color:var(--text3);cursor:pointer;transition:all .2s;font-family:'Noto Sans TC',sans-serif;letter-spacing:.3px}
+.lb-tab.active{background:linear-gradient(135deg,rgba(201,152,58,.18),rgba(201,152,58,.07));color:var(--amber2)}
 .lb-tab:not(:last-child){border-right:1px solid var(--border2)}
+.lb-wrap{max-width:460px;margin:0 auto}
+.lb-row{display:flex;align-items:center;gap:11px;padding:10px 15px;border-radius:11px;background:linear-gradient(135deg,var(--bg3),var(--bg4));border:1px solid var(--border);margin-bottom:7px;font-size:13px;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.lb-row.me{border-color:rgba(201,152,58,.45);background:linear-gradient(135deg,rgba(201,152,58,.1),rgba(201,152,58,.04));box-shadow:0 0 14px rgba(201,152,58,.12)}
+.lb-rank{width:26px;font-weight:700;color:var(--text3);text-align:center;flex-shrink:0;font-family:'Noto Serif TC',serif;font-size:15px}
+.lb-rank.gold{color:#f0c560;text-shadow:0 0 8px rgba(240,197,96,.5)}
+.lb-rank.silver{color:#b0b8cc}
+.lb-rank.bronze{color:#d08860}
+.lb-name{flex:1;font-weight:500;color:var(--text);font-size:14px}
+.lb-score{font-weight:700;color:var(--amber2);font-family:'Noto Serif TC',serif;font-size:16px}
+.lb-meta{font-size:11px;color:var(--text3);margin-left:4px}
+.lb-empty{text-align:center;padding:22px;color:var(--text3);font-size:13px}
 
-/* Stage clear interstitial */
-.inter-screen{text-align:center;padding:60px 20px 40px;animation:fadeUp .4s ease}
-.inter-icon{font-size:52px;margin-bottom:14px}
-.inter-title{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;margin-bottom:8px}
-.inter-sub{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:28px}
-.inter-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.name-screen{text-align:center;padding:64px 20px 40px;animation:fadeUp .4s ease}
-.name-screen h2{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;margin-bottom:8px}
-.name-screen p{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7}
-.name-input-wrap{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
-.name-input{padding:10px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:15px;width:220px;outline:none;transition:border-color .2s}
-.name-input:focus{border-color:rgba(212,168,67,.5)}
+/* ── Screen / Stats ── */
+.screen{text-align:center;padding:52px 20px 36px;animation:fadeUp .5s ease}
+.screen-icon{font-size:58px;margin-bottom:16px;display:block;animation:iconBounce .6s cubic-bezier(.4,0,.2,1);filter:drop-shadow(0 0 20px rgba(201,152,58,.4))}
+@keyframes iconBounce{0%{transform:scale(.6) translateY(10px);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.screen-title{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:700;margin-bottom:10px;letter-spacing:.5px}
+.screen-sub{font-size:14px;color:var(--text2);line-height:1.85;margin-bottom:26px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:480px;margin:0 auto 26px}
+@media(max-width:520px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:linear-gradient(160deg,var(--bg3),var(--bg4));border:1px solid var(--border2);border-radius:14px;padding:16px 10px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:all .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.stat-v{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:700;color:var(--amber2);text-shadow:0 0 12px rgba(201,152,58,.3)}
+.stat-l{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:.5px}
+.cta{padding:13px 32px;background:linear-gradient(135deg,rgba(201,152,58,.2),rgba(201,152,58,.08));border:1px solid rgba(201,152,58,.5);border-radius:24px;color:var(--amber2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .22s;margin:5px;box-shadow:0 0 14px rgba(201,152,58,.12);letter-spacing:.3px}
+.cta:hover{background:linear-gradient(135deg,rgba(201,152,58,.35),rgba(201,152,58,.15));box-shadow:0 0 24px rgba(201,152,58,.28);transform:translateY(-1px)}
+
+/* ── Name Screen ── */
+.name-screen{text-align:center;padding:52px 20px 38px;animation:fadeUp .5s ease}
+.name-screen h2{font-family:'Noto Serif TC',serif;font-size:28px;font-weight:700;margin-bottom:10px;background:linear-gradient(135deg,#ffd97a,#f0c560,#c9983a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.name-screen p{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.85}
+.stage-badge-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+.stage-badge{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid;transition:all .2s}
+.stage-badge-1{border-color:rgba(122,95,208,.4);background:rgba(122,95,208,.1);color:#a090f0}
+.stage-badge-2{border-color:rgba(46,170,106,.4);background:rgba(46,170,106,.1);color:var(--green2)}
+.stage-badge-3{border-color:rgba(74,143,212,.4);background:rgba(74,143,212,.1);color:var(--blue2)}
+.name-input-wrap{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.name-input{padding:12px 18px;border-radius:12px;border:1.5px solid var(--border2);background:rgba(0,0,0,.3);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:15px;width:240px;outline:none;transition:all .2s;box-shadow:inset 0 2px 8px rgba(0,0,0,.3)}
+.name-input:focus{border-color:rgba(201,152,58,.6);box-shadow:inset 0 2px 8px rgba(0,0,0,.3),0 0 14px rgba(201,152,58,.2)}
 .name-input::placeholder{color:var(--text3)}
 
-/* Leaderboard */
-.lb-wrap{max-width:440px;margin:0 auto}
-.lb-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.lb-title::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--amber);flex-shrink:0}
-.lb-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:13px}
-.lb-row.me{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.06)}
-.lb-rank{width:24px;font-weight:700;color:var(--text3);text-align:center;flex-shrink:0;font-family:'Noto Serif TC',serif}
-.lb-rank.gold{color:#f0c560}.lb-rank.silver{color:#a0a8b8}.lb-rank.bronze{color:#c87850}
-.lb-name{flex:1;font-weight:500;color:var(--text)}
-.lb-score{font-weight:700;color:var(--amber2);font-family:'Noto Serif TC',serif;font-size:15px}
-.lb-meta{font-size:11px;color:var(--text3);margin-left:6px}
-.lb-empty{text-align:center;padding:20px;color:var(--text3);font-size:13px}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-.shake{animation:shake .35s ease}
-.q-wrap{animation:fadeUp .3s ease}
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s ease}
+.q-wrap{animation:fadeUp .35s ease}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hud">
-    <div class="hud-logo">🔍 <span>數據偵探</span></div>
+    <div class="hud-logo">
+      <div class="hud-logo-icon">🔍</div>
+      <div class="hud-logo-txt">
+        <div>數據<span>偵探</span></div>
+        <div class="hud-logo-sub">DATA DETECTIVE</div>
+      </div>
+    </div>
     <div class="hud-sep"></div>
-    <span class="badge b-stage" id="b-stage">圖表分析</span>
+    <span class="badge b-stage" id="b-stage">第一關</span>
     <span class="badge b-type"  id="b-type"></span>
     <span class="badge b-score" id="b-score">0 分</span>
     <span class="badge b-streak" id="b-streak" style="display:none"></span>
     <div class="hud-right">
       <div class="hp-bar" id="hp-bar"></div>
-      <div class="timer-box" id="timer-box">3:00</div>
+      <div class="timer-box" id="timer-box">2:00</div>
     </div>
   </div>
   <div class="prog-row" id="prog-row"><span class="prog-lbl">進度</span></div>
@@ -229,204 +246,203 @@ const R5=(lo,hi)=>{ // random multiple of 5 in [lo,hi]
   return (Math.floor(Math.random()*(top-base+1))+base)*5;
 };
 
-/* ══════ FIXED QUESTIONS – each chart type, all values multiples of 5 ══════
-   9 題，每種圖各一：
-   Q0 圓餅圖  Q1 長條圖  Q2 雙組長條  Q3 折線圖  Q4 雙折線
-   Q5 直方圖  Q6 統計量  Q7 列聯表   Q8 眾數分析
+/* ══════ 第三關題目：數值全為5的倍數，承接第二關各圖表與統計量概念 ══════
+   Q0 圓餅圖   → 比例換算人數（第二關算過）
+   Q1 長條圖   → 不連續類別差值（第二關算過）
+   Q2 雙組長條 → 逐項比較，不能以偏概全
+   Q3 折線圖   → 斜率最陡=增加最多（第二關選過）
+   Q4 雙折線   → 交叉點判斷領先段
+   Q5 直方圖   → 60分以下人數（第二關算過）
+   Q6 平均數   → 極端值拉高平均，中位數更具代表性
+   Q7 列聯表   → 單列合計 vs 整體合計
+   Q8 眾數     → 出現最多次的類別名稱
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function makeQuestions(){
   return [
 
-/* ── Q0 圓餅圖 ──────────────────────────────────────────────────────────
-   核心：比例 ↔ 人數換算；判斷是否真的超過 50%
-   謊言：前兩名合計宣稱「剛好一半」，實際上超過一半
+/* ── Q0 圓餅圖：比例換算人數 ──────────────────────────────────────────
+   承接第二關：R2-0 算過「比例×總人數÷100＝人數」
+   謊言：知道「英文佔20%、全班200人」，卻說「英文有20人」（忘記乘以總人數）
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const cats=['數學','國文','英文','自然','社會'];
-  const pcts=[35,25,20,10,10]; // 加總=100，都是5的倍數
-  const total=100;
-  const vals=pcts.map(p=>p); // 總人數100，%直接等於人數
+  const pcts=[35,25,20,10,10];
+  const total=200;
+  const vals=pcts.map(p=>total*p/100); // [70,50,40,20,20]
   return {
     type:'pie', typeLabel:'圓餅圖', diff:'easy',
     data:{cats,vals,pcts,total},
-    hint:'重點：人數 ＝ 總人數 × 比例%；判斷兩類加總是否真的剛好等於 50%。',
+    hint:'💡 人數 ＝ 總人數 × 比例% ÷ 100，不能直接把 % 當成人數。',
     suspects:[
       {name:'小明',role:'班長',truth:true,
-       text:'「數學」佔 35%，全班 100 人，換算有 35 人選擇它，是五科中最多的。'},
+       text:'「數學」佔 35%，全班 200 人，換算有 70 人選數學。'},
       {name:'小華',role:'學委',truth:true,
-       text:'「數學」加「國文」合計 60%，超過全體的一半，兩科合計人數最多。'},
+       text:'「英文」佔 20%，全班 200 人，換算有 40 人選英文。'},
       {name:'小美',role:'同學',liar:true,
-       text:'「數學」35% 加「國文」25%，兩科合計剛好佔全體的一半（50%）。'},
+       text:'「英文」佔 20%，全班 200 人，所以選英文的有 20 人。'},
     ],
-    explanation:'35%＋25%＝60%，超過一半，不是「剛好一半（50%）」，小美的計算有誤。'
+    explanation:'英文人數應為 200 × 20% ＝ 40 人，不是 20 人。小美把百分比數字直接當人數，忘記乘以總人數 200。'
   };
 })(),
 
-/* ── Q1 長條圖 ──────────────────────────────────────────────────────────
-   核心：不連續類別直接比大小；倍數關係要用除法
-   謊言：宣稱A是B的三倍，實際上是兩倍
+/* ── Q1 長條圖：不連續類別差值 ────────────────────────────────────────
+   承接第二關：R2-1 算過「差值＝大的減小的」
+   謊言：長條圖顯示籃球60人、游泳35人，說「差了 10 人」
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const labels=['籃球','足球','羽球','桌球','游泳'];
-  const vals=[60,30,45,15,30];
-  const unit='人', subject='社團人數';
+  const vals=[60,30,45,15,35];
   return {
     type:'bar', typeLabel:'長條圖', diff:'easy',
-    data:{labels,vals,unit,subject},
-    hint:'重點：比較各類別的大小，倍數關係用除法（大÷小）計算，不能目測。',
+    data:{labels,vals,unit:'人',subject:'社團人數'},
+    hint:'💡 差值要用「較大的數字」減「較小的數字」，直接看長條高度再相減。',
     suspects:[
       {name:'體育組長',role:'學務處',truth:true,
-       text:'「籃球」60 人最多，「桌球」15 人最少，兩者相差 45 人。'},
+       text:'「籃球」60 人，「游泳」35 人，兩者相差 25 人。'},
       {name:'小琳',role:'活動組',truth:true,
-       text:'「籃球」60 人，「足球」30 人，籃球人數是足球的 2 倍。'},
+       text:'「籃球」60 人最多，「桌球」15 人最少，最大差距是 45 人。'},
       {name:'阿芸',role:'學委代表',liar:true,
-       text:'「籃球」60 人，「桌球」15 人，籃球人數是桌球的 3 倍。'},
+       text:'「籃球」60 人，「游泳」35 人，兩者相差 10 人。'},
     ],
-    explanation:'60 ÷ 15 ＝ 4 倍，不是 3 倍，阿芸的倍數計算錯誤。'
+    explanation:'60 − 35 ＝ 25 人，不是 10 人。阿芸的差值計算錯誤。'
   };
 })(),
 
-/* ── Q2 雙組長條圖 ──────────────────────────────────────────────────────
-   核心：逐項比較；某項贏 ≠ 每項都贏
-   謊言：甲班在「數學」贏，就說甲班每項都優於乙班
+/* ── Q2 雙組長條圖：逐項比較 ──────────────────────────────────────────
+   承接第二關概念：不能用某一項贏就說整體贏
+   謊言：甲班數學85分贏，就說甲班每科都贏
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const groups=['國文','數學','英文','自然'];
-  const vA=[70,85,65,75]; // 甲班：數學最高
-  const vB=[80,70,75,70]; // 乙班：國文英文較高
-  // 甲班贏：數學、自然（2項）；乙班贏：國文、英文（2項）
+  const vA=[70,85,65,75];
+  const vB=[80,70,75,70];
   return {
     type:'grouped', typeLabel:'雙組長條圖', diff:'easy',
     data:{groups,valsA:vA,valsB:vB,gA:'甲班',gB:'乙班',unit:'分'},
-    hint:'重點：比較兩組時要逐項對照，某一項贏不代表每一項都贏。',
+    hint:'💡 每個科目要分開比較，甲在某科贏，不代表每科都贏。',
     suspects:[
       {name:'小雯',role:'統計組長',truth:true,
-       text:'甲班在「數學」(85分)和「自然」(75分)高於乙班，乙班在「國文」和「英文」較高，兩班各有強項。'},
+       text:'甲班「數學」85 > 乙班 70、「自然」75 > 乙班 70，但「國文」70 < 乙班 80、「英文」65 < 乙班 75，兩班各贏 2 科。'},
       {name:'老陳',role:'導師',truth:true,
-       text:'甲班整體平均 73.75 分，乙班整體平均 73.75 分，兩班整體平均相同。'},
+       text:'甲班四科加總 295 分，乙班四科加總 295 分，兩班總分相同。'},
       {name:'阿強',role:'家長代表',liar:true,
-       text:'甲班「數學」得 85 分，高於乙班的 70 分，所以甲班每一科成績都優於乙班。'},
+       text:'甲班「數學」85 分，高於乙班 70 分，所以甲班每一科都比乙班優秀。'},
     ],
-    explanation:'甲班只在「數學」和「自然」領先，在「國文」(70<80)和「英文」(65<75)都低於乙班，阿強以偏概全。'
+    explanation:'甲班「國文」70 < 乙班 80、「英文」65 < 乙班 75，甲班並非每科都贏。阿強只看數學一科就下全面結論。'
   };
 })(),
 
-/* ── Q3 折線圖 ──────────────────────────────────────────────────────────
-   核心：整體趨勢 vs. 局部下降；數值最高 ≠ 增加最快
-   謊言：宣稱「整體上升所以從未下滑」
+/* ── Q3 折線圖：斜率最陡＝增加最多 ────────────────────────────────────
+   承接第二關：R2-2 選過「哪段斜率最陡」
+   謊言：數值最高的月份（6月65萬）說「那段增加最快」
+         但 3→4月 +20 才是增加最多的段
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const labels=['1月','2月','3月','4月','5月','6月'];
-  const vals=[30,45,35,55,50,65]; // 整體上升但3月、5月有下滑
-  const unit='萬人', subject='平台用戶數';
-  // 最快增加段：1→2月 +15，或4→5月 -5（下滑），3→4月 +20 是增加最多
+  const vals=[20,35,30,50,45,65];
+  // 差值：+15, -5, +20, -5, +20（3→4月和5→6月各+20，但6月數值最高）
   return {
     type:'line', typeLabel:'折線圖', diff:'med',
-    data:{labels,vals,unit,subject},
-    hint:'重點：整體趨勢上升，不代表每個月都在上升；要逐段檢查有無下滑。',
+    data:{labels,vals,unit:'萬人',subject:'App下載數'},
+    hint:'💡 折線最陡的段才是增加最多，不是數值最高的那個月份。',
     suspects:[
       {name:'小郁',role:'分析師',truth:true,
-       text:'從 1 月到 6 月整體呈上升趨勢，但 3 月（35萬）和 5 月（50萬）比前一個月還低，有局部下滑。'},
+       text:'3月→4月增加了 20 萬（50−30），5月→6月也增加了 20 萬，這兩段是增加最多的。'},
       {name:'阿國',role:'研究員',truth:true,
-       text:'增加最多的一段是 3 月→4 月，增加了 20 萬人，不是數值最高的那個月。'},
+       text:'2月→3月下降了 5 萬、4月→5月也下降了 5 萬，折線並非持續上升。'},
       {name:'小潔',role:'記者',liar:true,
-       text:'折線從 1 月到 6 月整體一路上升，所以每個月的用戶數都比前一個月更多，從未出現下滑。'},
+       text:'6月下載數最高（65萬），所以5月到6月這段是整條折線中斜率最陡、增加最快的一段。'},
     ],
-    explanation:'3 月(35)比 2 月(45)少了 10 萬，5 月(50)比 4 月(55)少了 5 萬，確實有下滑，小潔說「從未下滑」是錯的。'
+    explanation:'5→6月增加 65−45＝20 萬，但 3→4月也增加 50−30＝20 萬，並列增加最多。6月數值最高不等於那段增加最快。'
   };
 })(),
 
-/* ── Q4 雙折線圖 ────────────────────────────────────────────────────────
-   核心：最後一段領先 ≠ 整段都領先；要看交叉點
-   謊言：最後一段A高於B，宣稱A整段都領先B
+/* ── Q4 雙折線圖：交叉點判斷 ──────────────────────────────────────────
+   承接概念：最後段領先不等於全程領先
+   謊言：第5週A組65分高於B組45分，說A組全程都領先
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const labels=['第1週','第2週','第3週','第4週','第5週'];
-  const vA=[40,35,45,55,65]; // A組：後半段明顯上升
-  const vB=[60,65,55,50,45]; // B組：前半段高，後半段下降（兩線有交叉）
-  // 交叉點在第2→3週之間：B(65)→B(55)，A(35)→A(45)，3週後A>B
+  const vA=[40,35,45,55,65];
+  const vB=[60,65,55,50,45];
   return {
     type:'dualline', typeLabel:'雙折線圖', diff:'med',
     data:{labels,valsA:vA,valsB:vB,lineA:'A組',lineB:'B組',unit:'分',subject:'練習成績'},
-    hint:'重點：兩條折線有交叉，最後一段領先不代表整段都領先，要看完整走勢。',
+    hint:'💡 兩條折線有交叉就代表領先關係改變過，最後結果不等於全程都如此。',
     suspects:[
       {name:'阿文',role:'教練',truth:true,
-       text:'A組與B組的成績在第 3 週出現交叉，之前 B組領先，之後 A組領先，雙方各有領先的時段。'},
+       text:'第1、2週 B組（60、65分）領先 A組（40、35分），第3週交叉，之後 A組反超。'},
       {name:'小慧',role:'裁判',truth:true,
-       text:'B組在第 1、2 週（60分、65分）都高於 A組（40分、35分），前兩週是B組領先。'},
+       text:'A組從 40 分進步到 65 分，B組從 60 分退步到 45 分，兩組走勢完全相反。'},
       {name:'大壯',role:'隊長',liar:true,
-       text:'第 5 週 A組得 65 分，高於 B組的 45 分，所以 A組在這五週的練習中全程都比 B組表現好。'},
+       text:'第5週 A組 65 分，高於 B組 45 分，所以 A組這五週全程都比 B組表現好。'},
     ],
-    explanation:'前兩週 B組(60、65)都高於 A組(40、35)，A組並非「全程」領先，大壯只看最後結果忽略了前段。'
+    explanation:'前兩週 B組（60、65）都高於 A組（40、35），A組並非「全程」領先，大壯只看最後一週的結果。'
   };
 })(),
 
-/* ── Q5 直方圖 ──────────────────────────────────────────────────────────
-   核心：連續組距比大小；人數最多的組 ≠ 組內每人都是中間值
-   謊言：20–30 組最多，宣稱這組每個人分數都是 25 分
+/* ── Q5 直方圖：60分以下有幾人 ────────────────────────────────────────
+   承接第二關：R2-3 算過「60分以下＝前三組加總」
+   謊言：「60–80組有30人是最多」就說「超過一半的人在這組」
+         （30/90≈33%，未超過一半）
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const groups=['0–20','20–40','40–60','60–80','80–100'];
-  const vals=[5,15,25,30,15]; // 60–80 最多（30人）
-  const step=20, subject='測驗分數', unit='分';
+  const vals=[5,15,25,30,15]; // 合計90人，60分以下：5+15+25=45人（恰好一半）
+  const total=vals.reduce((a,b)=>a+b,0);
+  const below60=vals[0]+vals[1]+vals[2]; // 45人
   return {
     type:'hist', typeLabel:'直方圖', diff:'med',
-    data:{groups,vals,subject,unit,step},
-    hint:'重點：直方圖每組是「連續範圍」，只知道人數，無法知道組內每人的確切分數。',
+    data:{groups,vals,subject:'測驗分數',unit:'分',step:20},
+    hint:'💡 60分以下包含「0–20」「20–40」「40–60」三組，要把三組人數加起來。',
     suspects:[
       {name:'阿花',role:'統計員',truth:true,
-       text:'「60–80」這組有 30 人，是五組中人數最多的，組距都是 20 分，各組可以直接比較人數。'},
+       text:'60分以下有三組：「0–20」5人＋「20–40」15人＋「40–60」25人，合計 45 人。'},
       {name:'大明',role:'老師',truth:true,
-       text:'「60–80」組佔全體 90 人的 33%，未超過一半，不能說超過半數的人在這個範圍。'},
+       text:'「60–80」組 30 人是五組中最多的，佔全體 90 人的 33%，並未超過一半。'},
       {name:'小芳',role:'同學',liar:true,
-       text:'「60–80」這組人數最多（30人），代表這組裡每個人的分數都大約是 70 分。'},
+       text:'「60–80」這組人數最多（30人），代表超過一半的人分數都在 60 到 80 之間。'},
     ],
-    explanation:'直方圖只知道「60–80分」共 30 人，無法得知每人確切分數，組內有人可能是 62 分、75 分或 79 分，小芳的推論錯誤。'
+    explanation:'「60–80」組 30 人，佔全體 90 人的 33%，並未超過 50%。小芳說「超過一半」是錯的。'
   };
 })(),
 
-/* ── Q6 統計量分析 ───────────────────────────────────────────────────────
-   核心：有極端值時平均數失準；中位數需先排序
-   謊言：平均數能代表大多數人（所有數字均為5的倍數）
+/* ── Q6 平均數：極端值使平均數偏高 ────────────────────────────────────
+   承接第二關：R2-5 算過平均數
+   數字全為5的倍數，加入一個極端值95
+   謊言：「平均數61.1分能代表大多數人的水準」
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
-  // 8個普通值(40–75，5的倍數) + 1個極端值95
-  const data=[55,60,50,70,60,65,50,45,95]; // 未排序
+  const data=[55,60,50,70,60,65,50,45,95];
   const sorted=[45,50,50,55,60,60,65,70,95];
-  const n=9;
-  const outlier=95;
-  const mean=+(data.reduce((a,b)=>a+b,0)/n).toFixed(1); // =61.1
-  const realMedian=sorted[4]; // =60
-  const unsortedMid=data[4];  // =60（巧合相同，讓謊言更聚焦在平均數）
+  const n=9, outlier=95;
+  const sum=data.reduce((a,b)=>a+b,0); // 550
+  const mean=+(sum/n).toFixed(1);       // 61.1
+  const realMedian=sorted[4];           // 60
   return {
-    type:'stats', typeLabel:'統計分析', diff:'hard',
+    type:'stats', typeLabel:'平均數', diff:'hard',
     data:{data,sorted,mean,realMedian,outlier,n},
-    hint:'重點：有極端值（95分）時，平均數會被拉高，不能代表「大多數人」的水準。',
+    hint:'💡 有極端值時，平均數被拉高，不能代表「大多數人」的水準。',
     suspects:[
       {name:'數學老師',role:'任課老師',liar:true,
-       text:'這組數據平均分數是 61.1 分，精準代表了大多數同學的成績水準，非常具有參考價值。'},
+       text:'這組 9 人的平均分數是 61.1 分，這個數字精準代表了大多數同學的成績水準。'},
       {name:'班長',role:'一年甲班',truth:true,
-       text:'數據中有一個極端值 95 分，把平均數拉高到 61.1，但多數同學成績在 45–70 之間，中位數 60 分更具代表性。'},
+       text:'95 分是極端值，把平均數拉高到 61.1，但其他 8 人分數都在 45–70 之間，中位數 60 分更具代表性。'},
       {name:'小偉',role:'同學',truth:true,
-       text:'9 個數字從小到大排列後，第 5 個是 60 分，這才是正確的中位數，平均數 61.1 因為有 95 分而偏高。'},
+       text:'平均數 61.1 的計算方式是對的，但因為有 95 這個極端值，所以它高估了多數人的水準。'},
     ],
-    explanation:'有極端值 95 分時，平均數 61.1 比多數人的分數偏高；中位數 60 分才能代表「大多數人」的真實水準。'
+    explanation:'平均數 61.1 被 95 分拉高，8 位同學的成績都在 45–70，平均數無法「精準代表大多數人」。中位數 60 才更合適。'
   };
 })(),
 
-/* ── Q7 列聯表 ──────────────────────────────────────────────────────────
-   核心：交叉分類表，看「部分合計」vs「整體合計」；
-         條件比較要在相同類別內比，不能跨列混合
-   情境：全年級 120 人，按「性別」×「最喜歡的午餐」分類
-   謊言：以「雞排便當整體最多」跳結論「男生最喜歡雞排便當」，
-         但實際上男生訂最多的是排骨便當
+/* ── Q7 列聯表：單列合計 vs 整體合計 ──────────────────────────────────
+   承接第二關：R2-4 算過「橫向加總＝該列合計」
+   數字全為5的倍數
+   謊言：整體合計「雞排55份最多」→ 說「男生和女生都最喜歡雞排」
+         但男生那列：排骨35 > 雞排25
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
-  //               雞排  排骨  素食  合計
-  // 男生          25    35    10    70
-  // 女生          30    10    10    50
-  // 合計          55    45    20   120
   const rows=['男生','女生'];
   const cols=['雞排便當','排骨便當','素食便當'];
   const cells=[[25,35,10],[30,10,10]];
@@ -436,48 +452,42 @@ function makeQuestions(){
   return {
     type:'table', typeLabel:'列聯表', diff:'med',
     data:{rows,cols,cells,rowTotals,colTotals,grandTotal},
-    hint:'重點：列聯表要在「同一列（同一類別）」內比較，不能用整體合計來推論個別群體的喜好。',
+    hint:'💡 要看「男生那一橫列」的數字，不能用整體合計來推論某個群體的喜好。',
     suspects:[
       {name:'營養師',role:'學校午餐組',truth:true,
-       text:'男生訂最多的是「排骨便當」（35份），女生訂最多的是「雞排便當」（30份），兩性最喜歡的品項不同。'},
+       text:'男生那列：排骨 35 份 > 雞排 25 份，所以男生最喜歡的是排骨便當。'},
       {name:'小晴',role:'班級幹部',truth:true,
-       text:'全年級合計「雞排便當」最多（55份），但這是男女加總的結果，不代表每個性別都最喜歡雞排。'},
+       text:'整體合計雞排 55 份最多，但這是男生 25 份加女生 30 份的結果，不代表男生最喜歡雞排。'},
       {name:'阿志',role:'總務股長',liar:true,
-       text:'全年級訂「雞排便當」最多，共 55 份，所以男生和女生都最喜歡雞排便當。'},
+       text:'最下面合計列顯示雞排便當 55 份是三種便當中最多的，所以男生和女生都最喜歡雞排便當。'},
     ],
-    explanation:'男生訂「排骨便當」35份 > 雞排便當25份，男生其實最喜歡排骨便當。阿志用整體合計來推論個別群體，是錯誤的。'
+    explanation:'男生那列：排骨 35 > 雞排 25，男生最喜歡排骨便當。阿志只看合計列、忽略各列單項數字，是錯誤的。'
   };
 })(),
 
-/* ── Q8 眾數分析 ────────────────────────────────────────────────────────
-   核心：眾數＝出現「次數最多」的那個值（不是數值最大的）
-         可以是文字類別，例如便當種類、顏色、品牌
-   情境：全班 30 人各訂一份午餐，統計結果如下：
-         雞排便當 12 份（眾數）
-         排骨便當  8 份
-         豬排便當  6 份
-         素食便當  4 份
-   謊言：把「數值最大的項目」誤當成眾數（誤解眾數定義）
+/* ── Q8 眾數：出現最多次的類別名稱 ────────────────────────────────────
+   承接第二關：R2-7 選過「眾數是品項名稱本身」
+   數字全為5的倍數
+   謊言：把「份數最多的數字40%」說成眾數
 ──────────────────────────────────────────────────────────────────────── */
 (()=>{
   const items=['雞排便當','排骨便當','豬排便當','素食便當'];
-  const counts=[12,8,6,4]; // 雞排最多，是眾數
-  const total=30;
-  // 各項百分比（5的倍數）
-  const pcts=[40,25,20,15]; // 40+25+20+15=100
+  const counts=[20,10,15,5]; // 全部5的倍數，雞排20份最多
+  const total=50;
+  const pcts=[40,20,30,10];
   return {
-    type:'mode', typeLabel:'眾數分析', diff:'hard',
-    data:{items,counts,pcts,total,mode:'雞排便當',modeCount:12},
-    hint:'重點：眾數是出現「次數最多」的那個值，和數值大小無關；類別資料（文字）也可以有眾數。',
+    type:'mode', typeLabel:'眾數', diff:'hard',
+    data:{items,counts,pcts,total,mode:'雞排便當',modeCount:20},
+    hint:'💡 眾數是出現次數最多的「值本身」，答案是品項名稱，不是份數數字或百分比。',
     suspects:[
       {name:'老師',role:'導師',truth:true,
-       text:'全班訂「雞排便當」最多，共 12 份，它的份數比其他便當都多，所以眾數是「雞排便當」這個品項。'},
+       text:'「雞排便當」訂了 20 份，比其他三種都多，所以眾數是「雞排便當」這個名稱。'},
       {name:'小芬',role:'同學',truth:true,
-       text:'眾數是出現次數最多的項目名稱，「雞排便當」12 份是四種便當中最多的，所以眾數就是「雞排便當」。'},
+       text:'眾數是出現最多次的那個值本身，訂購最多的是「雞排便當」，所以眾數是「雞排便當」，不是數字 20。'},
       {name:'阿哲',role:'同學',liar:true,
-       text:'「雞排便當」佔全班 40%，這個百分比最大，所以這次午餐的眾數就是 40。'},
+       text:'「雞排便當」佔 40%，這個百分比最大，所以這次午餐的眾數是 40。'},
     ],
-    explanation:'眾數是「雞排便當」這個品項名稱，而不是它的數量（12）或百分比（40%）。阿哲把「數量的數字」當成眾數，概念錯誤。'
+    explanation:'眾數是「雞排便當」這個品項名稱，不是它的份數（20）也不是百分比（40%）。阿哲把百分比當成眾數，概念完全錯誤。'
   };
 })(),
 
@@ -492,207 +502,370 @@ function makeQuestions(){
 ══════════════════════════════════════════════════════════════════════ */
 
 function makeR2Questions(){
-  const qs=[];
 
-  /* ── R2-0 圓餅圖 → 人數換算（答案必為整數）────────────────────────
-     確保 pct 能整除 total，讓 total × pct/100 一定是整數
-  ──────────────────────────────────────────────────────────────────── */
-  (()=>{
-    // 先決定百分比（5的倍數），再讓 total 是 100 的倍數，保證整除
-    const pct=R5(20,40);           // 20/25/30/35/40
-    const total=R5(2,5)*100;       // 200/300/400/500，pct/100 × total 必為整數
-    const ans=total*pct/100;       // 一定是整數
-    const cats=['數學','國文','英文','自然','社會'];
-    const pcts=[pct, R5(15,25), R5(10,20), R5(5,15), 0];
-    pcts[4]=100-pcts[0]-pcts[1]-pcts[2]-pcts[3];
-    if(pcts[4]<5){pcts[0]-=(5-pcts[4]);pcts[4]=5;}
+  // ── 工具函式 ──
+  const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+  const rnd5=(lo,hi)=>{const b=Math.ceil(lo/5),t=Math.floor(hi/5);return(Math.floor(Math.random()*(t-b+1))+b)*5;};
+
+  // ── 題庫工廠（每種圖表多個變體，question 完全不含數字）──
+
+  /* ════ 圓餅圖（3 種）════ */
+  const pie1=()=>{
+    // 看圖：哪個扇形最大
+    const pools=[['數學','國文','英文','自然','社會'],['籃球','足球','羽球','桌球','游泳'],['動作片','喜劇','動畫','劇情','科幻']];
+    const cats=pick(pools);
+    const pcts=[rnd5(30,45),rnd5(15,25),rnd5(10,20),rnd5(5,15),0];
+    pcts[4]=100-pcts.slice(0,4).reduce((a,b)=>a+b,0);
+    if(pcts[4]<5){pcts[0]-=5;pcts[4]=5;}
+    const total=rnd5(2,4)*100;
     const vals=pcts.map(p=>Math.round(total*p/100));
-    qs.push({
-      type:'pie', typeLabel:'圓餅圖',
-      chartData:{cats,vals,pcts,total},
-      question:`全班共 <em>${total}</em> 人，圓餅圖顯示「數學」佔 <em>${pct}%</em>，請問選擇數學的有幾人？`,
-      answer:ans, unit:'人',
-      step:`${total} × ${pct}% = ${total} × ${pct} ÷ 100 = <strong>${ans} 人</strong>`
-    });
-  })();
+    const maxI=pcts.indexOf(Math.max(...pcts));
+    const correct=cats[maxI];
+    const wrong=cats.filter((_,i)=>i!==maxI).sort(()=>Math.random()-0.5).slice(0,3);
+    const opts=[correct,...wrong].sort(()=>Math.random()-0.5);
+    return {type:'pie',typeLabel:'圓餅圖',chartData:{cats,vals,pcts,total},
+      question:'觀察左側圓餅圖，哪個類別的<em>扇形最大</em>、佔比最高？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`「${correct}」的扇形最大，佔 ${pcts[maxI]}%`};
+  };
 
-  /* ── R2-1 長條圖 → 讀取差值 ──────────────────────────────────────── */
-  (()=>{
-    const a=R5(40,80), b=R5(10,35);
-    const labels=['籃球','足球','羽球','桌球','游泳'];
-    const vals=[a, b, R5(20,50), R5(15,40), R5(20,45)];
-    const ans=a-b;
-    qs.push({
-      type:'bar', typeLabel:'長條圖',
-      chartData:{labels,vals,unit:'人',subject:'社團人數'},
-      question:`長條圖中，「籃球」社團有 <em>${a}</em> 人，「足球」社團有 <em>${b}</em> 人，兩者相差幾人？`,
-      answer:ans, unit:'人',
-      step:`${a} − ${b} = <strong>${ans} 人</strong>`
-    });
-  })();
+  const pie2=()=>{
+    // 看圖：哪個扇形超過一半（>50%）
+    const pools=[['數學','國文','英文','自然','社會'],['籃球','足球','羽球','桌球','游泳']];
+    const cats=pick(pools);
+    const pcts=[rnd5(55,70),rnd5(10,20),rnd5(5,15),0,0];
+    pcts[3]=rnd5(3,8)*1; pcts[4]=100-pcts[0]-pcts[1]-pcts[2]-pcts[3];
+    if(pcts[4]<5){pcts[0]-=5;pcts[4]=5;}
+    const total=rnd5(2,4)*100;
+    const vals=pcts.map(p=>Math.round(total*p/100));
+    const correct=cats[0];
+    const wrong=cats.slice(1).sort(()=>Math.random()-0.5).slice(0,3);
+    const opts=[correct,...wrong].sort(()=>Math.random()-0.5);
+    return {type:'pie',typeLabel:'圓餅圖',chartData:{cats,vals,pcts,total},
+      question:'觀察左側圓餅圖，哪個類別的扇形<em>超過一半</em>（大於50%）？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`「${correct}」佔 ${pcts[0]}%，超過 50%`};
+  };
 
-  /* ── R2-2 折線圖 → 選擇題：哪個月份增加最多 ─────────────────────────
-     設計：確保最大增加量明顯高於第二大，讓答案唯一不模糊
-  ──────────────────────────────────────────────────────────────────── */
-  (()=>{
-    const labels=['1月','2月','3月','4月','5月','6月'];
-    // 先生成保證有一段明顯最大增加量的資料
-    const vals=[R5(20,30)];
-    for(let i=1;i<6;i++) vals.push(Math.max(5, vals[i-1]+R5(-10,20)));
-    // 計算每段差值
-    const diffs=vals.slice(1).map((v,i)=>v-vals[i]); // 5個差值
-    // 找最大正增加段
-    let maxDiff=-Infinity, maxSeg=0;
-    diffs.forEach((d,i)=>{if(d>maxDiff){maxDiff=d;maxSeg=i;}});
-    // 若最大增加量不夠明顯（<10），強制設定一段
-    if(maxDiff<10){
-      maxSeg=2; // 固定第3段（2→3月）
-      vals[3]=vals[2]+R5(20,30);
-      // 重算
-      diffs[2]=vals[3]-vals[2];
-      maxDiff=diffs[2];
+  const pie3=()=>{
+    // 看圖：哪個扇形最小
+    const cats=['數學','國文','英文','自然','社會'];
+    const pcts=[rnd5(25,35),rnd5(20,30),rnd5(15,25),rnd5(10,20),0];
+    pcts[4]=100-pcts.slice(0,4).reduce((a,b)=>a+b,0);
+    if(pcts[4]<5){pcts[3]-=5;pcts[4]+=5;}
+    const total=rnd5(2,4)*100;
+    const vals=pcts.map(p=>Math.round(total*p/100));
+    const minI=pcts.indexOf(Math.min(...pcts));
+    const correct=cats[minI];
+    const wrong=cats.filter((_,i)=>i!==minI).sort(()=>Math.random()-0.5).slice(0,3);
+    const opts=[correct,...wrong].sort(()=>Math.random()-0.5);
+    return {type:'pie',typeLabel:'圓餅圖',chartData:{cats,vals,pcts,total},
+      question:'觀察左側圓餅圖，哪個類別的<em>扇形最小</em>、佔比最低？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`「${correct}」的扇形最小，佔 ${pcts[minI]}%`};
+  };
+
+  /* ════ 長條圖（3 種）════ */
+  const bar1=()=>{
+    // 哪類最多（MCQ）— 確保唯一最大
+    const ctxPool=[
+      {labels:['籃球','足球','羽球','桌球','游泳'],subject:'社團人數',unit:'人'},
+      {labels:['甲班','乙班','丙班','丁班','戊班'],subject:'得獎人數',unit:'人'},
+      {labels:['蘋果','香蕉','芒果','葡萄','草莓'],subject:'水果銷售',unit:'份'},
+    ];
+    const c=pick(ctxPool);
+    let vals;
+    do{vals=c.labels.map(()=>rnd5(10,80));}while(vals.filter(v=>v===Math.max(...vals)).length>1);
+    const maxI=vals.indexOf(Math.max(...vals));
+    const opts=[c.labels[maxI],...c.labels.filter((_,i)=>i!==maxI).sort(()=>Math.random()-0.5).slice(0,3)].sort(()=>Math.random()-0.5);
+    return {type:'bar',typeLabel:'長條圖',chartData:{labels:c.labels,vals,unit:c.unit,subject:c.subject},
+      question:`觀察左側長條圖，哪個類別的<em>長條最高</em>、數量最多？`,
+      mcq:true,options:opts,correctOption:c.labels[maxI],answer:c.labels[maxI],unit:'',
+      step:`「${c.labels[maxI]}」的長條最高，共 ${vals[maxI]} ${c.unit}`};
+  };
+
+  const bar2=()=>{
+    // 兩類相差（輸入，不給數字）
+    const ctxPool=[
+      {labels:['籃球','足球','羽球','桌球','游泳'],subject:'社團人數',unit:'人',q0:'「籃球」',q1:'「足球」'},
+      {labels:['甲班','乙班','丙班','丁班','戊班'],subject:'得獎人數',unit:'人',q0:'「甲班」',q1:'「乙班」'},
+      {labels:['蘋果','香蕉','芒果','葡萄','草莓'],subject:'水果銷售',unit:'份',q0:'「蘋果」',q1:'「香蕉」'},
+    ];
+    const c=pick(ctxPool);
+    const a=rnd5(40,80),b=rnd5(10,35);
+    const rest=Array.from({length:c.labels.length-2},()=>rnd5(15,60));
+    const vals=[a,b,...rest];
+    return {type:'bar',typeLabel:'長條圖',chartData:{labels:c.labels,vals,unit:c.unit,subject:c.subject},
+      question:`觀察左側長條圖，${c.q0}和${c.q1}的${c.subject}相差幾${c.unit}？`,
+      answer:a-b,unit:c.unit,
+      step:`${c.labels[0]} ${a}${c.unit} − ${c.labels[1]} ${b}${c.unit} = <strong>${a-b} ${c.unit}</strong>`};
+  };
+
+  const bar3=()=>{
+    // 哪類最少（MCQ）— 確保唯一最小
+    const ctxPool=[
+      {labels:['籃球','足球','羽球','桌球','游泳'],subject:'社團人數',unit:'人'},
+      {labels:['一月','二月','三月','四月','五月'],subject:'銷售量',unit:'件'},
+    ];
+    const c=pick(ctxPool);
+    let vals;
+    do{vals=c.labels.map(()=>rnd5(10,80));}while(vals.filter(v=>v===Math.min(...vals)).length>1);
+    const minI=vals.indexOf(Math.min(...vals));
+    const opts=[c.labels[minI],...c.labels.filter((_,i)=>i!==minI).sort(()=>Math.random()-0.5).slice(0,3)].sort(()=>Math.random()-0.5);
+    return {type:'bar',typeLabel:'長條圖',chartData:{labels:c.labels,vals,unit:c.unit,subject:c.subject},
+      question:`觀察左側長條圖，哪個類別的<em>長條最矮</em>、數量最少？`,
+      mcq:true,options:opts,correctOption:c.labels[minI],answer:c.labels[minI],unit:'',
+      step:`「${c.labels[minI]}」的長條最矮，共 ${vals[minI]} ${c.unit}`};
+  };
+
+  /* ════ 折線圖（3 種）════ */
+  const makeLineData=(n=6)=>{
+    const labelPool=[['1月','2月','3月','4月','5月','6月'],['一月','二月','三月','四月','五月','六月'],['第1週','第2週','第3週','第4週','第5週','第6週']];
+    return pick(labelPool).slice(0,n);
+  };
+
+  const line1=()=>{
+    // 斜率最陡段（MCQ）
+    const labels=makeLineData();
+    const bigSeg=Math.floor(Math.random()*(labels.length-1));
+    const bigJump=rnd5(20,35);
+    const vals=[rnd5(15,30)];
+    for(let i=1;i<labels.length;i++){
+      vals.push(i-1===bigSeg?vals[i-1]+bigJump:Math.max(5,vals[i-1]+[-10,-5,0,5][Math.floor(Math.random()*4)]));
     }
-    const correctLabel=`${labels[maxSeg]} → ${labels[maxSeg+1]}`;
-    const wrongSegs=[0,1,2,3,4].filter(i=>i!==maxSeg)
-      .sort(()=>Math.random()-0.5).slice(0,3);
-    const distractors=wrongSegs.map(i=>`${labels[i]} → ${labels[i+1]}`);
-    const options=[correctLabel,...distractors].sort(()=>Math.random()-0.5);
-    qs.push({
-      type:'line', typeLabel:'折線圖',
-      chartData:{labels,vals,unit:'萬人',subject:'用戶數'},
-      question:`觀察折線圖，哪一段的斜率最陡、用戶數<em>增加最多</em>？`,
-      mcq:true, options, correctOption:correctLabel,
-      answer:correctLabel, unit:'',
-      step:`各段差值：${diffs.map((d,i)=>`${labels[i]}→${labels[i+1]}：${d>0?'+':''}${d}`).join('、')}。增加最多：<strong>${correctLabel}</strong>（+${maxDiff}萬人）`
-    });
-  })();
+    const diffs=vals.slice(1).map((v,i)=>v-vals[i]);
+    const correct=`${labels[bigSeg]} → ${labels[bigSeg+1]}`;
+    const wrongs=[...labels.keys()].filter(i=>i!==bigSeg).sort(()=>Math.random()-0.5).slice(0,3)
+      .map(i=>`${labels[i]} → ${labels[i+1]}`);
+    const opts=[correct,...wrongs].sort(()=>Math.random()-0.5);
+    return {type:'line',typeLabel:'折線圖',chartData:{labels,vals,unit:'萬人',subject:'用戶數'},
+      question:'觀察左側折線圖，哪一段的<em>斜率最陡</em>、數值增加最多？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`各段差值：${diffs.map((d,i)=>`${labels[i]}→${labels[i+1]}：${d>0?'+':''}${d}`).join('、')}。最陡：<strong>${correct}</strong>`};
+  };
 
-  /* ── R2-3 直方圖 → 60分以下共幾人 ──────────────────────────────── */
-  (()=>{
+  const line2=()=>{
+    // 哪段有下降（MCQ）
+    const labels=makeLineData();
+    const downSeg=Math.floor(Math.random()*(labels.length-1));
+    const vals=[rnd5(30,50)];
+    for(let i=1;i<labels.length;i++){
+      vals.push(i-1===downSeg?Math.max(5,vals[i-1]-rnd5(10,20)):vals[i-1]+rnd5(5,15));
+    }
+    const diffs=vals.slice(1).map((v,i)=>v-vals[i]);
+    const correct=`${labels[downSeg]} → ${labels[downSeg+1]}`;
+    const wrongs=[...labels.keys()].filter(i=>i!==downSeg&&diffs[i]>0).sort(()=>Math.random()-0.5).slice(0,3)
+      .map(i=>`${labels[i]} → ${labels[i+1]}`);
+    const opts=[correct,...wrongs].sort(()=>Math.random()-0.5);
+    return {type:'line',typeLabel:'折線圖',chartData:{labels,vals,unit:'萬人',subject:'用戶數'},
+      question:'觀察左側折線圖，哪一段的折線<em>往下走</em>、數值減少？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`${labels[downSeg]}→${labels[downSeg+1]} 數值下降（差值${diffs[downSeg]}），是唯一下降的段`};
+  };
+
+  const line3=()=>{
+    // 最高點在哪個時間（MCQ）
+    const labels=makeLineData();
+    const vals=labels.map(()=>rnd5(15,70));
+    const maxI=vals.indexOf(Math.max(...vals));
+    const correct=labels[maxI];
+    const wrongs=labels.filter((_,i)=>i!==maxI).sort(()=>Math.random()-0.5).slice(0,3);
+    const opts=[correct,...wrongs].sort(()=>Math.random()-0.5);
+    return {type:'line',typeLabel:'折線圖',chartData:{labels,vals,unit:'萬人',subject:'用戶數'},
+      question:'觀察左側折線圖，哪個時間點的數值<em>最高</em>？',
+      mcq:true,options:opts,correctOption:correct,answer:correct,unit:'',
+      step:`「${correct}」的折線點最高，數值為 ${vals[maxI]} 萬人`};
+  };
+
+  /* ════ 直方圖（3 種）════ */
+  const hist1=()=>{
+    // 60分以下共幾人（輸入）
     const groups=['0–20','20–40','40–60','60–80','80–100'];
-    const vals=[R5(5,15), R5(10,20), R5(15,30), R5(20,35), R5(10,20)];
-    // 60分以下：前三組（0–20, 20–40, 40–60）
+    const vals=[rnd5(5,15),rnd5(10,20),rnd5(15,30),rnd5(20,35),rnd5(10,20)];
     const ans=vals[0]+vals[1]+vals[2];
-    qs.push({
-      type:'hist', typeLabel:'直方圖',
-      chartData:{groups,vals,subject:'測驗分數',unit:'分',step:20},
-      question:`直方圖中，測驗分數在 <em>60 分以下</em>（未達60分）的同學共有幾人？`,
-      answer:ans, unit:'人',
-      step:`60分以下包含「0–20」${vals[0]}人＋「20–40」${vals[1]}人＋「40–60」${vals[2]}人 = <strong>${ans} 人</strong>`
-    });
-  })();
+    return {type:'hist',typeLabel:'直方圖',chartData:{groups,vals,subject:'測驗分數',unit:'分',step:20},
+      question:'觀察左側直方圖，<em>60分以下</em>（未達60分）共有幾人？',
+      answer:ans,unit:'人',
+      step:`「0–20」${vals[0]}人＋「20–40」${vals[1]}人＋「40–60」${vals[2]}人 = <strong>${ans} 人</strong>`};
+  };
 
-  /* ── R2-4 列聯表 → 橫向加總（右排各異、欄總和各異）─────────────── */
-  (()=>{
-    // 確保男生3格 ≠ 女生3格，且每欄合計都不同
-    let cells, rowTotals;
+  const hist2=()=>{
+    // 哪組最多（MCQ）— 確保最大值唯一
+    const groups=['0–20','20–40','40–60','60–80','80–100'];
+    let vals;
     do {
-      cells=[[R5(20,40), R5(15,30), R5(5,10)],[R5(10,25), R5(20,35), R5(10,20)]];
+      vals=groups.map(()=>rnd5(5,35));
+      // 確保最大值只有一組
+      const maxV=Math.max(...vals);
+      const maxCount=vals.filter(v=>v===maxV).length;
+      if(maxCount===1) break;
+    } while(true);
+    const maxI=vals.indexOf(Math.max(...vals));
+    const opts=[groups[maxI],...groups.filter((_,i)=>i!==maxI).sort(()=>Math.random()-0.5).slice(0,3)].sort(()=>Math.random()-0.5);
+    return {type:'hist',typeLabel:'直方圖',chartData:{groups,vals,subject:'測驗分數',unit:'分',step:20},
+      question:'觀察左側直方圖，哪個分數範圍的人數<em>最多</em>？',
+      mcq:true,options:opts,correctOption:groups[maxI],answer:groups[maxI],unit:'',
+      step:`「${groups[maxI]}」這組最多，共 ${vals[maxI]} 人`};
+  };
+
+  const hist3=()=>{
+    // 60分以上共幾人（輸入）
+    const groups=['0–20','20–40','40–60','60–80','80–100'];
+    const vals=[rnd5(5,15),rnd5(10,20),rnd5(15,30),rnd5(20,35),rnd5(10,20)];
+    const ans=vals[3]+vals[4];
+    return {type:'hist',typeLabel:'直方圖',chartData:{groups,vals,subject:'測驗分數',unit:'分',step:20},
+      question:'觀察左側直方圖，<em>60分以上</em>（含60分）共有幾人？',
+      answer:ans,unit:'人',
+      step:`「60–80」${vals[3]}人＋「80–100」${vals[4]}人 = <strong>${ans} 人</strong>`};
+  };
+
+  /* ════ 列聯表（3 種）════ */
+  const makeTableData=()=>{
+    let cells,rowTotals;
+    do{
+      cells=[[rnd5(15,40),rnd5(10,30),rnd5(5,15)],[rnd5(10,30),rnd5(15,35),rnd5(5,15)]];
       rowTotals=cells.map(r=>r.reduce((a,b)=>a+b,0));
-    } while(rowTotals[0]===rowTotals[1]);
+    }while(rowTotals[0]===rowTotals[1]);
     const colTotals=[0,1,2].map(ci=>cells.reduce((s,r)=>s+r[ci],0));
     const grand=rowTotals.reduce((a,b)=>a+b,0);
-    const ans=rowTotals[0];
-    qs.push({
-      type:'table', typeLabel:'列聯表',
-      chartData:{rows:['男生','女生'],cols:['雞排便當','排骨便當','素食便當'],cells,rowTotals,colTotals,grandTotal:grand},
-      question:`列聯表中，男生訂雞排 <em>${cells[0][0]}</em> 份、排骨 <em>${cells[0][1]}</em> 份、素食 <em>${cells[0][2]}</em> 份，男生共訂了幾份便當？`,
-      answer:ans, unit:'份',
-      step:`${cells[0][0]} ＋ ${cells[0][1]} ＋ ${cells[0][2]} = <strong>${ans} 份</strong>`
-    });
-  })();
+    return {rows:['男生','女生'],cols:['雞排便當','排骨便當','素食便當'],cells,rowTotals,colTotals,grandTotal:grand};
+  };
 
-  /* ── R2-5 平均數：積木堆疊圖示法 ────────────────────────────────────
-     顯示 5 根積木柱（各不同高度），右側四選一猜平均高度
-  ──────────────────────────────────────────────────────────────────── */
-  (()=>{
+  const table1=()=>{
+    const d=makeTableData();
+    return {type:'table',typeLabel:'列聯表',chartData:d,
+      question:'觀察左側列聯表，<em>男生</em>共訂了幾份便當？',
+      answer:d.rowTotals[0],unit:'份',
+      step:`男生各欄相加 = <strong>${d.rowTotals[0]} 份</strong>（右側男生合計欄）`};
+  };
+
+  const table2=()=>{
+    const d=makeTableData();
+    return {type:'table',typeLabel:'列聯表',chartData:d,
+      question:'觀察左側列聯表，訂「<em>雞排便當</em>」的男女合計共幾份？',
+      answer:d.colTotals[0],unit:'份',
+      step:`男生 ${d.cells[0][0]} ＋ 女生 ${d.cells[1][0]} = <strong>${d.colTotals[0]} 份</strong>（最下方雞排合計）`};
+  };
+
+  const table3=()=>{
+    const d=makeTableData();
+    return {type:'table',typeLabel:'列聯表',chartData:d,
+      question:'觀察左側列聯表，全部同學共訂了幾份便當？',
+      answer:d.grandTotal,unit:'份',
+      step:`全部合計 = <strong>${d.grandTotal} 份</strong>（表格右下角總計）`};
+  };
+
+  /* ════ 平均數（積木圖，2 種）════ */
+  const mean1=()=>{
     const n=5;
-    let data, sum, ans;
-    do {
-      data=Array.from({length:n},()=>R5(30,80));
-      sum=data.reduce((a,b)=>a+b,0);
-    } while(sum%n!==0);
+    let data,sum,ans;
+    do{data=Array.from({length:n},()=>rnd5(30,80));sum=data.reduce((a,b)=>a+b,0);}while(sum%n!==0);
     ans=sum/n;
-    const offsets=[10,15,20,-10,-15].filter(o=>ans+o>0&&ans+o<100);
-    offsets.sort(()=>Math.random()-0.5);
-    const wrongs=[offsets[0],offsets[1],offsets[2]].map(o=>ans+o);
-    const options=[ans,...wrongs].sort(()=>Math.random()-0.5).map(v=>`${v} 分`);
-    qs.push({
-      type:'mean_blocks', typeLabel:'平均數',
-      blockData:data,        // 積木高度陣列（5個）
-      chartData:null,
-      question:`右圖顯示 5 個積木柱的高度，如果把它們<em>堆平</em>成一樣高，每根是幾分？`,
-      mcq:true,
-      options,
-      correctOption:`${ans} 分`,
-      answer:ans, unit:'分',
-      step:`（${data.join(' ＋ ')}）÷ ${n} = ${sum} ÷ ${n} = <strong>${ans} 分</strong>`
-    });
-  })();
+    const offsets=[10,15,20,-10,-15].filter(o=>ans+o>0&&ans+o<100).sort(()=>Math.random()-0.5);
+    const opts=[ans,...offsets.slice(0,3).map(o=>ans+o)].sort(()=>Math.random()-0.5).map(v=>`${v} 分`);
+    return {type:'mean_blocks',typeLabel:'平均數',blockData:data,chartData:null,
+      question:'觀察右側積木圖，若把所有積木<em>堆平</em>成一樣高，每根是幾分？',
+      mcq:true,options:opts,correctOption:`${ans} 分`,answer:ans,unit:'分',
+      step:`（${data.join(' ＋ ')}）÷ ${n} = ${sum} ÷ ${n} = <strong>${ans} 分</strong>`};
+  };
 
-  /* ── R2-6 中位數：顯示原始→排列後，視覺直接看出答案 ──────────────── */
-  (()=>{
+  const mean2=()=>{
+    // n=4，更簡單
+    const n=4;
+    let data,sum,ans;
+    do{data=Array.from({length:n},()=>rnd5(20,80));sum=data.reduce((a,b)=>a+b,0);}while(sum%n!==0);
+    ans=sum/n;
+    const offsets=[5,10,15,-5,-10].filter(o=>ans+o>0&&ans+o<100).sort(()=>Math.random()-0.5);
+    const opts=[ans,...offsets.slice(0,3).map(o=>ans+o)].sort(()=>Math.random()-0.5).map(v=>`${v} 分`);
+    return {type:'mean_blocks',typeLabel:'平均數',blockData:data,chartData:null,
+      question:'觀察右側積木圖，把積木<em>堆平</em>後，平均高度是幾分？',
+      mcq:true,options:opts,correctOption:`${ans} 分`,answer:ans,unit:'分',
+      step:`（${data.join(' ＋ ')}）÷ ${n} = ${sum} ÷ ${n} = <strong>${ans} 分</strong>`};
+  };
+
+  /* ════ 中位數（輸入，2 種）════ */
+  const median1=()=>{
     const n=7;
-    const data=Array.from({length:n},()=>R5(30,90));
+    const data=Array.from({length:n},()=>rnd5(30,90));
     const sorted=[...data].sort((a,b)=>a-b);
     const midIdx=Math.floor(n/2);
     const ans=sorted[midIdx];
-    qs.push({
-      type:'median_visual', typeLabel:'中位數',
-      rawData:data,
-      sortedData:sorted,
-      midIdx,
-      chartData:null,
-      question:`以下 <em>${n}</em> 個數字排列後，中位數是多少？（排好後直接點選中間那格）`,
-      answer:ans, unit:'分',
-      step:`排序後：${sorted.map((v,i)=>i===midIdx?`<strong style="color:#f0c560">[&nbsp;${v}&nbsp;]</strong>`:`${v}`).join(' 、 ')}　→　中位數是 <strong>${ans} 分</strong>`
-    });
-  })();
+    return {type:'median_input',typeLabel:'中位數（奇數）',rawData:data,sortedData:sorted,midIdx,midPair:null,chartData:null,
+      question:'觀察下方排列好的數字，請輸入<em>中位數</em>（正中間那個數）。',
+      answer:ans,unit:'分',
+      step:`排序後：${sorted.map((v,i)=>i===midIdx?`<strong style="color:#f0c560">[${v}]</strong>`:v).join('、')}　→　第 ${midIdx+1} 個 = <strong>${ans} 分</strong>`};
+  };
 
-  /* ── R2-7 眾數 → 長條圖題型（文字類別）選擇題 ────────────────────────
-     設計：4 種便當，其中一種份數最多（眾數）
-     誘答選項：
-       A 正確答案（份數最多的便當「名稱」）
-       B 份數最多的「數字」（例如 12）← 最常見錯誤：把次數當眾數
-       C 份數第二多的便當名稱       ← 混淆最多次 vs 次多
-       D 所有份數的合計              ← 算錯成總數
-  ──────────────────────────────────────────────────────────────────── */
-  (()=>{
+  const median2=()=>{
+    const n=8;
+    let data,sorted,ans;
+    do{
+      data=Array.from({length:n},()=>rnd5(30,90));
+      sorted=[...data].sort((a,b)=>a-b);
+      ans=(sorted[n/2-1]+sorted[n/2])/2;
+    }while(ans%1!==0);
+    const m1=sorted[n/2-1],m2=sorted[n/2];
+    return {type:'median_input',typeLabel:'中位數（偶數）',rawData:data,sortedData:sorted,midIdx:-1,midPair:[n/2-1,n/2],chartData:null,
+      question:'觀察下方排列好的數字（偶數個），請輸入<em>中位數</em>（中間兩數的平均）。',
+      answer:ans,unit:'分',
+      step:`排序後第 ${n/2}、${n/2+1} 個：${m1}、${m2} → (${m1}＋${m2})÷2 = <strong>${ans} 分</strong>`};
+  };
+
+  /* ════ 眾數（長條圖，MCQ，2 種）════ */
+  const mode1=()=>{
     const items=['雞排便當','排骨便當','豬排便當','素食便當'];
-    // 確保第一個最多，且明顯多於其他
-    const modeCount=R5(10,15);
-    const others=[R5(5,8), R5(4,7), R5(2,5)];
-    const counts=[modeCount,...others];
+    const modeCount=rnd5(20,35);
+    const counts=[modeCount,rnd5(5,15),rnd5(5,15),rnd5(5,10)];
     const total=counts.reduce((a,b)=>a+b,0);
-    const pcts=counts.map(c=>Math.round(c/total*100));
-    const modeName=items[0]; // 雞排便當是眾數
-    const modeCountVal=counts[0];
-    const secondName=items[1]; // 次多
-    const totalAll=counts.reduce((a,b)=>a+b,0);
-    // 四個選項
     const opts=[
-      {text:`「${modeName}」`,correct:true},
-      {text:`${modeCountVal}（份數最多的數字）`,correct:false},
-      {text:`「${secondName}」`,correct:false},
-      {text:`${totalAll}（所有便當總份數）`,correct:false},
+      {text:`「${items[0]}」`,correct:true},
+      {text:`${modeCount}（份數）`,correct:false},
+      {text:`「${items[1]}」`,correct:false},
+      {text:`${total}（全部合計）`,correct:false},
     ].sort(()=>Math.random()-0.5);
-    qs.push({
-      type:'mode_bar', typeLabel:'眾數',
-      chartData:{labels:items,vals:counts,unit:'份',subject:'便當訂購份數'},
-      question:`長條圖顯示全班午餐訂購情形，請問這份資料的<em>眾數</em>是什麼？`,
-      mcq:true,
-      options:opts.map(o=>o.text),
-      correctOption:opts.find(o=>o.correct).text,
-      answer:modeName, unit:'',
-      step:`各品項份數：${items.map((it,i)=>`${it} ${counts[i]}份`).join('、')}。「${modeName}」份數最多（${modeCountVal}份），眾數是品項名稱本身：<strong>「${modeName}」</strong>`
-    });
-  })();
+    return {type:'mode_bar',typeLabel:'眾數',chartData:{labels:items,vals:counts,unit:'份',subject:'便當訂購'},
+      question:'觀察左側長條圖，這份資料的<em>眾數</em>是什麼？',
+      mcq:true,options:opts.map(o=>o.text),correctOption:opts.find(o=>o.correct).text,
+      answer:items[0],unit:'',
+      step:`「${items[0]}」長條最高（${modeCount}份），眾數是品項名稱本身：<strong>「${items[0]}」</strong>`};
+  };
 
-  return qs;
+  const mode2=()=>{
+    // 不同品項名稱，眾數在第2位
+    const items=['豬排便當','雞排便當','排骨便當','素食便當'];
+    const modeCount=rnd5(20,35);
+    const counts=[rnd5(5,15),modeCount,rnd5(5,15),rnd5(5,10)];
+    const total=counts.reduce((a,b)=>a+b,0);
+    const opts=[
+      {text:`「${items[1]}」`,correct:true},
+      {text:`「${items[0]}」`,correct:false},
+      {text:`${modeCount}（份數）`,correct:false},
+      {text:`${total}（全部合計）`,correct:false},
+    ].sort(()=>Math.random()-0.5);
+    return {type:'mode_bar',typeLabel:'眾數',chartData:{labels:items,vals:counts,unit:'份',subject:'便當訂購'},
+      question:'觀察左側長條圖，哪個品項是這份資料的<em>眾數</em>？',
+      mcq:true,options:opts.map(o=>o.text),correctOption:opts.find(o=>o.correct).text,
+      answer:items[1],unit:'',
+      step:`「${items[1]}」長條最高（${modeCount}份），眾數是：<strong>「${items[1]}」</strong>`};
+  };
+
+  /* ════ 組成 15 題（每種圖表至少 1 題，隨機多抽 3 題補足）════ */
+  const mandatory=[
+    pie1(), pie2(),
+    bar1(), bar2(),
+    line1(), line2(),
+    hist1(), hist2(),
+    table1(), table2(),
+    mean1(),
+    median1(), median2(),
+    mode1(), mode2(),
+  ];
+  // 隨機打亂後取 15 題
+  return mandatory.sort(()=>Math.random()-0.5);
 }
 
 /* ══════ R2 計時器（獨立 5 分鐘）══════ */
-const R2_TIME=300;
+const R2_TIME=60; // 每題60秒
 
 /* ══════ R2 排行榜 ══════ */
 const LB_R2_KEY='detective_lb_r2_v1';
@@ -740,7 +913,6 @@ function startR2(){
   document.getElementById('b-streak').style.display='none';
   renderR2Dots();
   renderR2Q();
-  startR2Timer();
 }
 
 function renderR2Dots(){
@@ -771,6 +943,8 @@ function startR2Timer(){
 function renderR2Q(){
   if(G2.qIdx>=G2.qs.length){finishR2();return;}
   G2.answered=false;
+  clearInterval(G2.timerID);
+  G2.timeLeft=R2_TIME; // 每題重設60秒
   const q=G2.qs[G2.qIdx];
   document.getElementById('b-type').textContent=q.typeLabel;
   renderR2Dots();
@@ -779,27 +953,32 @@ function renderR2Q(){
   const wrap=document.createElement('div');
   wrap.className='calc-question';
 
-  // Data chips (for stats/mode rawData questions)
+  // Data chips for rawData questions (not median_input - has its own display)
   let dataSection='';
-  if(q.rawData && q.type!=='median_visual'){
+  if(q.rawData && q.type!=='median_input'){
     dataSection=`<div class="data-display" id="r2-data">`
       +q.rawData.map(v=>`<span class="data-num">${v}</span>`).join('')
       +'</div>';
   }
 
-  // median_visual: show unsorted → sorted with interaction
+  // median_input: show unsorted + sorted, NO highlighting (student must find middle)
   let medianSection='';
-  if(q.type==='median_visual'){
+  if(q.type==='median_input'){
+    const isPair=q.midPair!=null;
+    const n=q.sortedData.length;
     medianSection=`
       <div style="margin-bottom:14px">
-        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">原始數字</div>
+        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">原始數字（未排序）</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
           ${q.rawData.map(v=>`<span class="data-num">${v}</span>`).join('')}
         </div>
-        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">排列後（由小到大）—— 點選中間那格</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px" id="sorted-row">
-          ${q.sortedData.map((v,i)=>`<span class="data-num" id="sv-${i}" style="cursor:pointer;transition:all .15s" data-val="${v}" data-idx="${i}">${v}</span>`).join('')}
+        <div style="font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:7px">由小到大排列後（共 ${n} 個）</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${q.sortedData.map((v,i)=>`<span class="data-num">${v}</span>`).join('')}
         </div>
+        ${isPair
+          ?`<div style="font-size:12px;color:var(--text2);margin-top:8px">💡 偶數個資料：中位數 ＝ 中間兩個數相加 ÷ 2</div>`
+          :`<div style="font-size:12px;color:var(--text2);margin-top:8px">💡 奇數個資料：找正中間那一個數</div>`}
       </div>`;
   }
 
@@ -815,7 +994,7 @@ function renderR2Q(){
         ${q.type==='stats'?'<div class="drow" id="dc2"></div>':''}
       </div>`:''}
       <div class="calc-question-panel">
-        <div class="ptitle">計算題 · ${G2.qIdx+1}/${G2.qs.length}</div>
+        <div class="ptitle"><span class="ptitle-dot"></span>計算題 · ${G2.qIdx+1}/${G2.qs.length}</div>
         ${dataSection}
         ${medianSection}
         <div class="calc-q-text">${q.question}</div>
@@ -960,20 +1139,17 @@ function renderR2Q(){
     const optsDiv=document.getElementById('r2-opts');
     q.options.forEach((opt,oi)=>{
       const btn=document.createElement('button');
-      btn.style.cssText='width:100%;padding:11px 14px;border-radius:9px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:"Noto Sans TC",sans-serif;font-size:14px;text-align:left;cursor:pointer;transition:all .15s;line-height:1.6';
-      btn.textContent=`${'ＡＢＣＤ'[oi]}　${opt}`;
-      btn.addEventListener('mouseenter',()=>{if(!G2.answered)btn.style.borderColor='rgba(212,168,67,.5)';});
-      btn.addEventListener('mouseleave',()=>{if(!G2.answered)btn.style.borderColor='var(--border2)';});
+      btn.className='mcq-btn';
+      btn.innerHTML=`<span class="mcq-prefix">${'ＡＢＣＤ'[oi]}</span><span>${opt}</span>`;
       btn.addEventListener('click',()=>{
         if(G2.answered)return;
         G2.answered=true;
-        optsDiv.querySelectorAll('button').forEach(b=>b.style.cursor='default');
+        optsDiv.querySelectorAll('button').forEach(b=>b.classList.add('locked-opt'));
         const correct=(opt===q.correctOption);
-        // Highlight all options
         q.options.forEach((o,oi2)=>{
           const b=optsDiv.querySelectorAll('button')[oi2];
-          if(o===q.correctOption){b.style.borderColor='rgba(61,184,122,.7)';b.style.background='rgba(61,184,122,.1)';b.style.color='#5bd491';}
-          else if(oi===oi2&&!correct){b.style.borderColor='rgba(217,80,80,.5)';b.style.background='rgba(217,80,80,.07)';b.style.color='#e87070';}
+          if(o===q.correctOption)b.classList.add('correct-opt');
+          else if(oi===oi2&&!correct)b.classList.add('wrong-opt');
         });
         const timePct=G2.timeLeft/R2_TIME;
         const basePt=150;
@@ -1033,7 +1209,21 @@ function renderR2Q(){
     setTimeout(()=>input.focus(),100);
   }
 
-  nxtBtn.addEventListener('click',()=>{G2.qIdx++;renderR2Q();});
+  nxtBtn.addEventListener('click',()=>{
+    clearInterval(G2.timerID);G2.qIdx++;renderR2Q();
+  });
+  // 每題計時器
+  G2.timerID=setInterval(()=>{
+    G2.timeLeft--;
+    const t=G2.timeLeft,m=Math.floor(t/60),s=t%60;
+    const box=document.getElementById('timer-box');
+    if(box){box.textContent=m+':'+(s<10?'0':'')+s;box.className='timer-box'+(t<=10?' danger':t<=20?' warn':'');}
+    if(t<=0){
+      clearInterval(G2.timerID);
+      if(!G2.answered){G2.answered=true;const fb=document.getElementById('r2-fb');if(fb){fb.className='calc-fb show fail';fb.innerHTML='⏰ 時間到！';}const nb=document.getElementById('r2-nxt');if(nb)nb.classList.add('show');}
+    }
+  },1000);
+  renderR2Dots();
 }
 
 function finishR2(){
@@ -1070,7 +1260,7 @@ function finishR2(){
 }
 const PTS=[100,100,100,150,150,150,200,150,200];
 const MARK_PTS=10;
-const GLOBAL_TIME=180;
+const GLOBAL_TIME=60; // 每題60秒
 let G={qIdx:0,hp:3,score:0,streak:0,timeLeft:180,timerID:null,answered:false,marks:{},qs:[],markScore:0,totalMarks:0};
 
 /* ══════ HUD ══════ */
@@ -1154,13 +1344,7 @@ function drawChart(canvas,q){
       ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sw);
       ctx.fillStyle=COLORS[i%6];ctx.fill();
       ctx.strokeStyle='rgba(14,15,20,.7)';ctx.lineWidth=1.5;ctx.stroke();
-      if(sw>.22){
-        const m=ang+sw/2;
-        ctx.fillStyle='rgba(255,255,255,.95)';
-        ctx.font=`bold ${Math.max(10,r*.17)}px 'Noto Sans TC'`;
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(pcts[i]+'%',cx+r*.62*Math.cos(m),cy+r*.62*Math.sin(m));
-      }
+      // 扇形內不顯示數字
       ang+=sw;
     });
     const lh=15,cols=3,lx0=4,ly0=H-Math.ceil(cats.length/cols)*lh-4;
@@ -1168,7 +1352,7 @@ function drawChart(canvas,q){
       const col=i%cols,row=Math.floor(i/cols),lx=lx0+col*(W/cols),ly=ly0+row*lh;
       ctx.fillStyle=COLORS[i%6];ctx.beginPath();ctx.arc(lx+5,ly+5,3.5,0,2*Math.PI);ctx.fill();
       ctx.fillStyle=TC;ctx.font=f(10);ctx.textAlign='left';
-      ctx.fillText(c+'('+vals[i]+'人)',lx+12,ly+9);
+      ctx.fillText(c,lx+12,ly+9);
     });
 
   }else if(q.type==='bar'){
@@ -1269,16 +1453,29 @@ function drawChart(canvas,q){
 
   }else if(q.type==='hist'){
     const{groups,vals}=q.data;
-    const maxV=Math.max(...vals),pad={t:24,r:10,b:38,l:34};
+    const maxV=Math.max(...vals);
+    const pad={t:28,r:10,b:42,l:36};
     const bw=(W-pad.l-pad.r)/groups.length;
-    gridLines(pad,maxV);
+    gridLines(pad,maxV,4);
     groups.forEach((g,i)=>{
-      const bh=(vals[i]/maxV)*(H-pad.t-pad.b)*0.95;
-      const by=pad.t+(H-pad.t-pad.b)-bh,bx=pad.l+i*bw+.5;
-      ctx.fillStyle=COLORS[i%6]+'bb';ctx.fillRect(bx,by,bw-1,bh);
-      ctx.strokeStyle='rgba(14,15,20,.5)';ctx.lineWidth=.5;ctx.strokeRect(bx,by,bw-1,bh);
-      ctx.fillStyle=TC;ctx.font=f(8.5);ctx.textAlign='center';ctx.fillText(g,pad.l+i*bw+bw/2,H-5);
-      ctx.fillStyle='rgba(220,215,208,.85)';ctx.font=f(9);ctx.fillText(vals[i],pad.l+i*bw+bw/2,by-4);
+      const bh=(vals[i]/maxV)*(H-pad.t-pad.b)*0.92;
+      const by=pad.t+(H-pad.t-pad.b)-bh;
+      const bx=pad.l+i*bw+1;
+      const bwi=bw-2;
+      // 統一藍色漸層，不標示哪組最多
+      const grad=ctx.createLinearGradient(0,by,0,by+bh);
+      grad.addColorStop(0,COLORS[i%6]+'dd');
+      grad.addColorStop(1,COLORS[i%6]+'66');
+      ctx.fillStyle=grad;
+      ctx.fillRect(bx,by,bwi,bh);
+      ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=0.5;
+      ctx.strokeRect(bx,by,bwi,bh);
+      // 組距標籤（X 軸）
+      ctx.fillStyle=TC;ctx.font=f(9);ctx.textAlign='center';
+      ctx.fillText(g,pad.l+i*bw+bw/2,H-5);
+      // 數值標籤（長條頂部）
+      ctx.fillStyle='rgba(200,196,188,0.85)';ctx.font=f(9);
+      ctx.fillText(vals[i],pad.l+i*bw+bw/2,by-4);
     });
 
   }else if(q.type==='stats'){
@@ -1339,29 +1536,32 @@ function drawChart(canvas,q){
     ctx.fillStyle='rgba(212,168,67,0.06)';
     ctx.fillRect((nCols-1)*cw,startY,cw,nRows*rh);
 
-    const cellText=(txt,col,row,bold,color)=>{
+    const cellText=(txt,col,row,style,color)=>{
       ctx.fillStyle=color||TC;
-      ctx.font=(bold?'bold ':'')+f(bold?10:9.5);
+      // style: 'header'=小標題, 'data'=大數字, 'total'=中等粗體, 'label'=列標籤
+      const sizes={header:9,data:15,total:13,label:11};
+      const bold=(style!=='header'&&style!=='data')?'bold ':style==='data'?'bold ':'';
+      ctx.font=bold+f(sizes[style]||10);
       ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText(txt,col*cw+cw/2,startY+row*rh+rh/2);
     };
 
     // 標題列
-    cellText('',0,0,true,'#4a90d9');
-    cols.forEach((c,i)=>cellText(c,i+1,0,true,'#4a90d9'));
-    cellText('合計',nCols-1,0,true,'#d4a843');
+    cellText('',0,0,'header','#4a90d9');
+    cols.forEach((c,i)=>cellText(c,i+1,0,'header','#4a90d9'));
+    cellText('合計',nCols-1,0,'header','#d4a843');
 
-    // 資料列
+    // 資料列（數字用大字體，讓學生難以用心算加總）
     rows.forEach((r,ri)=>{
-      cellText(r,0,ri+1,true,'rgba(212,168,67,0.9)');
-      cells[ri].forEach((v,ci)=>cellText(v,ci+1,ri+1,false,TC));
-      cellText(rowTotals[ri],nCols-1,ri+1,true,'rgba(212,168,67,0.8)');
+      cellText(r,0,ri+1,'label','rgba(212,168,67,0.9)');
+      cells[ri].forEach((v,ci)=>cellText(v,ci+1,ri+1,'data',TC));
+      cellText(rowTotals[ri],nCols-1,ri+1,'total','rgba(212,168,67,0.9)');
     });
 
     // 合計列
-    cellText('合計',0,nRows-1,true,'rgba(212,168,67,0.9)');
-    colTotals.forEach((v,ci)=>cellText(v,ci+1,nRows-1,true,'rgba(212,168,67,0.8)'));
-    cellText(grandTotal,nCols-1,nRows-1,true,'#f0c560');
+    cellText('合計',0,nRows-1,'label','rgba(212,168,67,0.9)');
+    colTotals.forEach((v,ci)=>cellText(v,ci+1,nRows-1,'total','rgba(212,168,67,0.8)'));
+    cellText(grandTotal,nCols-1,nRows-1,'total','#f0c560');
 
     // 無綠框標示
 
@@ -1500,27 +1700,19 @@ function renderLBR1(cid,myScore){
 }
 
 let G1={};
-const R1_TIME=180;
+const R1_TIME=60; // 每題60秒
 
 function startR1(){
   clearInterval(G1.timerID);
   const name=(G&&G.playerName)||(G2&&G2.playerName)||'匿名偵探';
-  G1={qIdx:0,score:0,correct:0,answered:false,timeLeft:R1_TIME,timerID:null,
+  G1={qIdx:0,score:0,correct:0,answered:false,timeLeft:0,timerID:null,
     qs:[...R1_QUESTIONS].sort(()=>Math.random()-0.5),playerName:name};
   document.getElementById('b-stage').textContent='第一關';
   document.getElementById('b-type').textContent='圖表功用';
   document.getElementById('b-streak').style.display='none';
   document.getElementById('b-score').textContent='0 分';
   renderR1Dots();renderR1Q();
-  G1.timerID=setInterval(()=>{
-    G1.timeLeft--;
-    const t=G1.timeLeft,m=Math.floor(t/60),s=t%60;
-    const box=document.getElementById('timer-box');
-    if(box){box.textContent=m+':'+(s<10?'0':'')+s;box.className='timer-box'+(t<=36?' danger':t<=60?' warn':'');}
-    if(t<=0){clearInterval(G1.timerID);finishR1();}
-  },1000);
-  const box=document.getElementById('timer-box');
-  if(box){const t=R1_TIME;box.textContent=Math.floor(t/60)+':'+(t%60<10?'0':'')+t%60;box.className='timer-box';}
+  // 計時由 renderR1Q 每題各自啟動
 }
 
 function renderR1Dots(){
@@ -1537,6 +1729,8 @@ function renderR1Dots(){
 function renderR1Q(){
   if(G1.qIdx>=G1.qs.length){finishR1();return;}
   G1.answered=false;
+  clearInterval(G1.timerID);
+  G1.timeLeft=R1_TIME; // 每題重設60秒
   const q=G1.qs[G1.qIdx];
   renderR1Dots();
   const opts=[...q.options].sort(()=>Math.random()-0.5);
@@ -1545,7 +1739,7 @@ function renderR1Q(){
   wrap.className='q-wrap';
   wrap.innerHTML=`
     <div class="calc-question-panel" style="max-width:680px;margin:0 auto">
-      <div class="ptitle">圖表功用判斷 &nbsp;·&nbsp; 題目 ${G1.qIdx+1} / ${G1.qs.length}</div>
+      <div class="ptitle"><span class="ptitle-dot"></span>圖表功用判斷 &nbsp;·&nbsp; 題目 ${G1.qIdx+1} / ${G1.qs.length}</div>
       <div style="font-size:44px;margin:12px 0 18px;text-align:center">${q.icon}</div>
       <div style="font-size:17px;font-weight:600;color:var(--text);line-height:1.65;margin-bottom:22px;text-align:center">${q.question}</div>
       <div id="r1-opts" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1588,7 +1782,28 @@ function renderR1Q(){
     });
     optsDiv.appendChild(btn);
   });
-  document.getElementById('r1-nxt').addEventListener('click',()=>{G1.qIdx++;renderR1Q();});
+  document.getElementById('r1-nxt').addEventListener('click',()=>{
+    clearInterval(G1.timerID);G1.qIdx++;renderR1Q();
+  });
+  // 每題計時器
+  G1.timerID=setInterval(()=>{
+    G1.timeLeft--;
+    const t=G1.timeLeft,m=Math.floor(t/60),s=t%60;
+    const box=document.getElementById('timer-box');
+    if(box){box.textContent=m+':'+(s<10?'0':'')+s;box.className='timer-box'+(t<=10?' danger':t<=20?' warn':'');}
+    if(t<=0){
+      clearInterval(G1.timerID);
+      if(!G1.answered){
+        G1.answered=true;
+        const fb=document.getElementById('r1-fb');
+        if(fb){fb.className='calc-fb show fail';fb.textContent='⏰ 時間到！';}
+        const nxt=document.getElementById('r1-nxt');
+        if(nxt)nxt.classList.add('show');
+      }
+    }
+  },1000);
+  const box=document.getElementById('timer-box');
+  if(box){box.textContent='1:00';box.className='timer-box';}
 }
 
 function finishR1(){
@@ -1656,7 +1871,7 @@ function renderQ(){
   wrap.innerHTML=`
     <div class="main">
       <div class="panel">
-        <div class="ptitle">證據圖表 · ${q.typeLabel}</div>
+        <div class="ptitle"><span class="ptitle-dot"></span>證據圖表 · ${q.typeLabel}</div>
         <div class="diff-tag diff-${d}">
           ${{easy:'⭐ 初級',med:'⭐⭐ 中級',hard:'⭐⭐⭐ 高難'}[d]}
           &nbsp;·&nbsp; 題目 ${G.qIdx+1} / ${G.qs.length}
@@ -1666,7 +1881,7 @@ function renderQ(){
         <div class="hint-box"><span style="flex-shrink:0">💡</span><span>${q.hint}</span></div>
       </div>
       <div class="panel">
-        <div class="ptitle">嫌疑人審問</div>
+        <div class="ptitle"><span class="ptitle-dot"></span>嫌疑人審問</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">
           點擊每條證詞標記
           <span style="color:var(--green)">✅ 可信</span> 或
@@ -1899,11 +2114,12 @@ function showNameEntry(){
     <div class="name-screen">
       <div style="font-size:48px;margin-bottom:12px">🔍</div>
       <h2>數據偵探：真相只有一個</h2>
-      <p>
-        🌟 <strong>第一關</strong>：判斷統計圖表與統計量的功用，共 6 題・3 分鐘<br>
-        🧮 <strong>第二關</strong>：計算統計數值（圖表讀值、平均數、中位數、眾數），共 8 題・5 分鐘<br>
-        🔍 <strong>第三關</strong>：找出說謊者，標記證詞得分，共 9 題・3 分鐘・3 條命
-      </p>
+      <p>完成三關挑戰，成為頂尖數據偵探！</p>
+      <div class="stage-badge-row">
+        <div class="stage-badge stage-badge-1">🌟 第一關：圖表功用判斷 · 6題 · 2分鐘</div>
+        <div class="stage-badge stage-badge-2">🧮 第二關：計算數值 · 15題 · 2分鐘</div>
+        <div class="stage-badge stage-badge-3">🔍 第三關：找說謊者 · 9題 · 3分鐘</div>
+      </div>
       <div class="name-input-wrap">
         <input class="name-input" id="player-name" maxlength="12" placeholder="輸入你的偵探名稱" autocomplete="off"/>
         <button class="cta" onclick="confirmName()">從第一關開始 →</button>
