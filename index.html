@@ -285,9 +285,10 @@ table td{ border-bottom:2px solid #e0d8c4 !important; }
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 /* ── Firebase 初始化(階段1:僅登入;資料仍在本機)── */
-var FB = { ready:false, auth:null, user:null };
+var FB = { ready:false, auth:null, user:null, db:null };
 try{
   if(typeof firebase !== "undefined"){
     firebase.initializeApp({
@@ -299,6 +300,8 @@ try{
       appId: "1:935964696129:web:aa081bb14cb43a334030c0"
     });
     FB.auth = firebase.auth();
+    FB.db = firebase.firestore();
+    try{ FB.db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}   /* 離線快取 */
     FB.ready = true;
   }
 }catch(e){ FB.ready = false; }
@@ -315,7 +318,7 @@ try{
 <div id="modalHost"></div>
 
 <script>
-if(typeof FB === "undefined"){ var FB = { ready:false, auth:null, user:null }; }   /* SDK被擋時的保底 */
+if(typeof FB === "undefined"){ var FB = { ready:false, auth:null, user:null, db:null }; }   /* SDK被擋時的保底 */
 "use strict";
 /* ============================================================
  * 班級 RPG v2 — 公會大廳(離線單檔)
@@ -1358,6 +1361,11 @@ function backfill(p){
   p.art = p.art || {};
   if(p.skillsOff===undefined) p.skillsOff = false;
   if(!p.teacherEmails) p.teacherEmails = [];
+  if(p.lbOptIn===undefined) p.lbOptIn = false;
+  if(p.lbName===undefined) p.lbName = "";
+  if(p.className===undefined) p.className = "";
+  if(p.bossKills===undefined) p.bossKills = 0;
+  if(!p.xpWeek) p.xpWeek = {key:"", sum:0};
   p.students.forEach((s,i)=>{
     if(s.seat===undefined) s.seat = String(i+1);      // 座號預設依名冊順序
     if(s.email===undefined) s.email = "";
@@ -1420,7 +1428,179 @@ function load(){
   }catch(e){ /* 壞資料 → 重建 */ }
   const s = freshState(); localStorage.setItem(LS_KEY, JSON.stringify(s)); return s;
 }
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function save(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));   // 本機永遠留一份(離線保險)
+  CLOUD.scheduleSync();                                   // 雲端節流同步(未連線時自動略過)
+}
+
+/* ══ CLOUD:Firestore 雲端資料層(階段2) ══════════════
+ * 結構:classes/{cid}/data/main(班級主體,不含學生與作品)
+ *       classes/{cid}/students/{sid}(每生一文件,縮小衝突面)
+ *       classes/{cid}/items/{itemId}(工坊作品,含圖片)
+ *       leaderboard/{cid}(世界排行榜公開摘要)
+ * 同步:save() 後節流 1.5s;dirty-check 只寫有變動的文件。 */
+const CLOUD = {
+  cid: null,              // 目前班級 id(null=未連雲,純本機)
+  role: null,             // teacher|student|parent
+  _timer: null,
+  _lastSnap: {},          // 上次寫入的 JSON 快照(dirty-check 用)
+  _unsubs: [],
+  _applying: false,       // 正在套用遠端資料(避免回寫迴圈)
+
+  on(){ return FB.ready && FB.db && this.cid; },
+
+  /* 班級主體 = state 去掉 students/customItems */
+  _meta(){
+    const m = Object.assign({}, state);
+    delete m.students; delete m.customItems;
+    return m;
+  },
+  scheduleSync(){
+    if(!this.on() || this._applying) return;
+    clearTimeout(this._timer);
+    this._timer = setTimeout(()=> this.pushDirty().catch(e=>console.warn("sync",e)), 1500);
+  },
+  async pushDirty(){
+    if(!this.on()) return;
+    const c = FB.db.collection("classes").doc(this.cid);
+    const batchWrites = [];
+    const metaJson = JSON.stringify(this._meta());
+    if(this._lastSnap.meta !== metaJson){
+      batchWrites.push(c.collection("data").doc("main").set(JSON.parse(metaJson)));
+      this._lastSnap.meta = metaJson;
+    }
+    for(const s of state.students){
+      const j = JSON.stringify(s);
+      if(this._lastSnap["stu:"+s.id] !== j){
+        batchWrites.push(c.collection("students").doc(s.id).set(JSON.parse(j)));
+        this._lastSnap["stu:"+s.id] = j;
+      }
+    }
+    for(const it of state.customItems){
+      const j = JSON.stringify(it);
+      if(this._lastSnap["item:"+it.id] !== j){
+        batchWrites.push(c.collection("items").doc(String(it.id)).set(JSON.parse(j)));
+        this._lastSnap["item:"+it.id] = j;
+      }
+    }
+    await Promise.all(batchWrites);
+    this.pushLeaderboard();                    // 排行榜摘要(內部再節流)
+  },
+  /* 讀整班(進班時一次)+ 掛即時監聽 */
+  async loadClass(cid){
+    const c = FB.db.collection("classes").doc(cid);
+    const [metaDoc, stuSnap, itemSnap] = await Promise.all([
+      c.collection("data").doc("main").get(),
+      c.collection("students").get(),
+      c.collection("items").get()
+    ]);
+    if(!metaDoc.exists) throw new Error("找不到班級資料");
+    const meta = metaDoc.data();
+    meta.students = stuSnap.docs.map(d=>d.data());
+    meta.customItems = itemSnap.docs.map(d=>d.data());
+    state = backfill(meta);
+    this.cid = cid;
+    localStorage.setItem("rpg-last-class", cid);
+    this._snapAll();
+    localStorage.setItem(LS_KEY, JSON.stringify(state));   // 雲端資料也落一份本機
+    this.listen();
+  },
+  _snapAll(){
+    this._lastSnap = { meta: JSON.stringify(this._meta()) };
+    state.students.forEach(s=> this._lastSnap["stu:"+s.id] = JSON.stringify(s));
+    state.customItems.forEach(it=> this._lastSnap["item:"+it.id] = JSON.stringify(it));
+  },
+  /* 即時監聽:別的裝置(老師/其他學生)改了資料,這裡自動更新畫面 */
+  listen(){
+    this.stopListen();
+    const c = FB.db.collection("classes").doc(this.cid);
+    const apply = (fn)=>{ this._applying = true; try{ fn(); render(); }finally{ this._applying = false; } };
+    this._unsubs.push(c.collection("students").onSnapshot(snap=>{
+      snap.docChanges().forEach(ch=>{
+        const d = ch.doc.data(); const j = JSON.stringify(d);
+        if(this._lastSnap["stu:"+d.id] === j) return;      // 自己寫的,略過
+        apply(()=>{
+          const i = state.students.findIndex(x=>x.id===d.id);
+          if(ch.type==="removed"){ if(i>=0) state.students.splice(i,1); delete this._lastSnap["stu:"+d.id]; }
+          else{ if(i>=0) state.students[i]=d; else state.students.push(d); this._lastSnap["stu:"+d.id]=j; }
+        });
+      });
+    }));
+    this._unsubs.push(c.collection("data").doc("main").onSnapshot(doc=>{
+      if(!doc.exists) return;
+      const j = JSON.stringify(doc.data());
+      if(this._lastSnap.meta === j) return;
+      apply(()=>{
+        const meta = doc.data();
+        meta.students = state.students; meta.customItems = state.customItems;
+        state = backfill(meta);
+        this._lastSnap.meta = j;
+      });
+    }));
+    this._unsubs.push(c.collection("items").onSnapshot(snap=>{
+      snap.docChanges().forEach(ch=>{
+        const d = ch.doc.data(); const j = JSON.stringify(d);
+        if(this._lastSnap["item:"+d.id] === j) return;
+        apply(()=>{
+          const i = state.customItems.findIndex(x=>x.id===d.id);
+          if(ch.type==="removed"){ if(i>=0) state.customItems.splice(i,1); delete this._lastSnap["item:"+d.id]; }
+          else{ if(i>=0) state.customItems[i]=d; else state.customItems.push(d); this._lastSnap["item:"+d.id]=j; }
+        });
+      });
+    }));
+  },
+  stopListen(){ this._unsubs.forEach(u=>{ try{u();}catch(e){} }); this._unsubs=[]; },
+
+  /* ── 班級管理 ── */
+  async listMyClasses(email){
+    const q = await FB.db.collection("classes").where("teacherEmails","array-contains",email).get();
+    return q.docs.map(d=>({ cid:d.id, name:(d.data().name||"未命名"), createdAt:d.data().createdAt }));
+  },
+  async createClass(name, email, fromState){
+    const cid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+    const src = fromState || freshState();
+    src.className = name;
+    await FB.db.collection("classes").doc(cid).set({
+      name, teacherEmails:[email], createdAt: Date.now()
+    });
+    // 上傳資料
+    const c = FB.db.collection("classes").doc(cid);
+    const meta = Object.assign({}, src); delete meta.students; delete meta.customItems;
+    if(!meta.teacherEmails || !meta.teacherEmails.length) meta.teacherEmails=[email];
+    await c.collection("data").doc("main").set(JSON.parse(JSON.stringify(meta)));
+    await Promise.all(src.students.map(s=> c.collection("students").doc(s.id).set(JSON.parse(JSON.stringify(s)))));
+    await Promise.all((src.customItems||[]).map(it=> c.collection("items").doc(String(it.id)).set(JSON.parse(JSON.stringify(it)))));
+    return cid;
+  },
+
+  /* ── 世界排行榜 ── */
+  _lbLast: 0,
+  async pushLeaderboard(){
+    if(!this.on() || !state.lbOptIn) return;
+    const now = Date.now();
+    if(now - this._lbLast < 5*60*1000) return;             // 5 分鐘節流
+    this._lbLast = now;
+    const n = state.students.length || 1;
+    const total = state.students.reduce((a,s)=>a+(s.totalXp||0),0);
+    const weekKey = lbWeekKey();
+    const weekXp = (state.xpWeek && state.xpWeek.key===weekKey) ? state.xpWeek.sum : 0;
+    await FB.db.collection("leaderboard").doc(this.cid).set({
+      name: state.lbName || state.className || "匿名班級",
+      students: n, totalXp: total, avgXp: Math.round(total/n),
+      weekKey, weekXp, bossKills: state.bossKills||0,
+      updatedAt: now
+    });
+  },
+  async fetchLeaderboard(){
+    const q = await FB.db.collection("leaderboard").orderBy("avgXp","desc").limit(50).get();
+    return q.docs.map(d=>d.data());
+  }
+};
+function lbWeekKey(){
+  const d = new Date(); const on = new Date(d.getFullYear(),0,1);
+  const w = Math.ceil(((d-on)/86400000 + on.getDay()+1)/7);
+  return d.getFullYear()+"w"+w;
+}
 function stu(id){ return state.students.find(s=>s.id===id); }
 function addLog(sid, msg){
   state.log.unshift({t:new Date().toLocaleString("zh-TW",{hour12:false}), sid, msg});
@@ -2160,6 +2340,7 @@ function rollByContribution(damageMap){
   return entries[entries.length-1][0];
 }
 function winBoss(){
+  state.bossKills = (state.bossKills||0) + 1;
   const b = state.boss; if(!b) return;
   const parts = Object.keys(b.damage).filter(sid=>stu(sid));
   const totalDmg = parts.reduce((a,sid)=>a+b.damage[sid], 0) || 1;
@@ -2324,6 +2505,32 @@ function rejectDesign(id){
 }
 
 /* ── 回收確認(防誤觸)────────────────────────────── */
+/* ── 世界排行榜:人均/本週/屠龍三榜 ── */
+async function showLeaderboard(){
+  const host = document.getElementById("modalHost");
+  host.innerHTML = '<div class="modal-bg"><div class="modal"><h4>🌍 世界排行榜</h4><div class="msub">載入中…</div></div></div>';
+  let rows = [];
+  try{ rows = await CLOUD.fetchLeaderboard(); }
+  catch(e){ host.querySelector(".msub").textContent = "讀取失敗:"+e.message; return; }
+  const wk = lbWeekKey();
+  const mk = (list, valFn, unit)=> list.slice(0,10).map((r,i)=>{
+    const me = r.name===(state.lbName||"") ? ' style="background:#fff3c9;font-weight:900"' : "";
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+    return '<tr'+me+'><td style="width:36px;text-align:center">'+medal+'</td><td>'+esc(r.name)+'</td><td class="num" style="text-align:right">'+valFn(r)+unit+'</td></tr>';
+  }).join("") || '<tr><td colspan="3" class="mini">還沒有班級上榜,當第一名吧!</td></tr>';
+  const byAvg  = [...rows].sort((a,b)=>b.avgXp-a.avgXp);
+  const byWeek = rows.filter(r=>r.weekKey===wk).sort((a,b)=>b.weekXp-a.weekXp);
+  const byBoss = [...rows].sort((a,b)=>(b.bossKills||0)-(a.bossKills||0));
+  host.innerHTML = '<div class="modal-bg"><div class="modal" style="max-width:520px;max-height:82vh;overflow:auto">'
+    + '<h4>🌍 世界排行榜</h4>'
+    + '<div class="msub">參加班級:'+rows.length+' 班。只顯示班級暱稱,不含任何個人資料。</div>'
+    + '<h4 style="margin-top:10px">🏆 人均 XP 榜</h4><table><tbody>'+mk(byAvg, r=>r.avgXp, " XP")+'</tbody></table>'
+    + '<h4 style="margin-top:10px">📅 本週衝刺榜</h4><table><tbody>'+mk(byWeek, r=>r.weekXp, " XP")+'</tbody></table>'
+    + '<h4 style="margin-top:10px">⚔️ 屠龍榜</h4><table><tbody>'+mk(byBoss, r=>(r.bossKills||0), " 隻")+'</tbody></table>'
+    + '<div style="margin-top:12px"><button class="big-btn" id="lbClose">關閉</button></div>'
+    + '</div></div>';
+  document.getElementById("lbClose").onclick = ()=> host.innerHTML="";
+}
 function openRecycleModal(sid, slot){
   const s = stu(sid); if(!s) return;
   const it = itemById(s[slot+"Id"]);
@@ -2370,6 +2577,9 @@ const WHEEL_PRIZES = [
 function grantXp(s, xp){
   const ups = applyLevelUps(s, xp);
   state.classGoal.progress += xp;
+  const wk = lbWeekKey();
+  if(!state.xpWeek || state.xpWeek.key!==wk) state.xpWeek = {key:wk, sum:0};
+  state.xpWeek.sum += xp;
   if(ups){ levelUpFx(s.name+" 升至 Lv."+s.level+"!"); sfx("levelup"); }
   checkClassGoal();
 }
@@ -2630,36 +2840,89 @@ function renderLegacyHome(){
 function googleLogin(role){
   if(!FB.ready){ toast("登入服務未連線,請用離線模式", true); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
-  FB.auth.signInWithPopup(provider).then(res=>{
+  FB.auth.signInWithPopup(provider).then(async res=>{
     FB.user = res.user;
     const email = (res.user.email||"").toLowerCase();
     if(role==="teacher"){
-      if(!state.teacherEmails) state.teacherEmails = [];
-      if(state.teacherEmails.length===0){
-        state.teacherEmails.push(email); save();          // 首任教師:自動登記白名單
-        toast("已將 "+email+" 登記為教師(可在名冊管理白名單)");
-        view={page:"teacher", tview:"board", role:"teacher"}; render();
-      }else if(state.teacherEmails.includes(email)){
-        view={page:"teacher", tview:"board", role:"teacher"}; render();
-      }else{
-        toast("此帳號不在教師白名單:"+email, true);
-        FB.auth.signOut(); FB.user=null;
-      }
+      CLOUD.role = "teacher";
+      view = {page:"classes", role:"teacher"}; renderClasses(email);
     }else{
-      const s = state.students.find(x=>(x.email||"").toLowerCase()===email);
-      if(s){ view={page:"student", sid:s.id, tab:"stats", shopFilter:"all", role:"student"}; render(); }
-      else{
-        toast("名冊找不到這個信箱:"+email+"。請老師在名冊填入你的 Google 信箱", true);
-        FB.auth.signOut(); FB.user=null;
-      }
+      CLOUD.role = "student";
+      // 學生:用網址的 ?class= 或上次班級
+      const cid = new URLSearchParams(location.search).get("class") || localStorage.getItem("rpg-last-class");
+      if(!cid){ toast("請用老師提供的班級連結開啟(網址帶 ?class=...)", true); FB.auth.signOut(); FB.user=null; return; }
+      try{
+        await CLOUD.loadClass(cid);
+        const s = state.students.find(x=>(x.email||"").toLowerCase()===email);
+        if(s){ view={page:"student", sid:s.id, tab:"stats", shopFilter:"all", role:"student"}; render(); }
+        else{ toast("這個班級的名冊找不到你的信箱:"+email, true); FB.auth.signOut(); FB.user=null; }
+      }catch(e){ toast("載入班級失敗:"+e.message, true); }
     }
   }).catch(err=>{ toast("登入失敗:"+(err&&err.message||err), true); });
 }
-/* 家長:座號+生日(YYYYMMDD)比對 */
-function parentLogin(){
+/* 教師:班級選擇頁 */
+async function renderClasses(email){
+  app.innerHTML = '<div class="home"><div class="crest">🏫</div><h2>我的班級</h2><p>載入中…</p></div>';
+  let list = [];
+  try{ list = await CLOUD.listMyClasses(email); }
+  catch(e){ app.innerHTML = '<div class="panel"><h3>讀取失敗</h3><div class="mini">'+esc(e.message)+'</div><button class="btn" id="cbk">← 回登入</button></div>'; document.getElementById("cbk").onclick=()=>{view={page:"home"};render();}; return; }
+  const cards = list.map(c=>
+    '<button class="role-card" data-cid="'+esc(c.cid)+'"><span class="face">🏫</span><span class="nm">'+esc(c.name)+'</span><span class="sub">點擊進入</span></button>').join("");
+  const hasLocal = !!localStorage.getItem(LS_KEY);
+  app.innerHTML =
+    '<div class="home"><div class="crest">🏫</div><h2>我的班級</h2>'
+    + '<div class="role-grid">'+cards+'</div>'
+    + '<div class="panel" style="max-width:420px;margin:16px auto 0;text-align:left"><h3>➕ 新增班級</h3>'
+    + '<div class="inline-form"><input type="text" id="ncName" placeholder="班級名稱(例:七年三班)" style="flex:1">'
+    + '<button class="btn gold" id="ncCreate">建立空白班級</button></div>'
+    + (hasLocal ? '<div style="margin-top:8px"><button class="btn" id="ncMigrate">📦 把這台裝置的現有資料上傳成新班級</button><div class="mini" style="margin-top:4px">會把本機 localStorage 的班級搬上雲端(本機資料保留)。</div></div>' : "")
+    + '</div></div>';
+  app.querySelectorAll("[data-cid]").forEach(b=>{
+    b.onclick = async ()=>{
+      b.disabled = true; b.querySelector(".sub").textContent = "載入中…";
+      try{ await CLOUD.loadClass(b.dataset.cid); view={page:"teacher", tview:"board", role:"teacher"}; render(); }
+      catch(e){ toast("載入失敗:"+e.message, true); b.disabled=false; }
+    };
+  });
+  document.getElementById("ncCreate").onclick = async ()=>{
+    const nm = (document.getElementById("ncName").value||"").trim();
+    if(!nm){ toast("請輸入班級名稱", true); return; }
+    try{
+      const cid = await CLOUD.createClass(nm, email, null);
+      await CLOUD.loadClass(cid);
+      if(!state.teacherEmails.includes(email)) state.teacherEmails.push(email);
+      view={page:"teacher", tview:"roster", role:"teacher"}; render();
+      toast("班級「"+nm+"」已建立!到名冊加入學生吧");
+    }catch(e){ toast("建立失敗:"+e.message, true); }
+  };
+  const mig = document.getElementById("ncMigrate");
+  if(mig) mig.onclick = async ()=>{
+    const nm = prompt("為這個班級取名(例:七年三班)");
+    if(!nm) return;
+    try{
+      const local = backfill(JSON.parse(localStorage.getItem(LS_KEY)));
+      if(!local.teacherEmails.includes(email)) local.teacherEmails.push(email);
+      const cid = await CLOUD.createClass(nm, email, local);
+      await CLOUD.loadClass(cid);
+      view={page:"teacher", tview:"board", role:"teacher"}; render();
+      toast("✅ 本機資料已上雲!班級連結可在名冊頁複製給學生");
+    }catch(e){ toast("遷移失敗:"+e.message, true); }
+  };
+}
+/* 家長:座號+生日(YYYYMMDD)比對;有班級連結時先從雲端載入 */
+async function parentLogin(){
   const seat = (document.getElementById("pSeat").value||"").trim();
   const birth = (document.getElementById("pBirth").value||"").trim();
   if(!seat || !/^\d{8}$/.test(birth)){ toast("請輸入座號與 8 碼生日(例 20130215)", true); return; }
+  const cid = new URLSearchParams(location.search).get("class") || localStorage.getItem("rpg-last-class");
+  if(FB.ready && cid && !CLOUD.cid){
+    try{
+      if(!FB.auth.currentUser) await FB.auth.signInAnonymously();   // 匿名登入(唯讀用)
+      await CLOUD.loadClass(cid);
+      CLOUD.role = "parent";
+      CLOUD.stopListen();                                            // 家長唯讀,不需即時監聽
+    }catch(e){ toast("無法載入班級資料,改用本機資料查詢", true); }
+  }
   const s = state.students.find(x=> String(x.seat||"")===seat && String(x.birth||"")===birth);
   if(!s){ toast("查無資料:座號或生日不符,請向老師確認", true); return; }
   view={page:"parent", sid:s.id, role:"parent"}; render();
@@ -2851,7 +3114,15 @@ function teacherRoster(){
     + '<div class="inline-form" style="margin-top:10px">'
     + '<input type="text" id="twAdd" placeholder="新增教師 Gmail" style="width:200px">'
     + '<button class="btn" id="twAddBtn">加入白名單</button></div>'
-    + '<div class="mini" style="margin-top:6px">學生登入:在上方名冊填入學生的 Google 信箱。家長查看:填座號+生日(8碼)。</div></div>';
+    + '<div class="mini" style="margin-top:6px">學生登入:在上方名冊填入學生的 Google 信箱。家長查看:填座號+生日(8碼)。</div></div>'
+    + (CLOUD.on() ? '<div class="panel"><h3>🔗 班級連結與世界排行榜</h3>'
+      + '<div class="inline-form"><input type="text" id="classLink" readonly value="'+esc(location.origin+location.pathname+"?class="+CLOUD.cid)+'" style="flex:1;font-size:12px">'
+      + '<button class="btn gold" id="copyLink">複製連結</button></div>'
+      + '<div class="mini" style="margin:4px 0 10px">把連結發到班群,學生/家長點開即可登入本班。</div>'
+      + '<div class="inline-form"><button class="btn'+(state.lbOptIn?" gold":"")+'" id="lbToggle">世界排行榜:'+(state.lbOptIn?"參加中":"未參加")+'</button>'
+      + '<input type="text" id="lbName" placeholder="上榜暱稱(例:桃園某國中703)" value="'+esc(state.lbName||"")+'" style="flex:1">'
+      + '<button class="btn" id="lbView">🌍 看排行榜</button></div>'
+      + '<div class="mini" style="margin-top:4px">只上傳班級摘要(人均XP/週XP/擊王數),不會公開任何學生姓名。</div></div>' : "");
 }
 function teacherTasks(){
   const scopeOpts = ['<option value="all">全班</option>'].concat(
@@ -3209,6 +3480,24 @@ function bindTeacher(){
       state.teacherEmails.splice(+b.dataset.tdel,1); save(); render();
     };
   });
+  // 班級連結+排行榜
+  const cpy = document.getElementById("copyLink");
+  if(cpy) cpy.onclick = ()=>{
+    const inp = document.getElementById("classLink"); inp.select();
+    try{ navigator.clipboard.writeText(inp.value).then(()=>toast("已複製班級連結")); }
+    catch(e){ document.execCommand("copy"); toast("已複製"); }
+  };
+  const lbT = document.getElementById("lbToggle");
+  if(lbT) lbT.onclick = ()=>{
+    state.lbOptIn = !state.lbOptIn;
+    const nm = document.getElementById("lbName"); if(nm) state.lbName = nm.value.trim();
+    if(state.lbOptIn && !state.lbName){ toast("請先填上榜暱稱", true); state.lbOptIn=false; return; }
+    save(); CLOUD._lbLast=0; CLOUD.pushLeaderboard().catch(()=>{}); render();
+  };
+  const lbN = document.getElementById("lbName");
+  if(lbN) lbN.onchange = ()=>{ state.lbName = lbN.value.trim(); save(); };
+  const lbV = document.getElementById("lbView");
+  if(lbV) lbV.onclick = showLeaderboard;
   const bsSk = document.getElementById("bsSkip");
   if(bsSk) bsSk.onclick = skipGroupTurn;
   app.querySelectorAll("[data-bscounter]").forEach(b=> b.onclick = ()=>{
@@ -3608,7 +3897,8 @@ function renderStudent(){
     const gRank = [...state.groups].sort((a,b)=>groupScore(b)-groupScore(a))
       .map((g,i)=>'<tr><td><span class="lb-rank num">'+(i+1)+'</span></td><td>'+esc(g)+' 組</td><td class="num">'+groupScore(g)+' XP</td></tr>').join("");
     body = bossInfo + '<div class="panel"><h3>個人排行(等級 → XP → 金幣)</h3><table><tbody>'+rows+'</tbody></table></div>'
-      + '<div class="panel"><h3>小組排行(累積 XP)</h3><table><tbody>'+gRank+'</tbody></table></div>';
+      + '<div class="panel"><h3>小組排行(累積 XP)</h3><table><tbody>'+gRank+'</tbody></table></div>'
+      + (CLOUD.on() && state.lbOptIn ? '<div class="panel"><h3>🌍 世界排行榜</h3><div class="mini" style="margin-bottom:8px">我們班正在跟其他班級較勁!</div><button class="btn gold" id="stuLbView">看世界排行榜</button></div>' : "");
   }
 
   const myLogs = state.log.filter(l=>l.sid===s.id).slice(0,15)
@@ -3637,6 +3927,8 @@ function renderStudent(){
     + '</div><div><div class="tabs stu-tabs">'+tabs+'</div>'+body+'</div></div>';
 
   app.querySelectorAll("[data-tab]").forEach(b=> b.onclick = ()=>{ view.tab=b.dataset.tab; render(); });
+  const stuLb = document.getElementById("stuLbView");
+  if(stuLb) stuLb.onclick = showLeaderboard;
   app.querySelectorAll("[data-filter]").forEach(b=> b.onclick = ()=>{ view.shopFilter=b.dataset.filter; render(); });
   app.querySelectorAll("[data-buy]").forEach(b=> b.onclick = ()=> buyItem(s.id, +b.dataset.buy));
   app.querySelectorAll("[data-use]").forEach(b=> b.onclick = ()=> useConsumable(s.id, +b.dataset.use));
