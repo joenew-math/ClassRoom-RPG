@@ -70,6 +70,10 @@
   .member .mname{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .member .mlv{font-size:10px;color:var(--gold)}
   .member .mbadges{font-size:10px;min-height:12px}
+  .member .mtitle{font-size:10px;color:#b8860b;font-weight:900;display:block}
+  .member.msel{ outline:4px solid var(--gold); outline-offset:-2px; }
+  .member .msel-badge{ position:absolute; top:4px; left:4px; background:var(--gold); border:2px solid #141414; border-radius:50%; width:24px; height:24px; font-weight:900; font-size:15px; line-height:20px; z-index:3; }
+  .member .mlv-in{font-size:9px;background:var(--gold);color:#2a2004;border-radius:3px;padding:0 4px;font-weight:900;vertical-align:middle}
 
   /* 加分彈窗(觸控大按鈕) */
   .overlay{position:fixed;inset:0;background:rgba(10,13,22,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -127,6 +131,14 @@
   .wheel-hub{position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--panel);border:3px solid var(--gold);z-index:1;display:flex;align-items:center;justify-content:center;font-size:18px}
   .rar.Custom{color:#7ad0e8}
   .px-wrap{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.adj-bar{ display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  background:#fff; border:3px solid #141414; border-radius:12px;
+  padding:10px 16px; margin-top:12px; box-shadow:4px 4px 0 rgba(20,20,20,.85); }
+.adj-pad{ display:grid; grid-template-columns:repeat(3,46px); grid-auto-rows:46px; gap:4px; }
+.adj-pad .btn{ padding:0; min-width:46px; min-height:46px; font-size:17px; line-height:1; }
+.adj-pad i{ visibility:hidden; }
+.adj-group{ display:flex; gap:6px; }
+.adj-group .btn{ min-height:46px; padding:0 14px; font-size:14px; }
   .px-grid{display:grid;grid-template-columns:repeat(16,1fr);gap:1px;background:#10141f;border:1px solid var(--line);border-radius:6px;padding:3px;width:100%;max-width:340px;touch-action:none;user-select:none}
   .px-cell{aspect-ratio:1;background:#232b42;border:none;border-radius:2px;padding:0;min-width:0}
   .palette{display:flex;gap:5px;flex-wrap:wrap;align-items:center;max-width:340px}
@@ -231,6 +243,7 @@ table td{ border-bottom:2px solid #e0d8c4 !important; }
 .stat-pill b{ color:#c0392b; }
 .stat-pill.lvp{ background:var(--gold); }
 .stat-pill.lvp b{ color:#141414; }
+.stat-pill.lvp .ttl{ color:#8a5a00; font-size:11px; font-weight:900; }
 .equip-col{ display:flex; flex-direction:column; gap:6px; flex:0 0 auto; width:88px; }
 .equip-col .slot{ background:#fff !important; border:2.5px solid #141414 !important; border-radius:7px !important; box-shadow:2px 2px 0 var(--toon-shadow) !important; padding:5px 3px !important; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:11px; color:#141414 !important; min-height:auto !important; }
 .equip-col .slot.filled{ background:#fff8e6 !important; outline:2px solid var(--gold); outline-offset:-4px; }
@@ -245,6 +258,94 @@ table td{ border-bottom:2px solid #e0d8c4 !important; }
 .item-card{ background:#fff !important; border:3px solid #141414 !important; border-radius:8px !important; box-shadow:3px 3px 0 var(--toon-shadow) !important; color:#141414 !important; }
 .badge{ background:#fff !important; border:2px solid #141414 !important; color:#141414 !important; border-radius:14px !important; }
 .badge.locked{ opacity:.4; }
+.badge.title-pick{ cursor:pointer; }
+.badge.title-pick.on{ background:var(--gold) !important; font-weight:900; }
+/* ── 大招特效 ── */
+.ult-flash{ position:fixed; inset:0; background:#fff; z-index:128; pointer-events:none; animation:ultFlash .6s ease-out forwards; }
+@keyframes ultFlash{ 0%{opacity:.9} 100%{opacity:0} }
+.ult-banner{ position:fixed; left:50%; top:30%; transform:translate(-50%,-50%) rotate(-3deg); z-index:140; pointer-events:none;
+  background:var(--uc,#f5c518); color:#141414; border:5px solid #141414; border-radius:14px; box-shadow:6px 6px 0 rgba(0,0,0,.85);
+  padding:14px 34px; font-size:34px; font-weight:900; animation:ultBanner 1.35s ease-out forwards; white-space:nowrap; }
+@keyframes ultBanner{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-14deg)} 14%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(-1deg)} 26%{transform:translate(-50%,-50%) scale(1) rotate(-3deg)} 82%{opacity:1} 100%{opacity:0;transform:translate(-50%,-58%) scale(1.02) rotate(-3deg)} }
+/* ── 傷害數字(分級) ── */
+.dmg-pop{ position:fixed; z-index:135; pointer-events:none; font-weight:900; font-family:Consolas,monospace;
+  transform:translate(-50%,-100%); -webkit-text-stroke:2px #141414; paint-order:stroke;
+  text-shadow:2px 2px 0 rgba(0,0,0,.55); animation:dmgFloat .95s ease-out forwards; }
+.dmg-s{ font-size:28px; color:#fff; }
+.dmg-m{ font-size:38px; color:#ffd234; animation:dmgFloat .95s ease-out forwards; }
+.dmg-l{ font-size:52px; color:#ff5f3d; animation:dmgBig .95s ease-out forwards; -webkit-text-stroke:3px #141414; }
+.dmg-heal{ font-size:32px; color:#5cf08a; }
+.dmg-block{ font-size:28px; color:#7ad0e8; }
+@keyframes dmgFloat{ 0%{opacity:0;transform:translate(-50%,-80%) scale(.5)} 15%{opacity:1;transform:translate(-50%,-105%) scale(1.12)} 30%{transform:translate(-50%,-105%) scale(1)} 100%{opacity:0;transform:translate(-50%,-165%) scale(.95)} }
+@keyframes dmgBig{ 0%{opacity:0;transform:translate(-50%,-80%) scale(.4) rotate(-6deg)} 14%{opacity:1;transform:translate(-50%,-110%) scale(1.35) rotate(3deg)} 28%{transform:translate(-50%,-105%) scale(1.05) rotate(-1deg)} 42%{transform:translate(-50%,-108%) scale(1.12)} 100%{opacity:0;transform:translate(-50%,-170%) scale(1)} }
+/* ── 技能特效粒子 ── */
+.sfx-wrap{ position:fixed; z-index:130; pointer-events:none; width:0; height:0; }
+.sfx{ position:absolute; left:0; top:0; font-size:32px; transform:translate(-50%,-50%); text-shadow:1px 1px 0 rgba(0,0,0,.4); }
+.sfx-burst{ animation:sfxBurst .65s ease-out forwards; }
+@keyframes sfxBurst{ 0%{opacity:1;transform:translate(-50%,-50%) scale(.4)} 70%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.25)} }
+.sfx-slash{ font-size:70px; animation:sfxSlash .5s ease-in forwards; }
+@keyframes sfxSlash{ 0%{opacity:0;transform:translate(-140%,-160%) rotate(-38deg) scale(.6)} 25%{opacity:1} 100%{opacity:0;transform:translate(40%,60%) rotate(-38deg) scale(1.3)} }
+.sfx-fall{ animation:sfxFall .7s ease-in forwards; }
+@keyframes sfxFall{ 0%{opacity:0;transform:translate(calc(-50% + var(--dx)),-170px) scale(.7)} 20%{opacity:1} 80%{opacity:1;transform:translate(calc(-50% + var(--dx)),-8px) scale(1.15)} 100%{opacity:0;transform:translate(calc(-50% + var(--dx)),0) scale(1.5)} }
+.sfx-rise{ animation:sfxRise .85s ease-out forwards; }
+@keyframes sfxRise{ 0%{opacity:0;transform:translate(calc(-50% + var(--dx)),16px) scale(.6)} 25%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--dx)),-64px) scale(1.1)} }
+.sfx-bolt{ animation:sfxBolt .4s steps(2) forwards; font-size:44px; }
+@keyframes sfxBolt{ 0%{opacity:1;transform:translate(calc(-50% + var(--dx)),-70px) scale(1.2)} 60%{opacity:1;transform:translate(calc(-50% + var(--dx)),-10px) scale(1)} 100%{opacity:0;transform:translate(calc(-50% + var(--dx)),4px) scale(.9)} }
+.sfx-ring{ animation:sfxRing .7s ease-out forwards; font-size:28px; }
+@keyframes sfxRing{ 0%{opacity:1;transform:translate(-50%,-50%) scale(.3)} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6)} }
+.sfx-shieldfx{ font-size:72px; animation:sfxShield .6s ease-out forwards; }
+@keyframes sfxShield{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 30%{opacity:1;transform:translate(-50%,-50%) scale(1.15)} 70%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.2)} }
+/* ── 團體競技場 ── */
+.ga-field{ position:relative; margin:0 auto; border:3px solid #141414; border-radius:10px;
+  background-image:linear-gradient(180deg,#f2e2be 0 50%,#e8d4a8 50% 100%); overflow:hidden; overflow-x:auto; max-width:100%; }
+.ga-fighter{ position:absolute; width:40px; text-align:center; transition:left .4s,top .4s; z-index:5; }
+.ga-fighter.ga-ko{ transform:rotate(85deg); opacity:.45; filter:grayscale(.8); }
+.ga-hp{ height:5px; background:#eee; border:1.5px solid #141414; border-radius:3px; overflow:hidden; margin-bottom:1px; }
+.ga-hp i{ display:block; height:100%; }
+.ga-nm{ font-size:9px; font-weight:900; white-space:nowrap; text-shadow:1px 1px 0 #fff; }
+/* 學生遙控器 */
+.gpad-wrap{ text-align:center; padding:10px; }
+.gpad-grid{ display:grid; grid-template-columns:repeat(3,72px); grid-template-rows:repeat(3,72px); gap:8px; justify-content:center; margin:14px auto; }
+.gpad-btn{ font-size:26px; font-weight:900; background:#fff; border:3px solid #141414; border-radius:14px; box-shadow:3px 3px 0 rgba(0,0,0,.75); cursor:pointer; user-select:none; }
+.gpad-btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(0,0,0,.75); }
+.gpad-act{ display:flex; gap:14px; justify-content:center; margin-top:6px; }
+.gpad-atk{ width:110px; height:70px; font-size:20px; background:var(--gold); }
+.gpad-ult{ width:110px; height:70px; font-size:20px; background:#e2593b; color:#fff; }
+.gpad-job{ width:110px; height:70px; font-size:15px; background:#6a5acd; color:#fff; }
+.gpad-job[disabled]{ opacity:.4; }
+.gpad-ult[disabled]{ opacity:.4; }
+/* ── 競技場 ── */
+.arena-stage{ background:radial-gradient(circle,rgba(0,0,0,.06) 1.4px,transparent 1.5px) 0 0/11px 11px,var(--toon-paper); border:4px solid #141414; border-radius:14px; box-shadow:5px 5px 0 rgba(0,0,0,.85); padding:18px; position:relative; }
+.ar-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.ar-side{ flex:1; max-width:320px; }
+.ar-name{ font-weight:900; font-size:18px; color:#141414; }
+.ar-hpbar{ height:14px; background:#eee; border:3px solid #141414; border-radius:8px; overflow:hidden; margin:4px 0 2px; }
+.ar-hpbar i{ display:block; height:100%; background:linear-gradient(90deg,#5cc47a,#8ee6a8); transition:width .35s; }
+.ar-vs{ font-weight:900; font-size:26px; color:#c0392b; text-shadow:2px 2px 0 rgba(0,0,0,.2); }
+.ar-field{ display:flex; justify-content:center; align-items:flex-end; gap:110px; min-height:250px; margin:10px 0; }
+.ar-doll{ transition:transform .3s; }
+.ar-flip svg{ transform:scaleX(-1); }
+.ar-lunge-r{ animation:arLungeR .5s ease-in-out; }
+.ar-lunge-l{ animation:arLungeL .5s ease-in-out; }
+@keyframes arLungeR{ 0%{transform:translateX(0)} 45%{transform:translateX(105px) rotate(6deg)} 60%{transform:translateX(95px)} 100%{transform:translateX(0)} }
+@keyframes arLungeL{ 0%{transform:translateX(0)} 45%{transform:translateX(-105px) rotate(-6deg)} 60%{transform:translateX(-95px)} 100%{transform:translateX(0)} }
+.ar-hurt{ animation:arShake .45s; }
+@keyframes arShake{ 0%,100%{transform:translateX(0);filter:none} 20%{transform:translateX(-9px);filter:brightness(1.6) saturate(2) hue-rotate(-30deg)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px);filter:brightness(1.5)} 80%{transform:translateX(4px)} }
+.ar-heal{ animation:arGlow .8s; }
+@keyframes arGlow{ 0%,100%{filter:none} 50%{filter:drop-shadow(0 0 14px #5cc47a) brightness(1.25)} }
+.ar-ko{ transform:rotate(85deg) translateY(26px); opacity:.65; transition:transform .7s, opacity .7s; }
+.ar-win{ animation:arJump .7s ease 2; }
+@keyframes arJump{ 0%,100%{transform:translateY(0)} 45%{transform:translateY(-26px)} }
+.ar-fighter{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.ar-fighter .ar-gauge{ width:170px; }
+.ar-glabel{ font-weight:900; font-size:11px; color:#8a5a00; }
+.ar-gauge{ height:13px; background:#fff; border:3px solid #141414; border-radius:8px; overflow:hidden; box-shadow:2px 2px 0 rgba(0,0,0,.5); }
+.ar-gauge i{ display:block; height:100%; background:linear-gradient(90deg,var(--gold),#ffd75e); }
+.ar-log{ margin-top:10px; text-align:center; font-size:13px; font-weight:700; color:#333; min-height:56px; }
+.ar-winner{ position:absolute; top:38%; left:50%; transform:translate(-50%,-50%) rotate(-4deg); background:var(--gold); border:4px solid #141414; border-radius:12px; box-shadow:5px 5px 0 rgba(0,0,0,.85); padding:14px 30px; font-size:26px; font-weight:900; z-index:20; animation:cpop .5s ease-out; }
+.rank-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:start; }
+@media(max-width:1000px){ .rank-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:640px){ .rank-grid{ grid-template-columns:1fr; } }
 .log-list li{ color:#333 !important; }
 .stat-strip .stat-chip,.stat-legend{ color:#141414 !important; }
 .stat-legend{ color:#5a5a5a !important; }
@@ -307,7 +408,7 @@ try{
 }catch(e){ FB.ready = false; }
 </script>
 <header>
-  <h1>⚔ 班級 RPG</h1><span class="tag">公會大廳 v30</span>
+  <h1>⚔ 班級 RPG</h1><span class="tag">班級經營公會 v1.0</span>
   <span class="sp"></span>
   <span id="who" class="mini"></span>
   <button class="btn" id="btnSound" title="音效開關">🔊</button>
@@ -411,13 +512,20 @@ const SHOP_ITEMS = [
   {id:6, name:"皮革護甲", type:"clothes", price:80, rarity:"Common", atk:1,agi:0,int:0,def:1},
   {id:7, name:"龍鱗頭盔", type:"hat", price:0,  rarity:"Legendary", atk:3,agi:0,int:0,def:3},
   {id:8, name:"英雄戰甲", type:"clothes", price:0, rarity:"Legendary", atk:3,agi:2,int:0,def:2},
+  {id:27,name:"屠龍聖劍", type:"weapon", price:0, rarity:"Legendary", atk:7,agi:1,int:0,def:0},
+  {id:28,name:"賢者魔導書",type:"weapon", price:0, rarity:"Legendary", atk:2,agi:0,int:6,def:0},
+  {id:29,name:"炎龍之翼", type:"back",   price:0, rarity:"Legendary", atk:2,agi:3,int:0,def:1},
+  {id:30,name:"疾風神靴", type:"shoes",  price:0, rarity:"Legendary", atk:0,agi:4,int:0,def:2},
   {id:9, name:"鐵劍",     type:"weapon", price:60,  rarity:"Common", atk:4,agi:0,int:0,def:0},
   {id:10,name:"獵人短弓", type:"weapon", price:80,  rarity:"Common", atk:3,agi:2,int:0,def:0},
   {id:11,name:"法師法杖", type:"weapon", price:100, rarity:"Common", atk:2,agi:0,int:4,def:0},
+  {id:25,name:"騎士長槍", type:"weapon", price:90,  rarity:"Common", atk:4,agi:0,int:0,def:1},
+  {id:26,name:"武僧鐵戟", type:"weapon", price:90,  rarity:"Common", atk:3,agi:1,int:0,def:1},
   {id:12,name:"回復藥水", type:"consumable", price:50, rarity:"Common", atk:0,agi:0,int:0,def:0, effect:"回復 30 HP"},
   {id:13,name:"幸運草",   type:"consumable", price:70, rarity:"Common", atk:0,agi:0,int:0,def:0, effect:"金幣獲得 +20%"},
   {id:14,name:"智慧卷軸", type:"consumable", price:90, rarity:"Common", atk:0,agi:0,int:0,def:0, effect:"XP 獲得 +20%"},
   {id:24,name:"洗技藥水", type:"consumable", price:120, rarity:"Common", atk:0,agi:0,int:0,def:0, effect:"重置技能點,退還全部 SP"},
+  {id:31,name:"攻城卷",   type:"consumable", price:500, rarity:"Rare",   atk:0,agi:0,int:0,def:0, effect:"公會戰入場券(限組長購買,每週五帶小組參戰)"},
   {id:15,name:"旅人之靴", type:"shoes", price:60, rarity:"Common", atk:0,agi:1,int:0,def:0},
   {id:16,name:"鐵板靴",   type:"shoes", price:80, rarity:"Common", atk:0,agi:0,int:0,def:2},
   {id:17,name:"冒險者背包",type:"back", price:70, rarity:"Common", atk:0,agi:1,int:0,def:0},
@@ -437,16 +545,52 @@ function allShopItems(){
 }
 
 const ACHIEVEMENTS = [
-  {id:"first_buy", name:"初次血拚", desc:"第一次在商店購買", icon:"🛍️"},
-  {id:"lv3",       name:"嶄露頭角", desc:"達到 Lv.3", icon:"🌱"},
-  {id:"lv5",       name:"冒險新星", desc:"達到 Lv.5", icon:"⭐"},
-  {id:"gold1000",  name:"小富翁",   desc:"持有金幣達 1000", icon:"💰"},
-  {id:"fullset",   name:"全副武裝", desc:"五個裝備欄全部裝滿", icon:"🛡️"},
-  {id:"task3",     name:"任務達人", desc:"完成 3 個任務", icon:"📌"},
-  {id:"boss_win",  name:"屠龍見習", desc:"參與擊敗一隻 Boss", icon:"🐉"},
-  {id:"boss_mvp",  name:"屠龍勇者", desc:"在 Boss 戰中成為 MVP", icon:"🏆"},
-  {id:"designer",  name:"裝備設計師", desc:"設計的作品通過審核上架", icon:"🎨"},
+  {id:"first_buy", name:"初次血拚", desc:"第一次在商店購買", icon:"🛍️", title:"精明買家"},
+  {id:"lv3",       name:"嶄露頭角", desc:"達到 Lv.3", icon:"🌱", title:"超級初心者"},
+  {id:"lv5",       name:"冒險新星", desc:"達到 Lv.5", icon:"⭐", title:"冒險新星"},
+  {id:"gold1000",  name:"小富翁",   desc:"持有金幣達 1000", icon:"💰", title:"小富翁"},
+  {id:"fullset",   name:"全副武裝", desc:"五個裝備欄全部裝滿", icon:"🛡️", title:"全副武裝"},
+  {id:"task3",     name:"任務達人", desc:"完成 3 個任務", icon:"📌", title:"任務達人"},
+  {id:"boss_win",  name:"屠龍見習", desc:"參與擊敗一隻 Boss", icon:"🐉", title:"屠龍見習生"},
+  {id:"boss_mvp",  name:"屠龍勇者", desc:"在 Boss 戰中成為 MVP", icon:"🏆", title:"屠龍勇者"},
+  {id:"designer",  name:"裝備設計師", desc:"設計的作品通過審核上架", icon:"🎨", title:"裝備設計師"},
 ];
+/* ── 教師頒發稱號目錄(效果隱藏,配戴才生效;目錄僅教師「稱號設計」可見) ── */
+const TITLE_DEFS = [
+  {name:"數學小霸王", effect:{atk:3},            fx:"⚔ ATK +3",        hint:"段考/小考表現優異"},
+  {name:"專注大師",   effect:{int:3},            fx:"🔮 INT +3",        hint:"上課專注不分心"},
+  {name:"神速筆記手", effect:{agi:3},            fx:"💨 AGI +3",        hint:"筆記完整工整"},
+  {name:"鋼鐵意志",   effect:{def:3},            fx:"🛡 DEF +3",        hint:"遇挫不放棄"},
+  {name:"小組軍師",   effect:{xpMul:0.10},       fx:"✨ XP 獲得 +10%",   hint:"帶領小組討論"},
+  {name:"黃金獵人",   effect:{goldMul:0.10},     fx:"💰 金幣獲得 +10%",  hint:"積極參與活動"},
+  {name:"生命鬥士",   effect:{hp:20},            fx:"❤️ HP 上限 +20",    hint:"運動/健康好表現"},
+  {name:"幸運星",     effect:{xpMul:0.05, goldMul:0.05}, fx:"🌟 XP+5%、金幣+5%", hint:"隨機驚喜/進步獎"},
+  {name:"公會之光",   effect:{atk:1,def:1,agi:1,int:1},  fx:"👑 全屬性 +1",  hint:"模範表現"},
+  {name:"精打細算",   effect:{shopOff:0.10},     fx:"🏷 商店購物 9 折",  hint:"理財/儲蓄達人"},
+];
+function titleDefOf(name){
+  return TITLE_DEFS.find(t=>t.name===name) || (state.customTitleDefs||[]).find(t=>t.name===name) || null;
+}
+/* 配戴中稱號的效果(沒配戴或無效果=全零) */
+function titleEffect(s){
+  const d = s && s.title ? titleDefOf(s.title) : null;
+  const e = d && d.effect ? d.effect : {};
+  return { atk:e.atk||0, def:e.def||0, agi:e.agi||0, int:e.int||0, hp:e.hp||0,
+           xpMul:e.xpMul||0, goldMul:e.goldMul||0, shopOff:e.shopOff||0 };
+}
+/* 擁有的稱號 = 內建成就稱號 + 教師任務頒發稱號 */
+function ownedTitles(s){
+  const fromAch = (s.achievements||[]).map(id=>{ const a=ACHIEVEMENTS.find(x=>x.id===id); return a?a.title:null; }).filter(Boolean);
+  return [...new Set([...fromAch, ...(s.customTitles||[])])];
+}
+function grantTitle(s, title){
+  if(!title) return;
+  if(!s.customTitles) s.customTitles = [];
+  if(ownedTitles(s).includes(title)) return;
+  s.customTitles.push(title);
+  addLog(s.id, "獲得稱號【"+title+"】");
+  toast("🎖 "+s.name+" 獲得稱號【"+title+"】"); sfx("achieve");
+}
 
 /* ── 紙娃娃(SVG 分層,佔位美術)────────────────────────
  * 之後換正式美術:只需要改 DOLL_ART 裡各 id 對應的 SVG 片段,
@@ -1286,6 +1430,7 @@ function dollSVG(s, size, override){
 function newStudent(id, name, job, group){
   return { id, name, job, group,
     level:1, xp:0, totalXp:0, gold:100, spPoints:0,
+    statPoints:0, alloc:{atk:0, agi:0, int:0, def:0},
     maxHp:100, currentHp:100,
     baseAtk:10, baseAgi:10, baseInt:10, baseDef:10,
     hatId:null, clothesId:null, weaponId:null,
@@ -1314,6 +1459,14 @@ function freshState(){
   ];
   for(const [id,name,job,g,gold,lv] of seed){
     const s = newStudent(id,name,job,g); s.gold=gold; s.level=lv;
+    const gr = JOB_INFO[job].growth;                        // 補算升級成長(修正:直接設等級也要有成長)
+    for(let L=2; L<=lv; L++){
+      s.baseAtk+=gr.atk; s.baseDef+=gr.def; s.baseAgi+=gr.agi; s.baseInt+=gr.int;
+      s.maxHp += 10;
+      s.spPoints++; s.statPoints = (s.statPoints||0) + ((L===5||L===15||L===30)?2:1);
+      if(L===5||L===15||L===30) s.spPoints += 2;
+    }
+    s.currentHp = s.maxHp;
     st.students.push(s);
   }
   /* 美編示範:測試戰士使用 RO 風紙娃娃並穿上展示套裝 */
@@ -1366,8 +1519,26 @@ function backfill(p){
   if(p.className===undefined) p.className = "";
   if(p.bossKills===undefined) p.bossKills = 0;
   if(!p.xpWeek) p.xpWeek = {key:"", sum:0};
+  if(!p.customTitleDefs) p.customTitleDefs = [];       // 教師自訂稱號(名稱+效果)
+  if(!p.awardPresets) p.awardPresets = [               // 自訂快捷加分鈕
+    {name:"課堂表現", xp:10, gold:0},
+    {name:"作業繳交", xp:30, gold:0},
+    {name:"小組合作", xp:0,  gold:20},
+    {name:"考試進步", xp:50, gold:30}
+  ];
+  if(!p.awardLog) p.awardLog = [];                     // 加分紀錄(供撤銷)
+  if(!p.termInfo) p.termInfo = { startDate:"", target:500, minScore:60, maxScore:100 };   // 平時成績結算設定
+  if(!p.progression) p.progression = { date:"", stage:0, exploreXp:0, exploreGoal:300 };   // 每日閘門:0探索→1魔王→2競技場
+  if(!p.groupLeaders) p.groupLeaders = {};             // 各組組長 {組名: 學生id}
+  if(!p.siege) p.siege = { forceDate:"", entries:[] };  // 公會戰:強制開啟日/已報名組
+  if(p.siege.testMode===undefined) p.siege.testMode = true;   // 測試模式:每日開放(正式啟用後教師可關)
+  if(!p.siege.tournament) p.siege.tournament = null;   // 🏆 積分循環賽 {teams,matches,scores}
+  if(!p.castle) p.castle = { owner:"", since:"", taxDate:"" };   // 🏰 榮耀之城:城主組/佔領日/稅收發放日
   p.students.forEach((s,i)=>{
     if(s.seat===undefined) s.seat = String(i+1);      // 座號預設依名冊順序
+    if(s.sno===undefined) s.sno = "";                  // 學號(唯一,家長查看用)
+    if(!s.customTitles) s.customTitles = [];           // 教師頒發稱號
+    if(s.title===undefined) s.title = "";              // 顯示中的稱號(空=不顯示)
     if(s.email===undefined) s.email = "";
     if(s.birth===undefined) s.birth = "";
   });
@@ -1381,7 +1552,22 @@ function backfill(p){
     if(p.boss.poison===undefined) p.boss.poison = null;
     if(!p.boss.revivedThisFight) p.boss.revivedThisFight = {};
   }
+  if(!p.castleShopItems) p.castleShopItems = [       // 🏰 城堡商店(現實道具卡,教師可自訂)
+    {key:"pardon", icon:"🎖️", name:"免死金牌", desc:"抵銷一次犯錯機會(使用後由老師審查執行)", price:15},
+    {key:"seat",   icon:"🔀", name:"換位卡",   desc:"本次上課可自由換位置", price:8},
+    {key:"snack",  icon:"🍿", name:"吃播卡",   desc:"小組本次上課可以吃東西", price:12}
+  ];
+  if(!p.realItemLog) p.realItemLog = [];               // 道具卡使用紀錄(老師審查)
   p.students.forEach(s=>{
+    if(s.diamonds===undefined) s.diamonds = 0;         // 💎 組長指導鑽石
+    if(s.mentorTier===undefined) s.mentorTier = 1;     // 指導獎勵倍率(1標準/2加倍/3三倍)
+    if(!s.realItems) s.realItems = {};                 // 持有的現實道具卡
+    if(!s.consumables) s.consumables = {};             // 舊資料補欄(公會戰攻城卷等)
+    if(!s.blueprints) s.blueprints = {};
+    if(!s.achievements) s.achievements = [];
+    if(s.termStartXp===undefined) s.termStartXp = 0;   // 計分週期起始XP快照
+    if(s.statPoints===undefined) s.statPoints = 0;     // 可分配能力點
+    if(!s.alloc) s.alloc = {atk:0, agi:0, int:0, def:0};   // 已自點分配
     if(!s.skills) s.skills = {};
     if(!s.blueprints) s.blueprints = {};
     for(const k of Object.keys(s.blueprints)){          /* v23 以前:純部位鍵 → 遷移為普通級 */
@@ -1424,9 +1610,9 @@ function load(){
     const raw = localStorage.getItem(LS_KEY);
     if(raw){ const p = JSON.parse(raw); if(p && Array.isArray(p.students)) return backfill(p); }
     const old = localStorage.getItem(OLD_KEY);
-    if(old){ const p = JSON.parse(old); if(p && Array.isArray(p.students)){ const m = migrateV1(p); localStorage.setItem(LS_KEY, JSON.stringify(m)); return m; } }
+    if(old){ const p = JSON.parse(old); if(p && Array.isArray(p.students)){ const m = backfill(migrateV1(p)); localStorage.setItem(LS_KEY, JSON.stringify(m)); return m; } }
   }catch(e){ /* 壞資料 → 重建 */ }
-  const s = freshState(); localStorage.setItem(LS_KEY, JSON.stringify(s)); return s;
+  const s = backfill(freshState()); localStorage.setItem(LS_KEY, JSON.stringify(s)); return s;
 }
 function save(){
   localStorage.setItem(LS_KEY, JSON.stringify(state));   // 本機永遠留一份(離線保險)
@@ -1448,6 +1634,36 @@ const CLOUD = {
   _applying: false,       // 正在套用遠端資料(避免回寫迴圈)
 
   on(){ return FB.ready && FB.db && this.cid; },
+
+  /* ── 團體競技場同步 ── */
+  async garenaWrite(obj){
+    if(!this.on()) return;
+    await FB.db.collection("classes").doc(this.cid).collection("garena").doc("live").set(obj);
+  },
+  garenaListenLive(cb){
+    if(!this.on()) return ()=>{};
+    return FB.db.collection("classes").doc(this.cid).collection("garena").doc("live")
+      .onSnapshot(d=> cb(d.exists ? d.data() : null), e=>console.warn("garenaLive", e));
+  },
+  async garenaCmd(sid, cmd){
+    if(!this.on()) return;
+    await FB.db.collection("classes").doc(this.cid).collection("garenaCmd").doc(sid)
+      .set(Object.assign({sid, ts:Date.now()}, cmd));
+  },
+  garenaListenCmds(cb){
+    if(!this.on()) return ()=>{};
+    return FB.db.collection("classes").doc(this.cid).collection("garenaCmd")
+      .onSnapshot(snap=> snap.docChanges().forEach(ch=> cb(ch.doc.data())), e=>console.warn("garenaCmd", e));
+  },
+  async garenaClear(){
+    if(!this.on()) return;
+    try{
+      const c = FB.db.collection("classes").doc(this.cid);
+      await c.collection("garena").doc("live").set({active:false, over:true, fighters:[], ts:Date.now()});
+      const cmds = await c.collection("garenaCmd").get();
+      for(const d of cmds.docs) await d.ref.delete();
+    }catch(e){ console.warn("garenaClear", e); }
+  },
 
   /* 班級主體 = state 去掉 students/customItems */
   _meta(){
@@ -1573,6 +1789,22 @@ const CLOUD = {
     return cid;
   },
 
+  async deleteClass(cid){
+    const c = FB.db.collection("classes").doc(cid);
+    const [stuSnap, itemSnap, dataSnap] = await Promise.all([
+      c.collection("students").get(), c.collection("items").get(), c.collection("data").get()
+    ]);
+    const dels = [];
+    stuSnap.docs.forEach(d=> dels.push(d.ref.delete()));
+    itemSnap.docs.forEach(d=> dels.push(d.ref.delete()));
+    dataSnap.docs.forEach(d=> dels.push(d.ref.delete()));
+    dels.push(FB.db.collection("leaderboard").doc(cid).delete().catch(()=>{}));
+    await Promise.all(dels);
+    await c.delete();
+    if(this.cid===cid){ this.stopListen(); this.cid=null; }
+    if(localStorage.getItem("rpg-last-class")===cid) localStorage.removeItem("rpg-last-class");
+  },
+
   /* ── 世界排行榜 ── */
   _lbLast: 0,
   async pushLeaderboard(){
@@ -1587,7 +1819,8 @@ const CLOUD = {
     await FB.db.collection("leaderboard").doc(this.cid).set({
       name: state.lbName || state.className || "匿名班級",
       students: n, totalXp: total, avgXp: Math.round(total/n),
-      weekKey, weekXp, bossKills: state.bossKills||0,
+      weekKey, weekXp, weekAvg: Math.round(weekXp/n),        // 週人均(班級人數公平)
+      bossKills: state.bossKills||0,
       updatedAt: now
     });
   },
@@ -1696,7 +1929,7 @@ function canLevelSkill(s, sk){
   return lv < 5 && s.spPoints > 0 && skillUnlocked(s, sk);
 }
 function skillVal(s, id){ const sk = skillDef(s.job, id); const lv = skillLv(s, id); return (sk && lv>0) ? sk.val[lv-1] : 0; }
-function skillChance(s, id){ const sk = skillDef(s.job, id); const lv = skillLv(s, id); return (sk && lv>0 && sk.chance) ? sk.chance[lv-1] : 0; }
+function skillChance(s, id){ const sk = skillDef(s.job, id); const lv = skillLv(s, id); if(!(sk && lv>0 && sk.chance)) return 0; return Math.min(85, sk.chance[lv-1] + intSkillBonus(s)); }
 function skillsEnabled(){ return !state.skillsOff; }
 function skillPassive(s, id){ return skillsEnabled() ? skillVal(s, id) : 0; }
 
@@ -1772,13 +2005,21 @@ function levelSkill(sid, id){
 
 function totalStats(s){
   const e = equipStatSum(s);
-  const t = {atk:s.baseAtk+e.atk, agi:s.baseAgi+e.agi, int:s.baseInt+e.int, def:s.baseDef+e.def};
+  const al = s.alloc || {atk:0,agi:0,int:0,def:0};
+  const t = {atk:s.baseAtk+e.atk+al.atk, agi:s.baseAgi+e.agi+al.agi, int:s.baseInt+e.int+al.int, def:s.baseDef+e.def+al.def};
   t.int += skillPassive(s,"blizzard") + skillPassive(s,"wrath");
+  const te = titleEffect(s);                            // 配戴稱號的隱藏效果
+  t.atk += te.atk; t.def += te.def; t.agi += te.agi; t.int += te.int;
   return t;
 }
-function skillMaxHpBonus(s){ return skillPassive(s,"tough"); }
-function xpMultiplier(s){ return Math.max(0.01, 1 + (totalStats(s).int-10)*0.02) * (1 + skillPassive(s,"study")/100); }
-function goldMultiplier(s){ return Math.max(0.01, 1 + (totalStats(s).agi-10)*0.02) * (1 + skillPassive(s,"wealth")/100); }
+function skillMaxHpBonus(s){ return skillPassive(s,"tough") + titleEffect(s).hp; }
+/* v61 能力值效果重塑:INT/AGI 不再影響 XP/金倍率(改為戰鬥效果) */
+function xpMultiplier(s){ return Math.max(0.01, (1 + skillPassive(s,"study")/100) * (1 + titleEffect(s).xpMul)); }
+function goldMultiplier(s){ return Math.max(0.01, (1 + skillPassive(s,"wealth")/100) * (1 + titleEffect(s).goldMul)); }
+/* INT → 技能觸發率加成:每點 +0.5%,加成上限 +15% */
+function intSkillBonus(s){ return Math.min(15, Math.max(0, (totalStats(s).int-10)*0.5)); }
+/* AGI → 迴避率:每點 +0.5%,上限 25%(競技場與團體戰生效) */
+function agiDodge(s){ return Math.min(25, Math.max(0, (totalStats(s).agi-10)*0.5)); }
 
 /* 升級:依職業成長屬性、+10 HP 並回滿(v2 設計) */
 function applyLevelUps(s, gainedXp){
@@ -1788,6 +2029,7 @@ function applyLevelUps(s, gainedXp){
     s.xp -= xpForNextLevel(s.level);
     s.level++; s.spPoints++; ups++;
     if(s.level===5 || s.level===15 || s.level===30) s.spPoints += 2;   // 轉職里程碑
+    s.statPoints = (s.statPoints||0) + ((s.level===5||s.level===15||s.level===30) ? 2 : 1);   // 自由能力點(里程碑2點)
     const g = JOB_INFO[s.job].growth;
     s.baseAtk+=g.atk; s.baseDef+=g.def; s.baseAgi+=g.agi; s.baseInt+=g.int;
     s.maxHp += 10; s.currentHp = s.maxHp;
@@ -1800,8 +2042,8 @@ function unlock(s, achId){
   if(s.achievements.includes(achId)) return;
   const a = ACHIEVEMENTS.find(x=>x.id===achId); if(!a) return;
   s.achievements.push(achId);
-  addLog(s.id, "解鎖成就「"+a.name+"」"+a.icon);
-  toast(a.icon+" "+s.name+" 解鎖成就:"+a.name);
+  addLog(s.id, "獲得稱號【"+a.title+"】"+a.icon);
+  toast(a.icon+" "+s.name+" 獲得稱號【"+a.title+"】!可到角色頁配戴");
   sfx("achieve");
 }
 function checkAchievements(s){
@@ -1818,15 +2060,32 @@ function reward(sid, baseXp, baseGold, reason, fxPoint){
   const fg = Math.round(baseGold * goldMultiplier(s));
   const ups = applyLevelUps(s, fx);
   s.gold += fg;
-  state.classGoal.progress += fx;
+  progAddXp(fx);                                             // 每日探索進度(取代舊班級目標)
 
-  let extra = "";
+  let extra = "", chestGold = 0;
   if(Math.random() < 0.12 && (fx>0 || fg>0)){   // 寶箱事件
-    const bonus = 10 + Math.floor(Math.random()*21);
-    s.gold += bonus;
-    extra = ",並發現寶箱 🎁 +"+bonus+" 金幣!";
+    chestGold = 10 + Math.floor(Math.random()*21);
+    s.gold += chestGold;
+    extra = ",並發現寶箱 🎁 +"+chestGold+" 金幣!";
     sfx("chest");
   }
+  // 💎 組長指導獎勵:組員獲得XP(≥5)→ 組長依組員倍率得鑽石
+  if(fx >= 5){
+    const lid = state.groupLeaders && state.groupLeaders[s.group];
+    if(lid && lid !== s.id){
+      const leader = stu(lid);
+      if(leader){
+        const gems = s.mentorTier || 1;
+        leader.diamonds = (leader.diamonds||0) + gems;
+        addLog(lid, "💎 指導 "+s.name+" 有成,獲得 "+gems+" 顆鑽石!");
+      }
+    }
+  }
+  // 加分紀錄(記實發含倍率與寶箱,供撤銷;最多留300筆)
+  state.awardLog.push({ id: Date.now()+"-"+Math.floor(Math.random()*1e4), sid,
+    xp: fx, gold: fg + chestGold, reason: reason||"老師獎勵",
+    t: new Date().toLocaleString("zh-TW",{hour12:false}), reverted:false });
+  if(state.awardLog.length > 300) state.awardLog = state.awardLog.slice(-300);
   addLog(sid, (reason||"老師獎勵")+",獲得 "+fx+" XP 和 "+fg+" 金幣"+(ups?",升至 Lv."+s.level+"!":"")+extra);
   checkAchievements(s);
   checkClassGoal();
@@ -1840,11 +2099,83 @@ function reward(sid, baseXp, baseGold, reason, fxPoint){
   else sfx("award");
   render();
 }
+/* 撤回 XP(不足時降級借位;等級最低1) */
+function revokeXp(s, amount){
+  let need = Math.max(0, Math.round(amount));
+  s.totalXp = Math.max(0, s.totalXp - need);
+  if(s.xpWeek) s.xpWeek.sum = Math.max(0, (s.xpWeek.sum||0) - need);
+  while(need > 0){
+    if(s.xp >= need){ s.xp -= need; need = 0; }
+    else if(s.level > 1){
+      need -= s.xp;
+      const lostPts = (s.level===5||s.level===15||s.level===30) ? 2 : 1;   // 該級當初給的自由點
+      s.level--; s.spPoints = Math.max(0, s.spPoints-1);
+      if(s.level===4 || s.level===14 || s.level===29) s.spPoints = Math.max(0, s.spPoints-2);   // 反向里程碑
+      s.statPoints = (s.statPoints||0) - lostPts;
+      while(s.statPoints < 0){                                // 點已花掉→從最高自點屬性收回
+        if(!s.alloc) s.alloc = {atk:0,agi:0,int:0,def:0};
+        const keys = ["atk","agi","int","def"].sort((x,y)=>s.alloc[y]-s.alloc[x]);
+        if(s.alloc[keys[0]] > 0){ s.alloc[keys[0]]--; s.statPoints++; }
+        else { s.statPoints = 0; }
+      }
+      const g = JOB_INFO[s.job].growth;
+      s.baseAtk-=g.atk; s.baseDef-=g.def; s.baseAgi-=g.agi; s.baseInt-=g.int;
+      s.maxHp = Math.max(50, s.maxHp - 10); s.currentHp = Math.min(s.currentHp, s.maxHp);
+      s.xp = xpForNextLevel(s.level);
+    }else{ s.xp = 0; need = 0; }                             // Lv1 見底
+  }
+}
+function reverseAward(logId){
+  const lg = (state.awardLog||[]).find(x=>x.id===logId);
+  if(!lg || lg.reverted) return;
+  const s = stu(lg.sid); if(!s){ toast("學生已不存在", true); return; }
+  revokeXp(s, lg.xp);
+  s.gold = Math.max(0, s.gold - lg.gold);
+  lg.reverted = true;
+  addLog(lg.sid, "⤺ 老師撤回獎勵「"+lg.reason+"」(-"+lg.xp+" XP,-"+lg.gold+" 金)");
+  save(); render(); toast("已撤回 "+s.name+" 的「"+lg.reason+"」");
+}
 function rewardGroup(groupName, baseXp, baseGold, reason){
   const members = state.students.filter(s=>s.group===groupName);
   if(!members.length){ toast("這一組沒有成員", true); return; }
   for(const m of members) reward(m.id, baseXp, baseGold, reason || (groupName+" 組獎勵"));
   toast(groupName+" 組全員獎勵完成("+members.length+" 人)");
+}
+/* ── 每日進度閘門:探索→魔王→競技場 ── */
+function progToday(){ return new Date().toLocaleDateString("sv"); }   // YYYY-MM-DD
+function progCheck(){                                       // 每日重置(任何進度操作前呼叫)
+  const pg = state.progression;
+  const today = progToday();
+  if(pg.date !== today){ pg.date = today; pg.stage = 0; pg.exploreXp = 0; }
+  castleTax(today);                                          // 🏰 城主組每日稅收
+  return pg;
+}
+function castleTax(today){
+  const c = state.castle;
+  if(!c || !c.owner || c.taxDate === today) return;
+  const members = state.students.filter(x=>x.group===c.owner);
+  if(!members.length){ c.owner=""; return; }                 // 組被刪→城堡空置
+  c.taxDate = today;
+  members.forEach(st=>{ st.gold += 15; });
+  addLog("-", "🏰 榮耀之城稅收:城主 "+c.owner+" 組全員 +15 金");
+}
+function progAddXp(xp){                                     // 探索階段累計全班XP
+  const pg = progCheck();
+  if(pg.stage !== 0) return;
+  pg.exploreXp += xp;
+  if(pg.exploreXp >= pg.exploreGoal){
+    pg.stage = 1;
+    addLog("-", "🗺 今日探索完成!魔王現身了…(累計 "+pg.exploreXp+" XP)");
+    levelUpFx("🗺 探索完成!⚔️ 魔王出現!"); sfx("goal");
+  }
+}
+function progBossDown(){                                    // 魔王擊破→解鎖競技場
+  const pg = progCheck();
+  if(pg.stage === 1){
+    pg.stage = 2;
+    addLog("-", "🏟 魔王被擊破,競技場開放!");
+    setTimeout(()=>{ levelUpFx("🏟 競技場開放!"); }, 1800);
+  }
 }
 function checkClassGoal(){
   const g = state.classGoal;
@@ -1857,20 +2188,39 @@ function checkClassGoal(){
 }
 
 /* ── 商店 / 回收 / 道具(同 v1,對照正式版)────────── */
+function isGroupLeader(s){ return s && state.groupLeaders && state.groupLeaders[s.group]===s.id; }
+/* 完整性維護:清掉指向已離組/已刪除學生的組長;城主組空了就釋出城堡 */
+function reconcileLeadersCastle(){
+  let changed = false;
+  Object.keys(state.groupLeaders||{}).forEach(g=>{
+    const lid = state.groupLeaders[g];
+    const ld = stu(lid);
+    if(!ld || ld.group !== g){ delete state.groupLeaders[g]; changed = true; }   // 組長不存在或已換組→卸任
+  });
+  if(state.castle && state.castle.owner){
+    if(!state.students.some(x=>x.group===state.castle.owner)){                    // 城主組沒人了→城堡空置
+      addLog("-", "🏰 "+state.castle.owner+" 組已無成員,榮耀之城回歸無主。");
+      state.castle.owner = ""; state.castle.since = ""; changed = true;
+    }
+  }
+  return changed;
+}
 function buyItem(sid, itemId){
   const s = stu(sid); const it = itemById(itemId);
   if(!s || !it) return;
   if(it.price === 0){ toast("傳說裝備只能靠掉落,無法購買", true); return; }
-  if(s.gold < it.price){ toast("金幣不足:需要 "+it.price+",目前 "+s.gold, true); return; }
-  s.gold -= it.price;
+  if(it.id === 31 && !isGroupLeader(s)){ toast("攻城卷限「組長」購買——想帶隊參戰,先爭取當組長!", true); return; }
+  const pay = Math.max(1, Math.round(it.price * (1 - titleEffect(s).shopOff)));   // 稱號折扣
+  if(s.gold < pay){ toast("金幣不足:需要 "+pay+",目前 "+s.gold, true); return; }
+  s.gold -= pay;
   if(it.type === "consumable"){
     s.consumables[itemId] = (s.consumables[itemId]||0) + 1;
-    addLog(sid, "購買了「"+it.name+"」x1,花費 "+it.price+" 金幣");
+    addLog(sid, "購買了「"+it.name+"」x1,花費 "+pay+" 金幣");
   }else{
     const slotKey = it.type + "Id";
     const old = itemById(s[slotKey]);
     s[slotKey] = it.id;
-    addLog(sid, "購買並裝備「"+it.name+"」"+(old?"(替換 "+old.name+")":"")+",花費 "+it.price+" 金幣");
+    addLog(sid, "購買並裝備「"+it.name+"」"+(old?"(替換 "+old.name+")":"")+",花費 "+pay+" 金幣");
     if(it.creatorId && it.creatorId !== sid){
       const cr = stu(it.creatorId);
       if(cr){
@@ -1895,6 +2245,7 @@ function recycleSlot(sid, slot){
   save(); toast("已回收「"+it.name+"」,+"+refund+" 金幣"); render();
 }
 function useConsumable(sid, itemId){
+  if(itemId === 31){ toast("攻城卷由組長報名公會戰時攜帶,戰鬥結算自動消耗", true); return; }
   const s = stu(sid); const it = itemById(itemId);
   if(!s || !it || !(s.consumables[itemId]>0)) return;
   s.consumables[itemId]--;
@@ -1921,27 +2272,40 @@ function createTask(title, xp, gold, scope){
   save(); return t;
 }
 function taskById(id){ return state.tasks.find(t=>t.id===id); }
+/* 任務獎勵:三層任務依 tier(0基礎/1進階/2挑戰)取,單一任務用本身 xp/gold */
+function taskReward(t, tier){
+  if(t.tiers && t.tiers[tier]) return t.tiers[tier];
+  return {name:"", xp:t.xp, gold:t.gold};
+}
+const TIER_NAMES = ["基礎","進階","挑戰"];
+const TIER_ICONS = ["🟢","🟡","🔴"];
 function subFor(taskId, sid){ return state.submissions.find(x=>x.taskId===taskId && x.sid===sid); }
+function taskScopeHas(t, sid){
+  return t.scope && t.scope.indexOf("stu:")===0 && t.scope.slice(4).split(",").includes(sid);
+}
 function tasksForStudent(s){
-  return state.tasks.filter(t=> t.active && (t.scope==="all" || t.scope===s.group));
+  return state.tasks.filter(t=> t.active && (t.scope==="all" || t.scope===s.group || taskScopeHas(t, s.id)));
 }
 function pendingSubs(){ return state.submissions.filter(x=>x.status==="pending"); }
 function approvedCount(sid){ return state.submissions.filter(x=>x.sid===sid && x.status==="approved").length; }
-function submitTask(sid, taskId){
+function submitTask(sid, taskId, tier){
   const s = stu(sid); const t = taskById(taskId);
   if(!s || !t) return;
+  tier = t.tiers ? Math.max(0, Math.min(2, tier|0)) : 0;
   const ex = subFor(taskId, sid);
   if(ex && ex.status!=="rejected"){ toast(ex.status==="pending"?"已送出,等老師審核":"這個任務已完成過", true); return; }
-  if(ex) ex.status = "pending";
-  else state.submissions.push({taskId, sid, status:"pending", t:new Date().toLocaleString("zh-TW",{hour12:false})});
-  addLog(sid, "回報完成任務「"+t.title+"」,等待審核");
+  if(ex){ ex.status = "pending"; ex.tier = tier; }
+  else state.submissions.push({taskId, sid, status:"pending", tier, t:new Date().toLocaleString("zh-TW",{hour12:false})});
+  addLog(sid, "回報完成任務「"+t.title+"」"+(t.tiers?"("+TIER_NAMES[tier]+")":"")+",等待審核");
   save(); toast("已回報,等老師審核"); render();
 }
 function approveSubmission(taskId, sid){
   const sub = subFor(taskId, sid); const t = taskById(taskId); const s = stu(sid);
   if(!sub || !t || !s) return;
   sub.status = "approved";
-  reward(sid, t.xp, t.gold, "完成任務「"+t.title+"」");
+  const rw = taskReward(t, sub.tier||0);
+  reward(sid, rw.xp, rw.gold, "完成任務「"+t.title+"」"+(t.tiers?"("+TIER_NAMES[sub.tier||0]+")":""));
+  if(t.titleReward) grantTitle(s, t.titleReward);
   if(approvedCount(sid)>=3) unlock(s,"task3");
   save(); render();
 }
@@ -1998,6 +2362,34 @@ function attackBoss(sid, fxPoint){
   let dmg = Math.max(1, Math.round(base * mult));
   const fxMsgs = [];
   const roll = (id)=> on && skillChance(s,id) && Math.random()*100 < skillChance(s,id);
+  // ── 大招:Lv5解鎖,攻擊時10%機率,每場Boss戰每人一次 ──
+  if(!b.ultUsed) b.ultUsed = {};
+  if(ultReady(s) && !b.ultUsed[s.id] && Math.random() < 0.10){
+    b.ultUsed[s.id] = true;
+    const u = ULT_DEFS[s.job];
+    const hits = u.hits || 1;
+    let totalU = 0;
+    for(let h2=0; h2<hits; h2++){
+      const ud = Math.max(1, Math.round((15 + Math.floor(Math.random()*11)) * mult * u.mult));
+      totalU += ud;
+      setTimeout(()=> dmgPop(ud, '[data-charwall="'+s.id+'"]', "dmg"), 260*h2 + 420);
+    }
+    ultFxPlay(s.job, '[data-charwall="'+s.id+'"]');
+    if(u.selfHeal){
+      const effMaxU = s.maxHp + skillMaxHpBonus(s);
+      const uh = Math.min(u.selfHeal, effMaxU - s.currentHp);
+      if(uh>0){ s.currentHp += uh; setTimeout(()=> dmgPop(uh, '[data-charwall="'+s.id+'"]', "heal"), 520); }
+    }
+    b.hp = Math.max(0, b.hp - totalU);
+    b.damage[s.id] = (b.damage[s.id]||0) + totalU;
+    b.groupDamage[s.group] = (b.groupDamage[s.group]||0) + totalU;
+    addLog(sid, "💫 發動大招【"+u.name+"】對「"+b.name+"」造成 "+totalU+" 傷害!(Boss 剩 "+b.hp+" HP)");
+    toast("💫 "+s.name+" 大招【"+u.name+"】-"+totalU+"!");
+    sfx("levelup");
+    if(b.hp<=0){ winBoss(); return; }
+    save(); render();
+    return;
+  }
   // ── 攻擊倍率型技能(擇一最高觸發,避免爆炸疊乘) ──
   let critMul = 1, critTag = "";
   const critTable = [
@@ -2057,7 +2449,7 @@ function attackBoss(sid, fxPoint){
     state.students.filter(x=>x.group===s.group && x.currentHp>0).forEach(x=>{
       const h = Math.min(amt, x.maxHp+skillMaxHpBonus(x) - x.currentHp);
       x.currentHp += h;
-      if(h>0) comicPop("+"+h, "cloud", "#4bae4f", '[data-charwall="'+x.id+'"]');   // 再各自跳回血
+      if(h>0) dmgPop(h, '[data-charwall="'+x.id+'"]', "heal");   // 再各自跳回血(即時)
     });
     fxMsgs.push("🌿群療+"+amt);
   }else if(healRoll || (s.job==="Cleric" && !skillLv(s,"heal") && !skillLv(s,"groupheal"))){
@@ -2068,7 +2460,7 @@ function attackBoss(sid, fxPoint){
       const h = Math.min(amt, ally.maxHp+skillMaxHpBonus(ally) - ally.currentHp);
       ally.currentHp += h;
       fxMsgs.push((skillLv(s,"heal")?"💚":"")+"治療"+ally.name+"+"+h);
-      if(skillLv(s,"heal")){ skillPop("heal", '[data-charwall="'+s.id+'"]'); comicPop("+"+h, "cloud", "#4bae4f", '[data-charwall="'+ally.id+'"]'); }
+      if(skillLv(s,"heal")){ skillPop("heal", '[data-charwall="'+s.id+'"]'); dmgPop(h, '[data-charwall="'+ally.id+'"]', "heal"); }
     }
   }
   // ── 裝備詞條(攻擊型)觸發 ──
@@ -2098,7 +2490,7 @@ function attackBoss(sid, fxPoint){
       state.students.filter(x=>x.group===g && x.currentHp>0).forEach(x=>{
         const h = Math.min(amt, (x.maxHp+skillMaxHpBonus(x)) - x.currentHp);
         x.currentHp += h;
-        if(h>0) comicPop("+"+h, "cloud", "#4bae4f", '[data-charwall="'+x.id+'"]');   // 再各自回血
+        if(h>0) dmgPop(h, '[data-charwall="'+x.id+'"]', "heal");   // 再各自回血(即時)
       });
       fxMsgs.push("🎵"+sk.name+"+"+amt);
     }
@@ -2106,7 +2498,7 @@ function attackBoss(sid, fxPoint){
   if(fxMsgs.length) note += "," + fxMsgs.join(",");
   addLog(sid, "對「"+b.name+"」造成 "+dmg+" 傷害"+note+"(Boss 剩 "+b.hp+" HP)");
   // 傷害數字對話框(排在技能名對話框之後,依序播放,錨定施法者角色頭上)
-  comicPop("-"+dmg, "spike", "#e23b3b", '[data-charwall="'+s.id+'"]');
+  dmgPop(dmg, '[data-charwall="'+s.id+'"]', "dmg");
   sfx("award");
   if(b.hp<=0){ winBoss(); return; }
   save(); render();
@@ -2218,7 +2610,7 @@ function bossHitVictim(t, dmgBase){
   }
   if(victim.currentHp<=0){ addLog(victim.id, "被「"+b.name+"」擊倒!"); tryRevive(victim); }
   // 在被擊角色頭上跳扣血對話框
-  comicPop("-"+dmg, "spike", "#e23b3b", '[data-charwall="'+victim.id+'"]');
+  dmgPop(dmg, '[data-charwall="'+victim.id+'"]', "dmg");
   return (tanked ? victim.name+" 替 "+t.name+" 承受" : victim.name)+"(-"+dmg+(tag?" "+tag:"")+")";
 }
 /* Boss 反擊:一次只發一招(機率池)。烈焰隕石保留「詠唱一回合」機制。 */
@@ -2322,7 +2714,7 @@ function castMeteor(){
     }
     s.currentHp = Math.max(0, s.currentHp - d);
     hit.push(s.name+"(-"+d+tag+")");
-    comicPop("-"+d, "spike", "#e23b3b", '[data-charwall="'+s.id+'"]');   // 再每人頭上扣血
+    dmgPop(d, '[data-charwall="'+s.id+'"]', "dmg");   // 每人頭上即時扣血
     if(s.currentHp<=0){ addLog(s.id, "被烈焰隕石擊倒!"); tryRevive(s); }
   }
   addLog("-", "☄️🔥 【烈焰隕石】落下!全體受到 "+dmg+" 點無視防禦傷害:"+hit.join("、"));
@@ -2347,6 +2739,7 @@ function winBoss(){
   let mvp = null, mvpDmg = -1;
   for(const sid of parts){ if(b.damage[sid]>mvpDmg){ mvp=sid; mvpDmg=b.damage[sid]; } }
   addLog("-", "🎉 Boss「"+b.name+"」被擊敗!參戰 "+parts.length+" 人");
+  progBossDown();                                            // 閘門:解鎖競技場
 
   /* ── 資源(XP/金幣)依小組貢獻度分配,組內平分 ── */
   const groupTotal = totalDmg;
@@ -2519,13 +2912,14 @@ async function showLeaderboard(){
     return '<tr'+me+'><td style="width:36px;text-align:center">'+medal+'</td><td>'+esc(r.name)+'</td><td class="num" style="text-align:right">'+valFn(r)+unit+'</td></tr>';
   }).join("") || '<tr><td colspan="3" class="mini">還沒有班級上榜,當第一名吧!</td></tr>';
   const byAvg  = [...rows].sort((a,b)=>b.avgXp-a.avgXp);
-  const byWeek = rows.filter(r=>r.weekKey===wk).sort((a,b)=>b.weekXp-a.weekXp);
+  const wAvg = r=> (r.weekAvg!==undefined) ? r.weekAvg : Math.round((r.weekXp||0)/Math.max(1,r.students||1));
+  const byWeek = rows.filter(r=>r.weekKey===wk).sort((a,b)=>wAvg(b)-wAvg(a));
   const byBoss = [...rows].sort((a,b)=>(b.bossKills||0)-(a.bossKills||0));
   host.innerHTML = '<div class="modal-bg"><div class="modal" style="max-width:520px;max-height:82vh;overflow:auto">'
     + '<h4>🌍 世界排行榜</h4>'
     + '<div class="msub">參加班級:'+rows.length+' 班。只顯示班級暱稱,不含任何個人資料。</div>'
     + '<h4 style="margin-top:10px">🏆 人均 XP 榜</h4><table><tbody>'+mk(byAvg, r=>r.avgXp, " XP")+'</tbody></table>'
-    + '<h4 style="margin-top:10px">📅 本週衝刺榜</h4><table><tbody>'+mk(byWeek, r=>r.weekXp, " XP")+'</tbody></table>'
+    + '<h4 style="margin-top:10px">📅 本週衝刺榜(人均)</h4><table><tbody>'+mk(byWeek, wAvg, " XP/人")+'</tbody></table>'
     + '<h4 style="margin-top:10px">⚔️ 屠龍榜</h4><table><tbody>'+mk(byBoss, r=>(r.bossKills||0), " 隻")+'</tbody></table>'
     + '<div style="margin-top:12px"><button class="big-btn" id="lbClose">關閉</button></div>'
     + '</div></div>';
@@ -2576,7 +2970,7 @@ const WHEEL_PRIZES = [
 ];
 function grantXp(s, xp){
   const ups = applyLevelUps(s, xp);
-  state.classGoal.progress += xp;
+  progAddXp(xp);                                             // 每日探索進度(取代舊班級目標)
   const wk = lbWeekKey();
   if(!state.xpWeek || state.xpWeek.key!==wk) state.xpWeek = {key:wk, sum:0};
   state.xpWeek.sum += xp;
@@ -2719,7 +3113,149 @@ const SKILL_POP = {
   block:["格擋!","spike","#4bae4f"], thorns:["反彈!","spike","#4bae4f"], endure:["不屈!","boom","#e23b3b"],
   shield:["聖盾!","spike","#4bc0e8"], revive:["復活!","cloud","#f2a3c7"],
 };
+/* ══ 職業技能特性相剋與大招(競技場) ══════════════════
+ * 🔮 法術穿透:法師「技能」無視戰士格擋+加傷(普攻仍可被擋)
+ * ✨ 神聖庇護:牧師受法師技能/大招傷害減免
+ * 🗡 治療干擾:對戰遊俠時,牧師所有回血打折(含大招自癒)
+ * 🛡 鐵壁格擋:戰士格擋遊俠攻擊時,減傷 50%→75%
+ * 🔥 逆境之魂:被克方 HP<50% 時傷害 +20%(有機會翻盤)
+ * (大招一律無視格擋,全職業一致) */
+const ADVANTAGE = { Cleric:"Mage", Mage:"Warrior", Warrior:"Rogue", Rogue:"Cleric" };
+function hasAdvantage(attJob, defJob){ return ADVANTAGE[attJob]===defJob; }
+/* 特性數值(模擬調參用,集中管理) */
+const TRAIT_TUNE = {                                   // v51:全員真裸裝重新校準(修正舊版測試混入展示裝的偏差)
+  pierceBonus: 1.05,   // 法術穿透:法師技能對戰士無視格擋且 +5% 傷害
+  sanctuary:   0.97,   // 神聖庇護:牧師受法師技能傷害 -3%
+  healCut:     0.95,   // 治療干擾:對戰遊俠時牧師回血 -5%
+  ironWall:    0.45,   // 鐵壁格擋:戰士擋遊俠時減傷 55%(一般格擋 50%)
+  underdog:    1.20    // 逆境之魂:被克方 HP<50% 時傷害 +20%(翻盤窗口)
+};
+/* 競技場職業平衡係數(1v1與團隊打王的平衡需求不同,僅競技場適用;真裸裝條件校準) */
+const ARENA_JOB_TUNE = { Warrior:1.3, Mage:1.15, Rogue:1.45, Cleric:0.90 };
+/* 競技場屬性軟化:「裝備」提供的 atk/def 在競技場收益減半,
+ * 基礎值與等級成長不受影響——防止全班買裝後傷害膨脹打壞職業平衡;Boss 戰不動 */
+function arenaDmgMult(s){ const e=equipStatSum(s); return Math.max(0.01, 1 + (totalStats(s).atk - e.atk*0.5 - 10)*0.02); }
+function arenaDefMult(s){ const e=equipStatSum(s); return Math.max(0.2, 1 - (totalStats(s).def - e.def*0.5 - 10)*0.02); }
+/* 大招:Lv5 解鎖;競技場=HP首次<40%發動;Boss戰=攻擊10%機率;皆每場一次 */
+const ULT_DEFS = {
+  Warrior:{ name:"聖劍・破空斬", mult:2.2, selfHeal:15, emoji:"⚔️", color:"#f5c518" },
+  Mage:   { name:"禁咒・隕星雨", mult:2.5, selfHeal:0,  emoji:"☄️", color:"#e2593b" },
+  Rogue:  { name:"絕影・千連擊", mult:1.4, selfHeal:0,  hits:2, emoji:"🌪", color:"#6a5acd" },
+  Cleric: { name:"神蹟・聖光審判", mult:1.7, selfHeal:25, emoji:"✨", color:"#ffd234" }
+};
+const ULT_CAP = 0.35;   // 競技場大招傷害上限:對方最大HP的35%(防秒殺,Boss戰不設限)
+function ultReady(s){ return s.level >= 5; }
+/* 大招全屏特效:白閃+大粒子環爆+特大招式名 */
+function ultFxPlay(job, anchorSel){
+  const u = ULT_DEFS[job]; if(!u) return;
+  const flash = document.createElement("div");
+  flash.className = "ult-flash";
+  document.body.appendChild(flash);
+  setTimeout(()=>flash.remove(), 650);
+  const banner = document.createElement("div");
+  banner.className = "ult-banner";
+  banner.style.setProperty("--uc", u.color);
+  banner.textContent = u.emoji+" "+u.name+" "+u.emoji;
+  document.body.appendChild(banner);
+  setTimeout(()=>banner.remove(), 1400);
+  const target = anchorSel && document.querySelector(anchorSel);
+  if(target){
+    const r = target.getBoundingClientRect();
+    const wrap = document.createElement("div");
+    wrap.className = "sfx-wrap";
+    wrap.style.left = (r.left+r.width/2)+"px"; wrap.style.top = (r.top+r.height/2)+"px";
+    for(let i=0;i<12;i++){
+      const pt = document.createElement("span");
+      pt.className = "sfx sfx-burst";
+      pt.style.fontSize = "44px";
+      pt.textContent = u.emoji;
+      const ang=(i/12)*6.283;
+      pt.style.setProperty("--dx", Math.cos(ang)*95+"px");
+      pt.style.setProperty("--dy", Math.sin(ang)*80+"px");
+      wrap.appendChild(pt);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(()=>wrap.remove(), 1100);
+  }
+}
+/* ══ 技能特效動畫(Boss戰+競技場共用) ══════════════
+ * pattern:burst爆發/slash斜閃/fall天降/rise上升/bolt閃電/ring音波環/shieldfx護罩 */
+const SKILL_FX = {
+  bash:    {pattern:"burst",  emoji:"💥", color:"#f5731f"},
+  execute: {pattern:"slash",  emoji:"⚔️", color:"#c0392b"},
+  blast:   {pattern:"burst",  emoji:"🔥", color:"#e2593b"},
+  meteor:  {pattern:"fall",   emoji:"☄️", color:"#e23b3b"},
+  spark:   {pattern:"bolt",   emoji:"⚡", color:"#4bc0e8"},
+  chain:   {pattern:"bolt",   emoji:"🌩", color:"#6a5acd"},
+  storm:   {pattern:"ring",   emoji:"🌪", color:"#7ad0e8"},
+  frost:   {pattern:"burst",  emoji:"❄️", color:"#7ad0e8"},
+  freeze:  {pattern:"burst",  emoji:"🧊", color:"#4bc0e8"},
+  edge:    {pattern:"slash",  emoji:"🗡", color:"#f5c518"},
+  lethal:  {pattern:"slash",  emoji:"☠️", color:"#6a5acd"},
+  shadow:  {pattern:"slash",  emoji:"🌑", color:"#333"},
+  poison:  {pattern:"rise",   emoji:"🐍", color:"#4bae4f"},
+  expose:  {pattern:"ring",   emoji:"🎯", color:"#f5731f"},
+  pocket:  {pattern:"rise",   emoji:"🍀", color:"#f5c518"},
+  greed:   {pattern:"rise",   emoji:"🎁", color:"#5cc47a"},
+  smite:   {pattern:"fall",   emoji:"🔨", color:"#f5c518"},
+  judge:   {pattern:"fall",   emoji:"⚡", color:"#f5c518"},
+  heal:    {pattern:"rise",   emoji:"💚", color:"#4bae4f"},
+  groupheal:{pattern:"rise",  emoji:"🌿", color:"#4bae4f"},
+  revive:  {pattern:"rise",   emoji:"💗", color:"#ff8ab5"},
+  block:   {pattern:"shieldfx", emoji:"🧱", color:"#8a7a55"},
+  shield:  {pattern:"shieldfx", emoji:"🔰", color:"#f5c518"},
+  thorns:  {pattern:"burst",  emoji:"🌵", color:"#4bae4f"},
+  endure:  {pattern:"ring",   emoji:"💪", color:"#e2593b"},
+  slash:   {pattern:"ring",   emoji:"📣", color:"#f5731f"},   /* 戰吼 */
+  harden:  {pattern:"shieldfx", emoji:"🛡", color:"#4bae4f"}, /* 守護號令 */
+  vigor:   {pattern:"rise",   emoji:"💪", color:"#4bae4f"},   /* 鼓舞 */
+  firebolt:{pattern:"ring",   emoji:"🔮", color:"#6a5acd"},   /* 魔力共鳴 */
+  agi:     {pattern:"ring",   emoji:"🏃", color:"#7ad0e8"},   /* 疾風令 */
+  faith:   {pattern:"rise",   emoji:"🎵", color:"#4bae4f"},   /* 聖歌 */
+};
+function skillFxPlay(id, anchorSel){
+  const fx = SKILL_FX[id]; if(!fx) return;
+  const target = anchorSel && document.querySelector(anchorSel);
+  if(!target) return;
+  const r = target.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const wrap = document.createElement("div");
+  wrap.className = "sfx-wrap";
+  wrap.style.left = cx + "px"; wrap.style.top = cy + "px";
+  const N = fx.pattern==="slash" ? 1 : fx.pattern==="shieldfx" ? 1 : fx.pattern==="fall" ? 3 : fx.pattern==="bolt" ? 4 : 6;
+  for(let i=0;i<N;i++){
+    const p = document.createElement("span");
+    p.className = "sfx sfx-" + fx.pattern;
+    p.textContent = fx.emoji;
+    p.style.setProperty("--sc", fx.color);
+    if(fx.pattern==="burst"){ const ang=(i/N)*6.283; p.style.setProperty("--dx", Math.cos(ang)*52+"px"); p.style.setProperty("--dy", Math.sin(ang)*44+"px"); }
+    if(fx.pattern==="rise"){ p.style.setProperty("--dx", ((i-N/2)*16)+"px"); p.style.animationDelay = (i*70)+"ms"; }
+    if(fx.pattern==="fall"){ p.style.setProperty("--dx", ((i-1)*30)+"px"); p.style.animationDelay = (i*110)+"ms"; }
+    if(fx.pattern==="bolt"){ p.style.setProperty("--dx", ((i-1.5)*20)+"px"); p.style.animationDelay = (i*50)+"ms"; }
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(()=> wrap.remove(), 1000);
+}
+/* 傷害/治療數字:即時彈出(不排佇列),大小隨數值分級,位置隨機偏移防重疊 */
+function dmgPop(val, anchorSel, kind){
+  const target = anchorSel && document.querySelector(anchorSel);
+  if(!target) return;
+  const r = target.getBoundingClientRect();
+  const el = document.createElement("div");
+  const n = Math.abs(+val)||0;
+  let cls = "dmg-s";                                   // <15 小
+  if(kind==="dmg"){ if(n>=30) cls="dmg-l"; else if(n>=15) cls="dmg-m"; }
+  el.className = "dmg-pop " + (kind==="heal"?"dmg-heal":kind==="block"?"dmg-block":cls);
+  el.textContent = (kind==="heal"?"+":"-") + n;
+  const ox = (Math.random()*44 - 22), oy = (Math.random()*14 - 7);
+  el.style.left = (r.left + r.width/2 + ox) + "px";
+  el.style.top  = (Math.max(8, r.top - 4 + oy)) + "px";
+  document.body.appendChild(el);
+  setTimeout(()=> el.remove(), 950);
+}
 function skillPop(id, anchor){
+  skillFxPlay(id, anchor);                                  /* Boss戰:特效跟著技能對話框 */
   const p = SKILL_POP[id]; if(!p) return;
   comicPop(p[0], p[1], p[2], anchor);
 }
@@ -2774,7 +3310,9 @@ const modalHost = document.getElementById("modalHost");
 let view = {page:"home", sid:null, tab:"stats", shopFilter:"all", tview:"board", role:null};
 
 function render(){
-  document.getElementById("btnHome").style.display = view.page==="home" ? "none" : "";
+  const bh = document.getElementById("btnHome");
+  bh.style.display = view.page==="home" ? "none" : "";
+  bh.textContent = (CLOUD.role==="teacher" && FB.user && view.page!=="classes") ? "🏫 切換班級" : "切換身分";
   const whoEl = document.getElementById("who");
   if(view.page==="teacher") whoEl.textContent = "身分:老師" + (FB.user?"("+FB.user.email+")":"");
   else if(view.page==="student"){ const s=stu(view.sid); whoEl.textContent = s ? "身分:"+s.name : ""; }
@@ -2798,9 +3336,16 @@ function renderHome(){
     + '<button class="role-card" id="loginParent"><span class="face">👪</span><span class="nm">家長查看</span><span class="sub">學號+生日</span></button>'
     + '</div>'
     + '<div style="margin-top:14px"><button class="btn" id="offlineMode">🔌 離線模式(單機,不登入)</button></div>'
+    + (state.castle && state.castle.owner
+       ? '<div style="margin-top:18px;background:linear-gradient(135deg,#f5c518,#e2a500);border:3px solid #141414;border-radius:14px;padding:10px 22px;display:inline-block;box-shadow:4px 4px 0 rgba(20,20,20,.6)">'
+         + '<div style="font-size:26px">👑🏰</div><b style="font-size:16px">榮耀之城城主:'+esc(state.castle.owner)+' 組</b>'
+         + '<div class="mini">'+esc(state.className||state.lbName||"")+'・公會戰積分賽冠軍</div></div>'
+       : '')
+    + '<div class="mini" style="margin-top:22px;color:#999;line-height:1.7">'
+    + '系統設計者:誠兆老師<br>協作:Claude<br>版本:班級經營公會 v1.0</div>'
     + '<div id="parentForm" style="display:none;margin-top:14px;max-width:320px;margin-left:auto;margin-right:auto">'
     + '<div class="panel"><h3>👪 家長查看</h3>'
-    + '<input type="text" id="pSeat" placeholder="孩子座號(例:12)" style="width:100%;margin-bottom:8px">'
+    + '<input type="text" id="pSno" placeholder="孩子學號(例:11024)" style="width:100%;margin-bottom:8px">'
     + '<input type="text" id="pBirth" placeholder="孩子生日 8 碼(例:20130215)" style="width:100%;margin-bottom:8px">'
     + '<button class="btn gold" id="pGo" style="width:100%">查看學習狀況</button>'
     + '<div class="mini" style="margin-top:6px">僅能查看每日任務與學習日誌,無法操作。</div></div></div>'
@@ -2855,10 +3400,49 @@ function googleLogin(role){
         await CLOUD.loadClass(cid);
         const s = state.students.find(x=>(x.email||"").toLowerCase()===email);
         if(s){ view={page:"student", sid:s.id, tab:"stats", shopFilter:"all", role:"student"}; render(); }
-        else{ toast("這個班級的名冊找不到你的信箱:"+email, true); FB.auth.signOut(); FB.user=null; }
+        else{ renderClaim(email); }                          // 首次登入:認領自己的角色
       }catch(e){ toast("載入班級失敗:"+e.message, true); }
     }
   }).catch(err=>{ toast("登入失敗:"+(err&&err.message||err), true); });
+}
+/* 學生首次登入:認領角色(教師不必預先收集信箱) */
+function renderClaim(email){
+  const free = state.students.filter(x=>!(x.email||"").trim());
+  if(!free.length){
+    app.innerHTML = '<div class="home"><div class="crest">🧑‍🎓</div><h2>找不到可認領的角色</h2>'
+      + '<p>名冊中沒有你的信箱('+esc(email)+'),而且所有角色都已被認領。<br>請請老師在名冊確認你的資料。</p>'
+      + '<button class="btn" id="cbk">← 回登入</button></div>';
+    document.getElementById("cbk").onclick=()=>{ FB.auth.signOut(); FB.user=null; view={page:"home"}; render(); };
+    return;
+  }
+  const cards = free.map(x=>
+    '<button class="role-card" data-claim="'+x.id+'">'+dollSVG(x,56)
+    + '<span class="nm">'+esc(x.name)+'</span><span class="sub num">座號 '+esc(String(x.sno||x.seat||"?"))+'</span></button>').join("");
+  app.innerHTML = '<div class="home"><div class="crest">🧑‍🎓</div><h2>第一次登入:認領你的角色</h2>'
+    + '<p>登入信箱:<b>'+esc(email)+'</b><br>點選你的名字,輸入座號確認後即完成綁定(之後都用這個 Google 帳號登入)。</p>'
+    + '<div class="role-grid">'+cards+'</div>'
+    + '<div style="margin-top:12px"><button class="btn" id="cbk">← 取消</button></div></div>';
+  document.getElementById("cbk").onclick=()=>{ FB.auth.signOut(); FB.user=null; view={page:"home"}; render(); };
+  app.querySelectorAll("[data-claim]").forEach(b=>{
+    b.onclick = async ()=>{
+      const st = stu(b.dataset.claim); if(!st) return;
+      const ans = prompt("確認身分:請輸入「"+st.name+"」的座號");
+      if(ans===null) return;
+      if(String(ans).trim() !== String(st.sno||st.seat||"").trim()){ toast("座號不符,請再確認", true); return; }
+      st.email = email;
+      try{
+        await FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id)
+          .set(JSON.parse(JSON.stringify(st)));
+        addLog(st.id, "🎉 完成帳號綁定,冒險正式開始!");
+        save();
+        toast("認領成功!歡迎加入,"+st.name);
+        view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"}; render();
+      }catch(e){
+        st.email = "";                                       // 寫入失敗回滾
+        toast("綁定失敗:"+(e.message||e)+"(可能是安全規則未更新)", true);
+      }
+    };
+  });
 }
 /* 教師:班級選擇頁 */
 async function renderClasses(email){
@@ -2867,7 +3451,10 @@ async function renderClasses(email){
   try{ list = await CLOUD.listMyClasses(email); }
   catch(e){ app.innerHTML = '<div class="panel"><h3>讀取失敗</h3><div class="mini">'+esc(e.message)+'</div><button class="btn" id="cbk">← 回登入</button></div>'; document.getElementById("cbk").onclick=()=>{view={page:"home"};render();}; return; }
   const cards = list.map(c=>
-    '<button class="role-card" data-cid="'+esc(c.cid)+'"><span class="face">🏫</span><span class="nm">'+esc(c.name)+'</span><span class="sub">點擊進入</span></button>').join("");
+    '<div style="position:relative;display:inline-block">'
+    + '<button class="role-card" data-cid="'+esc(c.cid)+'"><span class="face">🏫</span><span class="nm">'+esc(c.name)+'</span><span class="sub">點擊進入</span></button>'
+    + '<button class="btn danger" data-cdel="'+esc(c.cid)+'" data-cname="'+esc(c.name)+'" title="刪除班級" style="position:absolute;top:6px;right:6px;padding:2px 9px;font-size:13px">✕</button>'
+    + '</div>').join("");
   const hasLocal = !!localStorage.getItem(LS_KEY);
   app.innerHTML =
     '<div class="home"><div class="crest">🏫</div><h2>我的班級</h2>'
@@ -2884,21 +3471,37 @@ async function renderClasses(email){
       catch(e){ toast("載入失敗:"+e.message, true); b.disabled=false; }
     };
   });
+  app.querySelectorAll("[data-cdel]").forEach(b=>{
+    b.onclick = async (e)=>{
+      e.stopPropagation();
+      const nm = b.dataset.cname, cid = b.dataset.cdel;
+      if(!confirm("刪除班級「"+nm+"」?\n所有學生資料、紀錄、工坊作品將永久消失。")) return;
+      if(!confirm("⚠️ 再次確認:真的要永久刪除「"+nm+"」?\n此動作無法復原!")) return;
+      b.disabled = true; b.textContent = "…";
+      try{ await CLOUD.deleteClass(cid); toast("班級「"+nm+"」已刪除"); renderClasses(email); }
+      catch(err){ toast("刪除失敗:"+err.message, true); b.disabled=false; b.textContent="✕"; }
+    };
+  });
   document.getElementById("ncCreate").onclick = async ()=>{
     const nm = (document.getElementById("ncName").value||"").trim();
     if(!nm){ toast("請輸入班級名稱", true); return; }
+    const btn = document.getElementById("ncCreate");
+    if(btn.disabled) return;
+    btn.disabled = true; btn.textContent = "建立中…";   // 防連點(先前重複建班的原因)
     try{
       const cid = await CLOUD.createClass(nm, email, null);
       await CLOUD.loadClass(cid);
       if(!state.teacherEmails.includes(email)) state.teacherEmails.push(email);
       view={page:"teacher", tview:"roster", role:"teacher"}; render();
       toast("班級「"+nm+"」已建立!到名冊加入學生吧");
-    }catch(e){ toast("建立失敗:"+e.message, true); }
+    }catch(e){ toast("建立失敗:"+e.message, true); btn.disabled=false; btn.textContent="建立空白班級"; }
   };
   const mig = document.getElementById("ncMigrate");
   if(mig) mig.onclick = async ()=>{
     const nm = prompt("為這個班級取名(例:七年三班)");
     if(!nm) return;
+    if(mig.disabled) return;
+    mig.disabled = true; mig.textContent = "上傳中…";
     try{
       const local = backfill(JSON.parse(localStorage.getItem(LS_KEY)));
       if(!local.teacherEmails.includes(email)) local.teacherEmails.push(email);
@@ -2906,14 +3509,14 @@ async function renderClasses(email){
       await CLOUD.loadClass(cid);
       view={page:"teacher", tview:"board", role:"teacher"}; render();
       toast("✅ 本機資料已上雲!班級連結可在名冊頁複製給學生");
-    }catch(e){ toast("遷移失敗:"+e.message, true); }
+    }catch(e){ toast("遷移失敗:"+e.message, true); mig.disabled=false; mig.textContent="📦 把這台裝置的現有資料上傳成新班級"; }
   };
 }
 /* 家長:座號+生日(YYYYMMDD)比對;有班級連結時先從雲端載入 */
 async function parentLogin(){
-  const seat = (document.getElementById("pSeat").value||"").trim();
+  const sno = (document.getElementById("pSno").value||"").trim();
   const birth = (document.getElementById("pBirth").value||"").trim();
-  if(!seat || !/^\d{8}$/.test(birth)){ toast("請輸入座號與 8 碼生日(例 20130215)", true); return; }
+  if(!sno || !/^\d{8}$/.test(birth)){ toast("請輸入學號與 8 碼生日(例 20130215)", true); return; }
   const cid = new URLSearchParams(location.search).get("class") || localStorage.getItem("rpg-last-class");
   if(FB.ready && cid && !CLOUD.cid){
     try{
@@ -2923,7 +3526,7 @@ async function parentLogin(){
       CLOUD.stopListen();                                            // 家長唯讀,不需即時監聽
     }catch(e){ toast("無法載入班級資料,改用本機資料查詢", true); }
   }
-  const s = state.students.find(x=> String(x.seat||"")===seat && String(x.birth||"")===birth);
+  const s = state.students.find(x=> String(x.sno||"")!=="" && String(x.sno||"")===sno && String(x.birth||"")===birth);
   if(!s){ toast("查無資料:座號或生日不符,請向老師確認", true); return; }
   view={page:"parent", sid:s.id, role:"parent"}; render();
 }
@@ -2931,10 +3534,11 @@ async function parentLogin(){
 function renderParent(){
   const s = stu(view.sid); if(!s){ view={page:"home"}; render(); return; }
   const today = new Date().toLocaleDateString("zh-TW");
-  const myTasks = state.tasks.map(t=>{
+  const myTasks = state.tasks.filter(t=> t.active && (t.scope==="all" || t.scope===s.group || taskScopeHas(t, s.id))).map(t=>{
     const sub = state.submissions.find(x=>x.taskId===t.id && x.sid===s.id);
     const st = sub ? (sub.status==="approved"?"✅ 完成":"⏳ 待批改") : "⬜ 未繳";
-    return '<tr><td>'+esc(t.title)+'</td><td>+'+t.xp+' XP</td><td>'+st+'</td></tr>';
+    const rw = taskReward(t, sub?sub.tier||0:0);
+    return '<tr><td>'+esc(t.title)+(t.tiers&&sub?'('+TIER_NAMES[sub.tier||0]+')':'')+'</td><td>+'+rw.xp+' XP</td><td>'+st+'</td></tr>';
   }).join("") || '<tr><td colspan="3" class="mini">目前沒有任務</td></tr>';
   const logs = state.log.filter(l=>l.sid===s.id).slice(0,30).map(l=>
     '<li><span class="num">['+esc(l.t)+']</span> '+esc(l.msg)+'</li>').join("") || '<li class="mini">尚無紀錄</li>';
@@ -2956,7 +3560,7 @@ function groupScore(g){
 }
 function renderTeacher(){
   const pn = pendingSubs().length;
-  const tabs = [["board","🖥️ 大屏模式"],["boss","🐉 Boss"+(state.boss?" ⚔":"")],["tasks","📌 任務"+(pn?"("+pn+")":"")],["craft","🎨 工坊"+(pendingDesigns().length?"("+pendingDesigns().length+")":"")],["announce","📣 公告"],["art","🖼 美術"],["roster","📋 名冊管理"],["log","📜 冒險日誌"]]
+  const tabs = [["board","🖥️ 大屏模式"],["boss","🐉 Boss"+(state.boss?" ⚔":"")],["arena","⚔️ 競技場"],["tasks","📌 任務"+(pn?"("+pn+")":"")],["craft","🎨 工坊"+(pendingDesigns().length?"("+pendingDesigns().length+")":"")],["announce","📣 公告"],["art","🖼 美術"],["roster","📋 名冊管理"],["log","📜 冒險日誌"],["rank","🏆 排行榜"],["titles","🎖 稱號設計"]]
     .map(([k,n])=>'<button class="tab '+(view.tview===k?"on":"")+'" data-tv="'+k+'">'+n+'</button>').join("");
   let body = "";
   if(view.tview==="board") body = teacherBoard();
@@ -2966,10 +3570,943 @@ function renderTeacher(){
   else if(view.tview==="announce") body = teacherAnnounce();
   else if(view.tview==="art") body = teacherArt();
   else if(view.tview==="roster") body = teacherRoster();
+  else if(view.tview==="rank") body = teacherRank();
+  else if(view.tview==="titles") body = teacherTitles();
+  else if(view.tview==="arena") body = teacherArena();
   else body = teacherLog();
   app.innerHTML = '<div class="tabs">'+tabs+'</div>' + body;
   app.querySelectorAll("[data-tv]").forEach(b=> b.onclick = ()=>{ view.tview=b.dataset.tv; render(); });
   bindTeacher();
+}
+/* ══ 競技場:1v1 表演賽(不扣真實HP) ══════════════
+ * 行動條依敏捷充能,滿了自動行動;技能用學生實際點的技能表。 */
+const ARENA = {
+  active:false, over:false, acting:false, friendly:false,
+  a:null, b:null, hpA:0, hpB:0, maxA:0, maxB:0, gA:0, gB:0,
+  timer:null, speed:1, turns:0
+};
+function arenaStart(sidA, sidB, friendly){
+  const A = stu(sidA), B = stu(sidB);
+  if(!A || !B || A.id===B.id){ toast("請選兩位不同的學生", true); return; }
+  ARENA.a = A.id; ARENA.b = B.id; ARENA.friendly = !!friendly;
+  ARENA.maxA = A.maxHp + skillMaxHpBonus(A);
+  ARENA.maxB = B.maxHp + skillMaxHpBonus(B);
+  ARENA.hpA = ARENA.maxA; ARENA.hpB = ARENA.maxB;
+  ARENA.gA = 0; ARENA.gB = 0; ARENA.turns = 0;
+  ARENA.ultA = false; ARENA.ultB = false;                 // 大招每場一次
+  ARENA.active = true; ARENA.over = false; ARENA.acting = false; ARENA.speed = 1;
+  render();
+  arenaLog("⚔️ "+A.name+" VS "+B.name+"!決鬥開始!");
+  ARENA.timer = setInterval(arenaTick, 50);
+}
+function arenaStop(){
+  if(ARENA.timer){ clearInterval(ARENA.timer); ARENA.timer = null; }
+  ARENA.active = false; ARENA.acting = false;
+}
+function arenaLog(msg){
+  const el = document.getElementById("arLog");
+  if(!el) return;
+  el.innerHTML = '<div>'+esc(msg)+'</div>' + el.innerHTML;
+  while(el.children.length > 3) el.removeChild(el.lastChild);
+}
+function arenaTick(){
+  if(!ARENA.active || ARENA.over || ARENA.acting) return;
+  const A = stu(ARENA.a), B = stu(ARENA.b);
+  if(!A || !B){ arenaStop(); return; }
+  // 充能速度 ∝ 敏捷(基準 10 agi = 每秒約 25%)
+  ARENA.gA += totalStats(A).agi * 0.125 * ARENA.speed;
+  ARENA.gB += totalStats(B).agi * 0.125 * ARENA.speed;
+  const bA = document.getElementById("gaugeA"), bB = document.getElementById("gaugeB");
+  if(bA) bA.style.width = Math.min(100, ARENA.gA) + "%";
+  if(bB) bB.style.width = Math.min(100, ARENA.gB) + "%";
+  if(ARENA.gA >= 100 && ARENA.gA >= ARENA.gB){ ARENA.gA = 0; arenaAct("A"); }
+  else if(ARENA.gB >= 100){ ARENA.gB = 0; arenaAct("B"); }
+}
+/* 行動:roll 學生實際技能 → 傷害/治療 → 動畫序列 */
+function arenaAct(side){
+  ARENA.acting = true;
+  ARENA.turns++;
+  const att = stu(side==="A" ? ARENA.a : ARENA.b);
+  const dfd = stu(side==="A" ? ARENA.b : ARENA.a);
+  const on = skillsEnabled();
+  const roll = (id)=> on && skillLv(att,id) && Math.random()*100 < skillChance(att,id);
+  const D = 400 / ARENA.speed;                          // 動畫時基
+  const dollAtt = document.getElementById("doll"+side);
+  const dollDfd = document.getElementById("doll"+(side==="A"?"B":"A"));
+  const anchAtt = '#doll'+side, anchDfd = '#doll'+(side==="A"?"B":"A");
+
+  // 0. 大招:Lv5解鎖,HP首次低於40%時發動(每場一次)
+  const ultUsed = side==="A" ? ARENA.ultA : ARENA.ultB;
+  if(!ultUsed && ultReady(att) && myHpPct() < 0.4){
+    if(side==="A") ARENA.ultA = true; else ARENA.ultB = true;
+    const u = ULT_DEFS[att.job];
+    ultFxPlay(att.job, anchDfd);
+    let umult = arenaDmgMult(att) * (ARENA_JOB_TUNE[att.job]||1) * u.mult;
+    if(att.job==="Mage" && dfd.job==="Cleric") umult *= TRAIT_TUNE.sanctuary;   // ✨神聖庇護:大招也減傷
+    if(hasAdvantage(dfd.job, att.job)) umult *= TRAIT_TUNE.underdog;             // 🔥逆境之魂:大招也吃(發動時HP必<40%)
+    const hits = u.hits || 1;
+    const dfdMax = side==="A" ? ARENA.maxB : ARENA.maxA;
+    let hitArr = [];
+    for(let h=0; h<hits; h++) hitArr.push(Math.max(1, Math.round((12 + Math.floor(Math.random()*8)) * umult * arenaDefMult(dfd))));
+    let totalU = hitArr.reduce((x,y)=>x+y,0);
+    const cap = Math.max(1, Math.floor(dfdMax * ULT_CAP));
+    if(totalU > cap){                                    // 防秒殺:超上限等比縮放
+      const k = cap / totalU;
+      hitArr = hitArr.map(v=>Math.max(1, Math.round(v*k)));
+      totalU = hitArr.reduce((x,y)=>x+y,0);
+    }
+    hitArr.forEach((ud,h)=> setTimeout(()=> dmgPop(ud, anchDfd, "dmg"), 260*h + 400));
+    if(u.selfHeal){
+      let uHeal = u.selfHeal;
+      if(att.job==="Cleric" && dfd.job==="Rogue") uHeal = Math.floor(uHeal*TRAIT_TUNE.healCut);   // 🗡治療干擾:大招自癒也打折
+      const uh = Math.min(uHeal, myMaxOf() - myHpOf());
+      if(side==="A") ARENA.hpA += uh; else ARENA.hpB += uh;
+      setTimeout(()=> dmgPop(uh, anchAtt, "heal"), 500);
+    }
+    if(side==="A") ARENA.hpB = Math.max(0, ARENA.hpB - totalU);
+    else ARENA.hpA = Math.max(0, ARENA.hpA - totalU);
+    if(dollAtt) dollAtt.classList.add(side==="A" ? "ar-lunge-r" : "ar-lunge-l");
+    if(dollDfd) dollDfd.classList.add("ar-hurt");
+    arenaLog("💫 "+att.name+" 對 "+dfd.name+" 發動大招【"+u.name+"】造成傷害 "+totalU+(att.job==="Mage"&&dfd.job==="Cleric"?"(✨神聖庇護)":""));
+    setTimeout(()=>{
+      if(dollAtt) dollAtt.classList.remove("ar-lunge-r","ar-lunge-l");
+      if(dollDfd) dollDfd.classList.remove("ar-hurt");
+      arenaUpdateHp(); arenaAfterAct();
+    }, D*3);
+    return;
+  }
+  function myHpPct(){ return (side==="A"?ARENA.hpA/ARENA.maxA:ARENA.hpB/ARENA.maxB); }
+  function myMaxOf(){ return side==="A"?ARENA.maxA:ARENA.maxB; }
+  function myHpOf(){ return side==="A"?ARENA.hpA:ARENA.hpB; }
+  // 1. 攻守一體判定:血低於六成時 roll 治療技能,中了=本回合邊打邊補(攻擊傷害×0.6)
+  const myHp = side==="A" ? ARENA.hpA : ARENA.hpB;
+  const myMax = side==="A" ? ARENA.maxA : ARENA.maxB;
+  const canHeal = (skillLv(att,"heal") || att.job==="Cleric") && myHp < myMax*0.6;
+  let healAmt = 0;
+  if(canHeal && (roll("heal") || (att.job==="Cleric" && !skillLv(att,"heal") && Math.random()<0.3))){
+    healAmt = skillLv(att,"heal") ? skillVal(att,"heal") : 20;
+    if(dfd.job==="Rogue" && att.job==="Cleric"){ healAmt = Math.floor(healAmt*TRAIT_TUNE.healCut); }   // 🗡 治療干擾:遊俠剋牧師,回血打折
+    healAmt = Math.min(healAmt, myMax - myHp);
+  }
+
+  // 2. 攻擊:基礎傷害+技能倍率
+  let mult = arenaDmgMult(att) * (ARENA_JOB_TUNE[att.job]||1);
+  if(healAmt > 0) mult *= 0.6;                            // 攻守一體:邊打邊補,傷害減少
+  // 🔥 逆境之魂:被克方 HP<50% 時傷害提升(有機會翻盤)
+  const underdog = hasAdvantage(dfd.job, att.job) && myHp < myMax*0.5;
+  if(underdog) mult *= TRAIT_TUNE.underdog;
+  let skillName = "", skillId = null, popStyle = null;
+  const atkSkills = [
+    ["bash",1.8,"重擊"],["blast",2,"爆裂"],["edge",2,"暴擊"],["lethal",2.5,"致命"],
+    ["smite",1.8,"制裁"],["judge",2.2,"審判"],["meteor",3,"隕石"],["shadow",2,"影襲"],
+    ["chain",1.5,"連鎖"],["spark",1.5,"電擊"]
+  ];
+  let best = 1;
+  for(const [id,m,nm] of atkSkills){
+    if(roll(id) && m > best){ best = m; skillName = nm; skillId = id; popStyle = SKILL_POP[id]; }
+  }
+  mult *= best;
+  // 🌀 AGI迴避(1v1)
+  const dfdAnch = side==="A" ? "#arFB" : "#arFA";
+  if(Math.random()*100 < agiDodge(dfd)){
+    arenaLog(dfd.name+" 靈巧地閃過了 "+att.name+" 的攻擊!");
+    comicPop("MISS!","cloud","#4a90d9", dfdAnch);
+    return;
+  }
+  const base = 10 + Math.floor(Math.random()*8);
+  let dmg = Math.max(1, Math.round(base * mult * arenaDefMult(dfd)));
+  // 防禦方格擋/聖盾 + 技能特性相剋
+  let blocked = "", trait = "";
+  const pierce = att.job==="Mage" && dfd.job==="Warrior" && !!skillId;    // 🔮 法術穿透:法師技能無視戰士格擋+加傷
+  if(pierce) dmg = Math.round(dmg * TRAIT_TUNE.pierceBonus);
+  if(!pierce && on && skillLv(dfd,"block") && Math.random()*100 < skillChance(dfd,"block")){
+    if(dfd.job==="Warrior" && att.job==="Rogue"){ dmg = Math.round(dmg*TRAIT_TUNE.ironWall); blocked = "🛡鐵壁格擋"; }   // 戰士剋遊俠:格擋加深
+    else{ dmg = Math.round(dmg*0.5); blocked = "🧱格擋"; }
+  }
+  else if(on && skillLv(dfd,"shield") && Math.random()*100 < skillChance(dfd,"shield")){ dmg = Math.round(dmg*0.7); blocked = "🔰聖盾"; }
+  if(pierce && on && skillLv(dfd,"block")) trait = "🔮法術穿透";           // 有格擋技能才顯示穿透(否則無感)
+  if(dfd.job==="Cleric" && att.job==="Mage" && skillId){ dmg = Math.round(dmg*TRAIT_TUNE.sanctuary); trait = "✨神聖庇護"; }   // 牧師剋法師:法術減傷
+  if(underdog) trait = (trait?trait+"+":"") + "🔥逆境之魂";
+
+  // 動畫序列:衝刺→命中(技能框+扣血+震動)→回位→結算
+  if(dollAtt) dollAtt.classList.add(side==="A" ? "ar-lunge-r" : "ar-lunge-l");
+  setTimeout(()=>{
+    if(skillName && popStyle) comicPop(popStyle[0], popStyle[1], popStyle[2], anchAtt);
+    if(skillId) skillFxPlay(skillId, anchDfd);                       // 技能特效打在被擊者身上
+    if(blocked){ comicPop(blocked.slice(2)+"!","spike","#4bc0e8", anchDfd); skillFxPlay("block", anchDfd); }
+    if(trait) comicPop(trait+"!","boom", trait.startsWith("🔮")?"#6a5acd":"#ffd234", anchDfd);
+    dmgPop(dmg, anchDfd, "dmg");
+    if(dollDfd) dollDfd.classList.add("ar-hurt");
+    if(side==="A") ARENA.hpB = Math.max(0, ARENA.hpB - dmg);
+    else ARENA.hpA = Math.max(0, ARENA.hpA - dmg);
+    if(healAmt > 0){                                                 // 攻守一體:同回合回血
+      if(side==="A") ARENA.hpA = Math.min(myMax, ARENA.hpA + healAmt);
+      else ARENA.hpB = Math.min(myMax, ARENA.hpB + healAmt);
+      if(dollAtt) dollAtt.classList.add("ar-heal");
+      skillFxPlay("heal", anchAtt);
+      dmgPop(healAmt, anchAtt, "heal");
+    }
+    arenaUpdateHp();
+    let logMsg = att.name+" 對 "+dfd.name+" 使用【"+(skillName||"普通攻擊")+"】造成傷害 "+dmg
+      + (trait?"("+trait+")":"") + (blocked?"("+blocked+")":"");
+    if(healAmt > 0) logMsg += ",同時恢復生命 "+healAmt+(dfd.job==="Rogue"&&att.job==="Cleric"?"(🗡治療受干擾)":"");
+    arenaLog(logMsg);
+    setTimeout(()=>{
+      if(dollAtt) dollAtt.classList.remove("ar-lunge-r","ar-lunge-l","ar-heal");
+      if(dollDfd) dollDfd.classList.remove("ar-hurt");
+      arenaAfterAct();
+    }, D*1.2);
+  }, D);
+}
+function arenaUpdateHp(){
+  const hA = document.getElementById("hpA"), hB = document.getElementById("hpB");
+  if(hA){ hA.style.width = (ARENA.hpA/ARENA.maxA*100)+"%"; document.getElementById("hpAt").textContent = ARENA.hpA+"/"+ARENA.maxA; }
+  if(hB){ hB.style.width = (ARENA.hpB/ARENA.maxB*100)+"%"; document.getElementById("hpBt").textContent = ARENA.hpB+"/"+ARENA.maxB; }
+}
+function arenaAfterAct(){
+  ARENA.acting = false;
+  if(ARENA.hpA<=0 || ARENA.hpB<=0){ arenaEnd(ARENA.hpA<=0 ? "B" : "A"); return; }
+  if(ARENA.turns >= 40){ arenaEnd(ARENA.hpA/ARENA.maxA >= ARENA.hpB/ARENA.maxB ? "A" : "B", true); }
+}
+function arenaEnd(winSide, byTime){
+  ARENA.over = true;
+  if(ARENA.timer){ clearInterval(ARENA.timer); ARENA.timer = null; }
+  const win = stu(winSide==="A" ? ARENA.a : ARENA.b);
+  const lose = stu(winSide==="A" ? ARENA.b : ARENA.a);
+  const dollW = document.getElementById("doll"+winSide);
+  const dollL = document.getElementById("doll"+(winSide==="A"?"B":"A"));
+  if(dollL) dollL.classList.add("ar-ko");
+  if(dollW) dollW.classList.add("ar-win");
+  const bn = document.getElementById("arWinner");
+  if(bn){ bn.style.display=""; bn.innerHTML = '🏆 WINNER:'+esc(win.name)+(byTime?"(時間到,依剩餘HP判定)":""); }
+  arenaLog("🏆 "+win.name+" 獲勝!"+(byTime?"(判定勝)":"KO!"));
+  if(!ARENA.friendly){
+    grantXp(win, 20); grantXp(lose, 10);
+    const loot = Math.min(lose.gold, 30 + Math.floor(Math.random()*21));   // 奪取30~50金(不超過對方持有)
+    lose.gold -= loot; win.gold += loot;
+    const bn2 = document.getElementById("arWinner");
+    if(bn2 && loot>0) bn2.innerHTML += '<div style="font-size:16px;margin-top:4px">💰 奪取 '+loot+' 金幣!</div>';
+    addLog(win.id, "⚔️ 競技場獲勝 +20 XP,奪取 "+lose.name+" 的 "+loot+" 金幣!");
+    addLog(lose.id, "⚔️ 競技場惜敗 +10 XP,被奪走 "+loot+" 金幣(對手:"+win.name+")");
+    toast("🏆 "+win.name+" +20XP、奪金 "+loot+";"+lose.name+" +10XP");
+    save();
+  }
+  sfx("levelup");
+}
+/* ══ 團體競技場(紅vs藍,學生手機遙控,教師端為權威主機) ══════════
+ * 移動:格子制;攻擊:武器射程內最近敵人;傷害沿用競技場公式(軟化/職業係數/特性/技能roll)
+ * 大招:Lv5+每場一次;勝負:全滅或180秒比(存活數→剩餘HP%) */
+const GARENA = {
+  active:false, over:false, W:14, H:8,
+  fighters:{},          // sid → {sid,x,y,team,hp,max,ko,ultUsed,cd}
+  cmdQueue:{},          // sid → 最新指令 {ts, move|act}
+  timer:null, endTimer:null, startTs:0, DURATION:180, paused:false, pausedAt:0,
+  _cmdUnsub:null, _lastTs:{}
+};
+function weaponRange(s){
+  const it = s.weaponId ? itemById(s.weaponId) : null;
+  if(!it) return 1;
+  const n = it.name || "";
+  if(/弓|銃|槍砲|法杖|杖|書|魔導|水晶/.test(n)) return 3;    // 遠程
+  if(/長槍|矛|戟|鞭/.test(n)) return 2;                       // 長柄
+  return 1;                                                    // 近戰
+}
+function garenaDist(a,b){ return Math.abs(a.x-b.x)+Math.abs(a.y-b.y); }   // 曼哈頓距離
+function garenaStart(redIds, blueIds, aiMode){
+  GARENA.fighters = {}; GARENA.cmdQueue = {}; GARENA._lastTs = {};
+  GARENA.aiMode = !!aiMode;
+  if(GARENA.siege !== true) GARENA.siege = false;            // 由公會戰入口設true;其餘場次重置                                  // 🤖 AI演練:所有角色自動作戰(單機可測)
+  // 場地依人數動態調整:確保每隊塞得下(留移動空間),上限保護
+  const perTeam = Math.max(redIds.length, blueIds.length);
+  GARENA.H = Math.min(12, Math.max(8, Math.ceil(perTeam / 2) + 1));   // 每欄最多放滿高度的人,兩欄起跳
+  GARENA.W = Math.min(20, Math.max(14, 10 + Math.ceil(perTeam/GARENA.H)*2));
+  const place = (ids, team)=>{
+    const H = GARENA.H;
+    const colsNeeded = Math.ceil(ids.length / H);              // 需要幾欄
+    ids.forEach((sid,i)=>{
+      const st = stu(sid); if(!st) return;
+      const max = st.maxHp + skillMaxHpBonus(st);
+      const col = Math.floor(i / H);                           // 第幾欄(0起)
+      const row = i % H;                                       // 欄內第幾列
+      const x = team==="red" ? (1 + col) : (GARENA.W - 2 - col);
+      const y = Math.floor((row + 0.5) * H / Math.min(H, ids.length - col*H) );
+      GARENA.fighters[sid] = { sid, team, x, y:Math.min(H-1, row),
+        hp:max, max, ko:false, ultUsed:false, cd:0,
+        dmgDealt:0, kills:0, ultCount:0,                    // MVP統計
+        stealth:0, tauntBy:null, tauntT:0, jobCd:0 };       // 職業技:隱身拍數/嘲諷來源與拍數/職業技冷卻
+    });
+  };
+  place(redIds,"red"); place(blueIds,"blue");
+  // 佈陣後保險:掃描並排開任何重疊(同格往下或往內找空位)
+  const occupied = {};
+  for(const f of Object.values(GARENA.fighters)){
+    let tries = 0;
+    while(occupied[f.x+","+f.y] && tries < GARENA.W*GARENA.H){
+      f.y++;
+      if(f.y >= GARENA.H){ f.y = 0; f.x += (f.team==="red" ? 1 : -1); }
+      if(f.x < 0) f.x = 0; if(f.x >= GARENA.W) f.x = GARENA.W-1;
+      tries++;
+    }
+    occupied[f.x+","+f.y] = f.sid;
+  }
+  GARENA.active = true; GARENA.over = false; GARENA.paused = false; GARENA.startTs = Date.now();
+  // 監聽學生指令
+  if(GARENA._cmdUnsub) GARENA._cmdUnsub();
+  GARENA._cmdUnsub = CLOUD.garenaListenCmds(cmd=>{
+    if(!cmd || !cmd.sid) return;
+    if(GARENA._lastTs[cmd.sid] === cmd.ts) return;           // 舊指令略過
+    GARENA._lastTs[cmd.sid] = cmd.ts;
+    GARENA.cmdQueue[cmd.sid] = cmd;
+  });
+  GARENA.timer = setInterval(garenaTick, 500);
+  garenaPushLive();
+  render();
+  garenaLog("⚔️ 團體戰開始!紅隊 "+redIds.length+" 人 vs 藍隊 "+blueIds.length+" 人");
+}
+function garenaLog(msg){
+  const el = document.getElementById("gaLog");
+  if(el){ el.innerHTML = '<div>'+esc(msg)+'</div>'+el.innerHTML; while(el.children.length>3) el.removeChild(el.lastChild); }
+}
+function garenaStop(){
+  if(GARENA.timer){ clearInterval(GARENA.timer); GARENA.timer=null; }
+  if(GARENA._cmdUnsub){ GARENA._cmdUnsub(); GARENA._cmdUnsub=null; }
+  GARENA.active=false;
+  CLOUD.garenaClear && CLOUD.garenaClear();
+}
+/* 🤖 AI演練:每拍為每個存活角色決策(移動接近→射程內攻擊;技能與大招擇時施放) */
+function garenaAiStep(fs){
+  for(const f of fs){
+    if(f.ko || GARENA.cmdQueue[f.sid]) continue;
+    const st = stu(f.sid); if(!st) continue;
+    const range = weaponRange(st);
+    const en = fs.filter(o=>o.team!==f.team && !o.ko && (o.stealth||0)<=0);
+    if(!en.length) continue;
+    en.sort((a,b)=>garenaDist(f,a)-garenaDist(f,b));
+    const tgt = en[0], d = garenaDist(f,tgt);
+    // 大招:血量<40%且可用
+    if(f.hp < f.max*0.4 && !f.ultUsed && st.level>=5 && d<=Math.max(2,range)){
+      GARENA.cmdQueue[f.sid] = {sid:f.sid, act:"ult"}; continue;
+    }
+    // 職業技:冷卻好+時機(法師2敵內/牧師有傷隊友/戰士敵貼身/遊俠血低遁)
+    if((f.jobCd||0)<=0){
+      const job = st.job;
+      const near2 = en.filter(o=>garenaDist(f,o)<=2).length;
+      const hurtAlly = fs.some(o=>o.team===f.team && !o.ko && garenaDist(f,o)<=2 && o.hp < o.max*0.7);
+      if((job==="Mage" && en.filter(o=>garenaDist(f,o)<=range).length>=2)
+       ||(job==="Cleric" && hurtAlly)
+       ||(job==="Warrior" && near2>=1 && f.hp>f.max*0.3)
+       ||(job==="Rogue" && f.hp<f.max*0.5)){
+        GARENA.cmdQueue[f.sid] = {sid:f.sid, act:"jobskill"}; continue;
+      }
+    }
+    if(d<=range && f.cd<=0){ GARENA.cmdQueue[f.sid] = {sid:f.sid, act:"attack"}; continue; }
+    if(d>range){                                             // 接近(帶一點隨機避免排隊)
+      let dir;
+      if(Math.random()<0.25) dir = ["up","down","left","right"][Math.floor(Math.random()*4)];
+      else if(Math.abs(tgt.x-f.x) >= Math.abs(tgt.y-f.y)) dir = tgt.x>f.x ? "right" : "left";
+      else dir = tgt.y>f.y ? "down" : "up";
+      GARENA.cmdQueue[f.sid] = {sid:f.sid, move:dir};
+    }
+  }
+}
+function garenaTick(){
+  if(!GARENA.active || GARENA.over || GARENA.paused) return;
+  const fs = Object.values(GARENA.fighters);
+  if(GARENA.aiMode) garenaAiStep(fs);                        // AI演練:代替學生下指令
+  // 1. 處理指令(每人每拍一動作)
+  for(const f of fs){
+    if(f.ko) continue;
+    if(f.cd>0) f.cd--;
+    if(f.jobCd>0) f.jobCd--;
+    if(f.stealth>0) f.stealth--;
+    if(f.tauntT>0){ f.tauntT--; if(f.tauntT<=0) f.tauntBy=null; }
+    const cmd = GARENA.cmdQueue[f.sid];
+    if(!cmd) continue;
+    if(cmd.act==="attack" && f.cd>0){ continue; }          // 冷卻中的攻擊指令保留,下拍自動重試(不吃掉)
+    delete GARENA.cmdQueue[f.sid];
+    if(cmd.move) garenaMove(f, cmd.move);
+    else if(cmd.act==="attack") garenaAttack(f, false);
+    else if(cmd.act==="ult"){
+      const st = stu(f.sid);
+      if(st && ultReady(st) && !f.ultUsed){ f.ultUsed = true; garenaAttack(f, true); }
+      else if(f.ultUsed) garenaFx(f.sid, "miss");           // 已用過→提示
+    }
+    else if(cmd.act==="jobskill" && f.jobCd<=0) garenaJobSkill(f);
+  }
+  // 2. 勝負判定
+  const aliveR = fs.filter(f=>f.team==="red" && !f.ko).length;
+  const aliveB = fs.filter(f=>f.team==="blue" && !f.ko).length;
+  const elapsed = (Date.now()-GARENA.startTs)/1000;
+  if(aliveR===0 || aliveB===0){ garenaEnd(aliveR>0?"red":"blue"); return; }
+  if(elapsed >= GARENA.DURATION){
+    const score = t=> fs.filter(f=>f.team===t && !f.ko).length*1000 + fs.filter(f=>f.team===t).reduce((sum,f)=>sum+f.hp/f.max,0);
+    const sr = score("red"), sb = score("blue");
+    if(Math.abs(sr-sb) < 0.01){ garenaEnd("draw", true); return; }   // 完全平手
+    garenaEnd(sr>sb?"red":"blue", true); return;
+  }
+  garenaPushLive();
+  garenaRenderField();
+}
+function garenaMove(f, dir){
+  const d = {up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];
+  if(!d) return;
+  const nx=f.x+d[0], ny=f.y+d[1];
+  if(nx<0||nx>=GARENA.W||ny<0||ny>=GARENA.H) return;
+  if(Object.values(GARENA.fighters).some(o=>!o.ko && o.sid!==f.sid && o.x===nx && o.y===ny)) return;   // 不可疊格
+  f.x=nx; f.y=ny;
+}
+/* 職業戰術技:法師AOE/牧師群補/遊俠隱身/戰士嘲諷 */
+const JOB_SKILL = {
+  Mage:   { name:"烈焰風暴", icon:"🔥", cd:20, desc:"射程內所有敵人受傷" },
+  Cleric: { name:"聖光普照", icon:"💚", cd:20, desc:"2格內隊友全回血15" },
+  Rogue:  { name:"疾風隱身", icon:"🌫", cd:30, desc:"隱身3秒,敵人打不到你" },
+  Warrior:{ name:"震地嘲諷", icon:"📣", cd:30, desc:"2格內敵人被迫攻擊你3秒" }
+};
+function garenaJobSkill(f){
+  const att = stu(f.sid); if(!att) return;
+  const JS = JOB_SKILL[att.job]; if(!JS) return;
+  const all = Object.values(GARENA.fighters);
+  if(att.job==="Mage"){                                     // 🔥 AOE:射程內所有敵人×0.7傷害
+    const range = weaponRange(att);
+    const tgts = all.filter(o=>o.team!==f.team && !o.ko && o.stealth<=0 && garenaDist(f,o)<=range);
+    if(!tgts.length){ garenaFx(f.sid,"miss"); return; }
+    f.jobCd = JS.cd;
+    let total = 0;
+    tgts.forEach(tgt=>{
+      const dfd = stu(tgt.sid); if(!dfd) return;
+      let mult = arenaDmgMult(att) * (ARENA_JOB_TUNE[att.job]||1) * 0.7;
+      if(hasAdvantage(dfd.job, att.job) && f.hp < f.max*0.5) mult *= TRAIT_TUNE.underdog;
+      const base = 10 + Math.floor(Math.random()*8);
+      let dmg = Math.max(1, Math.round(base * mult * arenaDefMult(dfd)));
+      if(dfd.job==="Cleric") dmg = Math.round(dmg*TRAIT_TUNE.sanctuary);   // 神聖庇護(AOE屬技能)
+      tgt.hp = Math.max(0, tgt.hp - dmg);
+      f.dmgDealt += dmg; total += dmg;
+      if(tgt.hp<=0 && !tgt.ko){ tgt.ko=true; f.kills++; garenaLog("💀 "+dfd.name+" 倒下!"); }
+      skillFxPlay("blast", '[data-gfighter="'+tgt.sid+'"]');
+      dmgPop(dmg, '[data-gfighter="'+tgt.sid+'"]', "dmg");
+    });
+    garenaLog("🔥 "+att.name+" 施放【烈焰風暴】命中 "+tgts.length+" 人,共 "+total+" 傷害!");
+  }
+  else if(att.job==="Cleric"){                              // 💚 群補:2格內隊友+自己回15
+    const allies = all.filter(o=>o.team===f.team && !o.ko && garenaDist(f,o)<=2);
+    f.jobCd = JS.cd;
+    let healed = 0;
+    allies.forEach(a2=>{
+      const h = Math.min(15, a2.max - a2.hp);
+      if(h>0){ a2.hp += h; healed++;
+        skillFxPlay("groupheal", '[data-gfighter="'+a2.sid+'"]');
+        dmgPop(h, '[data-gfighter="'+a2.sid+'"]', "heal"); }
+    });
+    garenaLog("💚 "+att.name+" 施放【聖光普照】治癒 "+healed+" 位隊友!");
+  }
+  else if(att.job==="Rogue"){                               // 🌫 隱身6拍(3秒)
+    f.jobCd = JS.cd; f.stealth = 6;
+    skillFxPlay("shadow", '[data-gfighter="'+f.sid+'"]');
+    garenaLog("🌫 "+att.name+" 消失在煙霧中…(隱身3秒)");
+  }
+  else if(att.job==="Warrior"){                             // 📣 嘲諷:2格內敵人6拍強制打自己
+    const tgts = all.filter(o=>o.team!==f.team && !o.ko && garenaDist(f,o)<=2);
+    if(!tgts.length){ garenaFx(f.sid,"miss"); return; }
+    f.jobCd = JS.cd;
+    tgts.forEach(t=>{ t.tauntBy = f.sid; t.tauntT = 6; });
+    skillFxPlay("slash", '[data-gfighter="'+f.sid+'"]');    // 戰吼音波環
+    garenaLog("📣 "+att.name+" 震地嘲諷!"+tgts.length+" 名敵人被迫攻擊他(3秒)");
+  }
+}
+function garenaAttack(f, isUlt){
+  const att = stu(f.sid); if(!att) return;
+  if(f.stealth>0){ f.stealth = 0; }                          // 攻擊破隱
+  const range = isUlt ? Math.max(2, weaponRange(att)) : weaponRange(att);
+  const enemies = Object.values(GARENA.fighters).filter(o=>o.team!==f.team && !o.ko && o.stealth<=0);   // 隱身者不可被選中
+  let inRange = enemies.filter(o=>garenaDist(f,o)<=range).sort((a,b)=>garenaDist(f,a)-garenaDist(f,b));
+  // 📣 被嘲諷:嘲諷者在射程內→強制以他為目標
+  if(f.tauntBy){
+    const taunter = GARENA.fighters[f.tauntBy];
+    if(taunter && !taunter.ko && garenaDist(f,taunter)<=range) inRange = [taunter];
+  }
+  if(!inRange.length){
+    if(isUlt) f.ultUsed=false;                              // 大招空放不算用掉
+    garenaFx(f.sid, "miss"); return;
+  }
+  const tgt = inRange[0];
+  const dfd = stu(tgt.sid); if(!dfd) return;
+  const on = skillsEnabled();
+  const roll = (id)=> on && skillLv(att,id) && Math.random()*100 < skillChance(att,id);
+  let mult = arenaDmgMult(att) * (ARENA_JOB_TUNE[att.job]||1);
+  let skillName="", skillId=null;
+  if(isUlt){
+    const u = ULT_DEFS[att.job];
+    mult *= u.mult;
+    if(att.job==="Mage" && dfd.job==="Cleric") mult *= TRAIT_TUNE.sanctuary;
+    skillName = u.name; skillId = "__ult";
+    if(u.selfHeal){ const uh=Math.min(u.selfHeal, f.max-f.hp); f.hp+=uh; }
+  }else{
+    const atkSkills=[["bash",1.8,"重擊"],["blast",2,"爆裂"],["edge",2,"暴擊"],["lethal",2.5,"致命"],["smite",1.8,"制裁"],["judge",2.2,"審判"],["meteor",3,"隕石"],["shadow",2,"影襲"],["chain",1.5,"連鎖"],["spark",1.5,"電擊"]];
+    let best=1;
+    for(const [id,m,nm] of atkSkills){ if(roll(id) && m>best){ best=m; skillName=nm; skillId=id; } }
+    mult *= best;
+  }
+  // 逆境之魂
+  if(hasAdvantage(dfd.job, att.job) && f.hp < f.max*0.5) mult *= TRAIT_TUNE.underdog;
+  const base = 10 + Math.floor(Math.random()*8);
+  // 🌀 AGI迴避(大招不可迴避)
+  if(!isUlt && Math.random()*100 < agiDodge(dfd)){
+    garenaLog(dfd.name+" 靈巧地閃過了 "+att.name+" 的攻擊!");
+    comicPop("MISS!","cloud","#4a90d9", '[data-gfighter="'+tgt.sid+'"]');
+    f.cd = 2;                                              // 撲空小冷卻
+    return;
+  }
+  let dmg = Math.max(1, Math.round(base * mult * arenaDefMult(dfd)));
+  // 特性相剋(同1v1)
+  let tag = "";
+  const pierce = att.job==="Mage" && dfd.job==="Warrior" && !!skillId;
+  if(pierce) dmg = Math.round(dmg * TRAIT_TUNE.pierceBonus);
+  if(!isUlt && !pierce && on && skillLv(dfd,"block") && Math.random()*100 < skillChance(dfd,"block")){
+    if(dfd.job==="Warrior" && att.job==="Rogue"){ dmg=Math.round(dmg*TRAIT_TUNE.ironWall); tag="🛡"; }
+    else{ dmg=Math.round(dmg*0.5); tag="🧱"; }
+  }
+  if(dfd.job==="Cleric" && att.job==="Mage" && skillId && !isUlt){ dmg=Math.round(dmg*TRAIT_TUNE.sanctuary); tag="✨"; }
+  tgt.hp = Math.max(0, tgt.hp - dmg);
+  f.cd = 3;                                                  // 攻擊冷卻 3 拍(1.5秒)
+  f.dmgDealt += dmg;                                         // MVP:累計傷害
+  if(isUlt) f.ultCount++;
+  if(tgt.hp<=0 && !tgt.ko){ tgt.ko = true; f.kills++; garenaLog("💀 "+dfd.name+" 倒下!"); }
+  garenaLog((isUlt?"💫 ":"")+att.name+" 對 "+dfd.name+" 使用【"+(skillName||"普通攻擊")+"】造成傷害 "+dmg+(tag?"("+tag+")":""));
+  garenaFx(f.sid, "atk", tgt.sid, dmg, isUlt, att.job);
+}
+function garenaFx(sid, kind, tgtSid, dmg, isUlt, job){
+  const cell = document.querySelector('[data-gfighter="'+sid+'"]');
+  const tcell = tgtSid && document.querySelector('[data-gfighter="'+tgtSid+'"]');
+  if(kind==="atk" && tcell){
+    if(isUlt) ultFxPlay(job, '[data-gfighter="'+tgtSid+'"]');
+    dmgPop(dmg, '[data-gfighter="'+tgtSid+'"]', "dmg");
+    tcell.classList.add("ar-hurt"); setTimeout(()=>tcell.classList.remove("ar-hurt"), 500);
+  }
+  if(kind==="miss" && cell){ comicPop("範圍內沒有敵人!","cloud","#888", '[data-gfighter="'+sid+'"]'); }
+}
+function garenaEnd(winTeam, byTime){
+  GARENA.over = true;
+  GARENA.winTeam = winTeam;                                  // 記錄給學生端顯示
+  if(GARENA.timer){ clearInterval(GARENA.timer); GARENA.timer=null; }
+  const fs = Object.values(GARENA.fighters);
+  if(winTeam==="draw"){                                      // 平手:全員參與獎
+    fs.forEach(f=>{ const st=stu(f.sid); if(st){ grantXp(st,15); addLog(st.id,"⚔️ 團體戰平手(+15 XP)"); } });
+    if(GARENA.siegeTournament && GARENA.siegeTeams){         // 🏆 循環賽平手記分
+      tourRecord(GARENA.siegeTeams.red, GARENA.siegeTeams.blue, "draw");
+      GARENA.siege = false; GARENA.siegeTeams = null; GARENA.siegeTournament = false;
+    }
+    save();
+    garenaLog("🤝 時間到,雙方平手!全員 +15 XP");
+    const bnd = document.getElementById("gaWinner");
+    if(bnd){ bnd.style.display=""; bnd.innerHTML="🤝 平手!"; }
+    garenaPushLive(true); sfx("levelup"); return;
+  }
+  const winners = fs.filter(f=>f.team===winTeam), losers = fs.filter(f=>f.team!==winTeam);
+  if(GARENA.siege){                                          // 🏰 公會戰加碼
+    winners.forEach(f=>{ const st=stu(f.sid); if(st){ grantXp(st,30); st.gold+=30; addLog(st.id,"🏰 公會戰獲勝!(+30 XP +30 金)"); } });
+    losers.forEach(f=>{ const st=stu(f.sid); if(st){ grantXp(st,15); addLog(st.id,"🏰 公會戰參戰(+15 XP)"); } });
+    // 攜帶制:成功結算 → 兩邊組長各消耗一張攻城卷(循環賽場次除外,完賽統一結算)
+    if(GARENA.siegeTeams && !GARENA.siegeTournament){
+      [GARENA.siegeTeams.red, GARENA.siegeTeams.blue].forEach(grp=>{
+        const ld = stu(state.groupLeaders[grp]);
+        if(ld && ld.consumables && ld.consumables[31]>0){
+          ld.consumables[31]--;
+          addLog(ld.id, "🎫 攻城卷已於公會戰結算時消耗");
+        }
+      });
+    }
+    if(GARENA.siegeTournament && GARENA.siegeTeams){         // 🏆 循環賽場次:記分不佔城
+      tourRecord(GARENA.siegeTeams.red, GARENA.siegeTeams.blue, winTeam);
+      GARENA.siegeTeams = null; GARENA.siegeTournament = false;
+    }
+    const winGroup = GARENA.siegeTeams ? GARENA.siegeTeams[winTeam] : null;
+    if(winGroup){                                            // 👑 佔領榮耀之城
+      const prev = state.castle.owner;
+      state.castle.owner = winGroup;
+      state.castle.since = new Date().toLocaleDateString("sv");
+      addLog("-", "👑 "+winGroup+" 組"+(prev===winGroup?"守住了":(prev?"從 "+prev+" 組手中奪下了":"佔領了")+"")+"榮耀之城!");
+      setTimeout(()=>{ levelUpFx("👑 "+winGroup+" 組佔領榮耀之城!"); sfx("goal"); }, 2400);
+    }
+    GARENA.siege = false; GARENA.siegeTeams = null;
+  }else{
+    winners.forEach(f=>{ const st=stu(f.sid); if(st){ grantXp(st,20); addLog(st.id,"⚔️ 團體戰獲勝(+20 XP)"); } });
+    losers.forEach(f=>{ const st=stu(f.sid); if(st){ grantXp(st,10); addLog(st.id,"⚔️ 團體戰參戰(+10 XP)"); } });
+  }
+  save();
+  garenaLog("🏆 "+(winTeam==="red"?"紅隊":"藍隊")+"獲勝!"+(byTime?"(時間到判定)":"")+" 勝+20XP/敗+10XP");
+  const bn = document.getElementById("gaWinner");
+  if(bn){ bn.style.display=""; bn.innerHTML="🏆 "+(winTeam==="red"?"🔴 紅隊":"🔵 藍隊")+" WINS!"; }
+  garenaComputeMvp();
+  garenaPushLive(true);                                      // 學生端看到結束狀態(強制)
+  render();                                                  // 重繪以顯示MVP榜
+  sfx("levelup");
+}
+/* 計算 MVP:傷害王/斬殺王/生存者 */
+function garenaComputeMvp(){
+  const fs = Object.values(GARENA.fighters);
+  const byDmg = [...fs].sort((a,b)=>b.dmgDealt-a.dmgDealt);
+  const byKill = [...fs].sort((a,b)=>b.kills-a.kills || b.dmgDealt-a.dmgDealt);
+  GARENA.mvp = {
+    topDmg: byDmg[0] && byDmg[0].dmgDealt>0 ? byDmg[0] : null,
+    topKill: byKill[0] && byKill[0].kills>0 ? byKill[0] : null,
+    survivors: fs.filter(f=>!f.ko).map(f=>f.sid),
+    ranking: byDmg.map(f=>({sid:f.sid, team:f.team, dmg:f.dmgDealt, kills:f.kills, ult:f.ultCount, ko:f.ko}))
+  };
+}
+function garenaMvpHtml(){
+  const m = GARENA.mvp; if(!m) return "";
+  const nm = sid=>{ const st=stu(sid); return st?esc(st.name):"?"; };
+  const teamDot = t=> t==="red"?"🔴":"🔵";
+  const card = (icon,title,f,detail)=> f ?
+    '<div style="flex:1;min-width:130px;background:#fff;border:3px solid #141414;border-radius:10px;box-shadow:3px 3px 0 rgba(0,0,0,.7);padding:10px;text-align:center">'
+    + '<div style="font-size:28px">'+icon+'</div><div class="mini" style="font-weight:900">'+title+'</div>'
+    + '<div style="font-weight:900;font-size:15px;margin:2px 0">'+teamDot(f.team)+' '+nm(f.sid)+'</div>'
+    + '<div class="mini num">'+detail+'</div></div>' : "";
+  const rows = m.ranking.slice(0,8).map((r,i)=>
+    '<tr><td>'+(i+1)+'</td><td>'+teamDot(r.team)+' '+nm(r.sid)+(r.ko?' 💀':'')+'</td>'
+    + '<td class="num">'+r.dmg+'</td><td class="num">'+r.kills+'</td><td class="num">'+(r.ult||0)+'</td></tr>').join("");
+  return '<div class="panel" style="margin-top:12px"><h3 style="justify-content:center">🏅 戰後 MVP</h3>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px">'
+    + card("⚔️","傷害王",m.topDmg, m.topDmg?m.topDmg.dmgDealt+" 傷害":"")
+    + card("💀","斬殺王",m.topKill, m.topKill?m.topKill.kills+" 擊倒":"")
+    + '</div>'
+    + '<table><thead><tr><th>#</th><th>選手</th><th>傷害</th><th>擊倒</th><th>大招</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    + '<div class="inline-form" style="margin-top:10px;justify-content:center">'
+    + (m.topDmg?'<button class="btn gold" data-mvpaward="'+m.topDmg.sid+'|競技場MVP">🏅 頒【競技場MVP】給 '+nm(m.topDmg.sid)+'</button>':"")
+    + '</div><div class="mini" style="text-align:center;margin-top:4px">或到「稱號設計」自訂頒發</div></div>';
+}
+/* live 狀態寫雲端(學生遙控端讀);節流:狀態無變化不推、最短間隔800ms */
+function garenaPushLive(force){
+  if(!CLOUD.on()) return;
+  const fs = Object.values(GARENA.fighters).map(f=>({sid:f.sid,x:f.x,y:f.y,team:f.team,hp:f.hp,max:f.max,ko:f.ko,ultUsed:f.ultUsed,cd:f.cd,st:f.stealth||0,jc:f.jobCd||0,tt:f.tauntT||0}));
+  const snap = JSON.stringify(fs) + "|" + (GARENA.over?1:0);
+  const now = Date.now();
+  if(!force && snap===GARENA._lastSnap && now-(GARENA._lastPush||0) < 2000) return;   // 無變化且非強制→跳過
+  if(!force && now-(GARENA._lastPush||0) < 800) return;                                // 最短間隔保護
+  GARENA._lastSnap = snap; GARENA._lastPush = now;
+  const W = { active:GARENA.active && !GARENA.over, over:GARENA.over, winTeam:GARENA.winTeam||null,
+    W:GARENA.W, H:GARENA.H, fighters:fs,
+    aliveR: fs.filter(f=>f.team==="red"&&!f.ko).length, aliveB: fs.filter(f=>f.team==="blue"&&!f.ko).length,
+    endTs: GARENA.startTs + GARENA.DURATION*1000, ts:now };
+  CLOUD.garenaWrite(W).catch(e=>console.warn("garena", e));
+}
+function teacherArena(){
+  const pg = progCheck();
+  if(pg.stage < 2 && !GARENA.active && !ARENA.active){       // 未解鎖(進行中比賽不中斷)
+    return progBannerHtml()
+      + '<div class="panel" style="text-align:center;padding:36px"><div style="font-size:44px">🔒</div>'
+      + '<h3 style="justify-content:center">競技場尚未開放(含公會戰)</h3>'
+      + '<div class="mini">'+(pg.stage===0
+          ? '先完成今日探索(全班累計 '+pg.exploreXp+' / '+pg.exploreGoal+' XP),再擊敗魔王!'
+          : '⚔️ 魔王已現身——到「Boss 戰」分頁擊敗它,競技場就開放!')+'</div></div>';
+  }
+  if(GARENA.active) return garenaBattleHtml();
+  if(ARENA.active) return arenaBattleHtml();
+  const opts = state.students.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'(Lv.'+x.level+'・'+JOB_INFO[x.job].name+')</option>').join("");
+  return '<div class="panel" style="text-align:center"><h3 style="justify-content:center">⚔️ 競技場</h3>'
+    + '<div class="mini" style="margin-bottom:12px">挑兩位勇者上場決鬥!表演賽不扣真實 HP。行動條依敏捷充能,技能用學生實際點的技能樹。職業特性相剋:🔮法穿戰、✨牧抗法、🗡俠擾牧、🛡戰壁俠。</div>'
+    + '<div class="inline-form" style="justify-content:center">'
+    + '<select id="arA">'+opts+'</select>'
+    + '<b style="font-size:20px">VS</b>'
+    + '<select id="arB">'+opts+'</select></div>'
+    + '<div style="margin:10px 0"><label class="mini"><input type="checkbox" id="arFriendly"> 友誼賽(無獎懲;預設:勝 +20XP 並奪對方 30~50 金,敗 +10XP)</label></div>'
+    + '<button class="btn gold" id="arStart" style="padding:12px 30px;font-size:16px">🏟 開始決鬥!</button></div>'
+    + garenaSetupHtml();
+}
+function garenaSetupHtml(){
+  if(!CLOUD.on()) return '<div class="panel"><h3>👥 團體競技場</h3>'
+    + '<div class="mini" style="margin-bottom:8px">正式對戰需要雲端班級(學生用手機遙控)。單機可先用 <b>🤖 AI 演練</b> 觀摩整場流程(佈陣→移動→技能→大招→MVP)。</div>'
+    + garenaPickBoxes()
+    + '<button class="btn gold" id="gaStartAi">🤖 AI 演練(單機觀戰)</button></div>'
+    + siegeSetupHtml() + castleAdminHtml();
+  return '<div class="panel"><h3>👥 團體競技場(學生手機遙控)</h3>'
+    + '<div class="mini" style="margin-bottom:8px">勾選兩隊成員後開戰。學生在自己手機上會出現遙控器:移動+攻擊(武器射程:近戰1格/長柄2格/弓杖3格)+職業技+大招(Lv5)。180秒或全滅分勝負,勝隊+20XP敗隊+10XP。</div>'
+    + garenaPickBoxes()
+    + '<button class="btn gold" id="gaStart" style="padding:10px 26px;font-size:15px">⚔️ 開始團體戰!</button> '
+    + '<button class="btn" id="gaStartAi">🤖 AI 演練(觀戰示範)</button></div>'
+    + siegeSetupHtml() + castleAdminHtml();
+}
+/* ── 🏰 公會戰(每週五;組長持攻城卷帶隊參戰)── */
+function siegeOpenToday(){
+  const today = new Date().toLocaleDateString("sv");
+  return state.siege.testMode || new Date().getDay()===5 || state.siege.forceDate===today;
+}
+function siegeEntriesToday(){
+  const today = new Date().toLocaleDateString("sv");
+  state.siege.entries = (state.siege.entries||[]).filter(e=>e.date===today);   // 只留今日報名
+  return state.siege.entries;
+}
+/* 🏰 城堡商店管理(教師)+ 道具卡使用審查 */
+function castleAdminHtml(){
+  const rows = state.castleShopItems.map((it,i)=>
+    '<div class="inline-form" style="margin-bottom:6px">'
+    + '<input type="text" value="'+esc(it.icon)+'" data-csi="'+i+'" style="width:46px" title="圖示">'
+    + '<input type="text" value="'+esc(it.name)+'" data-csn="'+i+'" style="width:100px" title="名稱">'
+    + '<input type="text" value="'+esc(it.desc)+'" data-csd="'+i+'" style="flex:1;min-width:150px" title="說明">'
+    + '<input type="number" value="'+it.price+'" data-csp="'+i+'" min="1" style="width:64px" title="鑽石價">💎'
+    + '<button class="btn danger" data-csdel="'+i+'">✕</button></div>').join("");
+  const logs = (state.realItemLog||[]).slice(-15).reverse().map(lg=>
+    '<tr'+(lg.done?' style="opacity:.5"':'')+'><td class="mini num">'+esc(lg.t)+'</td>'
+    + '<td>'+esc(lg.itemName)+'</td><td>'+esc(lg.byName)+' → <b>'+esc(lg.forName)+'</b></td>'
+    + '<td>'+(lg.done?'<span class="mini">已執行</span>':'<button class="btn gold" data-csdone="'+lg.id+'" style="padding:2px 10px;font-size:12px">✓ 執行</button>')+'</td></tr>').join("")
+    || '<tr><td colspan="4" class="mini">還沒有使用紀錄</td></tr>';
+  return '<div class="panel"><h3>🏰 城堡商店管理(組長用💎兌換現實特權)</h3>'
+    + '<div class="mini" style="margin-bottom:8px">組員獲得 XP 時組長自動得鑽石(名冊可設每位學生的倍率 ×1~×3,指導越需要幫助的同學回報越高)。城主組組長可在自己頁面的「🏰 城堡商店」消費。</div>'
+    + '<div style="text-align:left">'+rows+'</div>'
+    + '<button class="btn" id="csAdd">➕ 新增道具卡</button>'
+    + '<button class="btn gold" id="csSave">儲存商店設定</button>'
+    + '<h3 style="margin-top:14px">🎟 道具卡使用紀錄(最近 15 筆)</h3>'
+    + '<div style="max-height:30vh;overflow:auto"><table><thead><tr><th>時間</th><th>道具</th><th>使用</th><th></th></tr></thead><tbody>'+logs+'</tbody></table></div></div>';
+}
+/* 🏆 積分循環賽:每隊互打,勝3平1敗0,冠軍佔城 */
+function tourStart(groups){
+  const matches = [];
+  for(let i=0;i<groups.length;i++) for(let j=i+1;j<groups.length;j++)
+    matches.push({red:groups[i], blue:groups[j], done:false, result:""});
+  const scores = {};
+  groups.forEach(g=>{ scores[g] = {pts:0, w:0, d:0, l:0}; });
+  state.siege.tournament = { teams:groups.slice(), matches, scores };
+}
+function tourRecord(red, blue, winTeam){                    // 單場結果回寫
+  const t = state.siege.tournament; if(!t) return;
+  const m = t.matches.find(x=>!x.done && x.red===red && x.blue===blue); if(!m) return;
+  m.done = true;
+  if(winTeam==="draw"){ m.result="平手"; t.scores[red].pts++; t.scores[blue].pts++; t.scores[red].d++; t.scores[blue].d++; }
+  else{
+    const w = winTeam==="red" ? red : blue, l = winTeam==="red" ? blue : red;
+    m.result = w+" 勝";
+    t.scores[w].pts += 3; t.scores[w].w++; t.scores[l].l++;
+  }
+  if(t.matches.every(x=>x.done)) tourFinish();
+}
+function tourRank(){
+  const t = state.siege.tournament; if(!t) return [];
+  return t.teams.slice().sort((a,b)=>
+    t.scores[b].pts - t.scores[a].pts || t.scores[b].w - t.scores[a].w || t.teams.indexOf(a) - t.teams.indexOf(b));
+}
+function tourFinish(){                                      // 完賽:冠軍佔城+攻城卷結算
+  const t = state.siege.tournament; if(!t) return;
+  const champ = tourRank()[0];
+  t.teams.forEach(g=>{                                      // 每隊組長耗一張攻城卷
+    const ld = stu(state.groupLeaders[g]);
+    if(ld && ld.consumables && ld.consumables[31]>0){ ld.consumables[31]--; addLog(ld.id, "🎫 攻城卷已於循環賽完賽時消耗"); }
+  });
+  const prev = state.castle.owner;
+  state.castle.owner = champ;
+  state.castle.since = new Date().toLocaleDateString("sv");
+  addLog("-", "🏆 積分循環賽結束!"+champ+" 組"+(prev===champ?"守住了":"登上冠軍,佔領")+"榮耀之城!");
+  state.siege.entries = [];
+  state.siege.tournament = null;
+  setTimeout(()=>{ levelUpFx("🏆 "+champ+" 組奪冠,佔領榮耀之城!"); sfx("goal"); }, 2600);
+  save();
+}
+function siegeSetupHtml(){
+  const offline = !CLOUD.on();
+  const today = new Date().toLocaleDateString("sv");
+  if(!siegeOpenToday()){
+    return '<div class="panel"><h3>🏰 公會戰(攻城)</h3>'
+      + '<div class="mini">每週五開啟。各組組長需先到商店購買「攻城卷」(💰500)才能帶隊報名。</div>'
+      + '<div class="inline-form" style="margin-top:8px">'
+      + '<button class="btn gold" id="siegeForce">🔓 立即開啟(僅今日)</button>'
+      + '<label class="mini"><input type="checkbox" id="siegeTest"'+(state.siege.testMode?" checked":"")+'> 測試模式:每天都開放</label>'
+      + '</div></div>';
+  }
+  const entries = siegeEntriesToday();
+  const rows = state.groups.map(g=>{
+    const lid = state.groupLeaders[g];
+    const leader = lid ? stu(lid) : null;
+    const nMem = state.students.filter(x=>x.group===g).length;
+    const hasTicket = leader && ((leader.consumables||{})[31]||0) > 0;
+    const entered = entries.some(e=>e.group===g);
+    let action;
+    if(entered) action = '<span class="tag" style="background:var(--gold)">✅ 已報名</span>';
+    else if(!leader) action = '<span class="mini">尚未指定組長</span>';
+    else if(!hasTicket) action = '<span class="mini">組長 '+esc(leader.name)+' 沒有攻城卷</span>';
+    else action = '<button class="btn gold" data-siegejoin="'+esc(g)+'">🎫 用攻城卷報名('+esc(leader.name)+')</button>';
+    return '<div class="group-manage-row"><span class="gm-name">'+esc(g)+' 組('+nMem+' 人)'+(leader?' 👑'+esc(leader.name):'')+'</span>'+action+'</div>';
+  }).join("");
+  const ent = entries.map(e=>e.group);
+  const opts = (sel)=> ent.map(g=>'<option value="'+esc(g)+'">'+esc(g)+' 組</option>').join("");
+  const c = state.castle;
+  let castleInfo;
+  if(c && c.owner){
+    const days = Math.max(1, Math.round((Date.now() - new Date(c.since).getTime())/86400000) + 1);
+    castleInfo = '<div style="background:linear-gradient(135deg,#fff6d8,#ffe9a8);border:3px solid #141414;border-radius:10px;padding:10px;margin-bottom:10px;text-align:center">'
+      + '<div style="font-size:26px">👑🏰</div><b>榮耀之城・現任城主:'+esc(c.owner)+' 組</b>'
+      + '<div class="mini">佔領第 '+days+' 天・每日稅收全組 +15 金・擊敗城主組即可易主!</div></div>';
+  }else{
+    castleInfo = '<div class="mini" style="margin-bottom:8px">👑 榮耀之城目前<b>無人佔領</b>——本次公會戰的勝者將成為首任城主(每日稅收 +15 金/人)!</div>';
+  }
+  const tour = state.siege.tournament;
+  if(tour){                                                  // 🏆 循環賽進行中:賽程+積分榜
+    const rank = tourRank();
+    const board = rank.map((g,i)=>{
+      const sc = tour.scores[g];
+      return '<tr'+(i===0?' style="background:#fff3c9;font-weight:900"':'')+'><td>'+(i+1)+'</td><td>'+esc(g)+' 組</td>'
+        + '<td class="num">'+sc.pts+'</td><td class="num">'+sc.w+'</td><td class="num">'+sc.d+'</td><td class="num">'+sc.l+'</td></tr>';
+    }).join("");
+    const ms = tour.matches.map((m,i)=>
+      '<div class="group-manage-row"><span class="gm-name">第'+(i+1)+'戰:🔴'+esc(m.red)+' vs 🔵'+esc(m.blue)+'</span>'
+      + (m.done ? '<span class="tag" style="background:var(--gold)">'+esc(m.result)+'</span>'
+                : '<button class="btn gold" data-tourgo="'+i+'">⚔️ 開打</button>')+'</div>').join("");
+    return '<div class="panel"><h3>🏆 公會戰・積分循環賽進行中</h3>'
+      + castleInfo
+      + '<div class="mini" style="margin-bottom:8px">勝 3 分・平 1 分・敗 0 分。全部打完,<b>積分最高者佔領榮耀之城</b>(同分比勝場)。每場照發公會戰獎勵,攻城卷完賽時才消耗。</div>'
+      + '<div class="group-manage-list">'+ms+'</div>'
+      + '<h3 style="margin-top:12px">積分榜</h3>'
+      + '<table><thead><tr><th>#</th><th>隊伍</th><th>積分</th><th>勝</th><th>平</th><th>敗</th></tr></thead><tbody>'+board+'</tbody></table>'
+      + '<button class="btn danger" id="tourAbort" style="margin-top:8px">🛑 中止賽事(不佔城不耗卷)</button></div>';
+  }
+  return '<div class="panel"><h3>🏰 公會戰(攻城)・今日開戰!'
+    + ' <label class="mini" style="font-weight:400;margin-left:8px"><input type="checkbox" id="siegeTest"'+(state.siege.testMode?" checked":"")+'> 測試模式(每日開放)</label></h3>'
+    + castleInfo
+    + '<div class="mini" style="margin-bottom:8px">組長持攻城卷報名 → 兩組單場對決,或<b>三組以上積分循環賽</b>(全組入場,'+(offline?'<b>離線模式:AI 自動代打</b>':'學生手機遙控')+')。<b>公會戰加碼:勝組全員 +30XP +30金、敗組 +15XP。</b></div>'
+    + '<div class="group-manage-list">'+rows+'</div>'
+    + (ent.length>=2
+       ? '<div class="inline-form" style="margin-top:10px">🔴<select id="siegeRed">'+opts()+'</select> vs 🔵<select id="siegeBlue">'+opts()+'</select>'
+         + '<button class="btn gold" id="siegeStart">🏰 單場開戰</button>'
+         + (ent.length>=3 ? '<button class="btn gold" id="tourStart" style="margin-left:8px">🏆 積分循環賽('+ent.length+' 隊 '+(ent.length*(ent.length-1)/2)+' 場)</button>' : '')
+         + '</div>'
+       : '<div class="mini" style="margin-top:8px">至少兩組報名後可開戰(已報名 '+ent.length+' 組)</div>')
+    + '</div>';
+}
+function garenaPickBoxes(){
+  const box = (team,color)=> state.students.map(x=>
+    '<label style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:2px solid '+color+';border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px;font-weight:700">'
+    + '<input type="checkbox" class="gaPick" data-team="'+team+'" value="'+x.id+'"> '+esc(x.name)+' <span class="mini">Lv'+x.level+'</span></label>').join(" ");
+  return '<div style="margin-bottom:6px"><b style="color:#c0392b">🔴 紅隊:</b></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+box("red","#c0392b")+'</div>'
+    + '<div style="margin-bottom:6px"><b style="color:#2b6cb0">🔵 藍隊:</b></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+box("blue","#2b6cb0")+'</div>';
+}
+function garenaBattleHtml(){
+  const cells = GARENA.W * GARENA.H;
+  const fs = Object.values(GARENA.fighters);
+  GARENA.cell = GARENA.W > 16 ? 34 : (GARENA.W > 14 ? 40 : 46);   // 寬場地縮小格子
+  const fhtml = fs.map(f=>{
+    const st = stu(f.sid); if(!st) return "";
+    const C = GARENA.cell||46;
+    return '<div class="ga-fighter'+(f.ko?" ga-ko":"")+'" data-gfighter="'+f.sid+'" style="left:'+(f.x*C+3)+'px;top:'+(f.y*C+3)+'px;width:'+(C-6)+'px">'
+      + '<div class="ga-hp"><i style="width:'+(f.hp/f.max*100)+'%;background:'+(f.team==="red"?"#e05252":"#5285e0")+'"></i></div>'
+      + dollSVG(st, C-8)
+      + '<div class="ga-nm" style="color:'+(f.team==="red"?"#c0392b":"#2b6cb0")+'">'+esc(st.name)+'</div></div>';
+  }).join("");
+  return '<div class="arena-stage" style="position:relative">'
+    + '<div id="gaWinner" class="ar-winner" style="display:none"></div>'
+    + '<div style="text-align:center;margin-bottom:8px">'
+    + '<span style="color:#c0392b;font-weight:900;font-size:18px">🔴 <span id="gaAliveR">'+Object.values(GARENA.fighters).filter(f=>f.team==="red"&&!f.ko).length+'</span></span>'
+    + ' <span class="mini">存活</span> '
+    + '<b style="font-size:16px">VS</b> '
+    + '<span style="color:#2b6cb0;font-weight:900;font-size:18px"><span id="gaAliveB">'+Object.values(GARENA.fighters).filter(f=>f.team==="blue"&&!f.ko).length+'</span> 🔵</span>'
+    + ' <span class="mini">・剩餘 <span id="gaTime" class="num">'+GARENA.DURATION+'</span> 秒</span></div>'
+    + '<div class="ga-field" id="gaField" style="width:'+(GARENA.W*(GARENA.cell||46))+'px;height:'+(GARENA.H*(GARENA.cell||46))+'px">'
+    + fhtml + '</div>'
+    + '<div id="gaLog" class="ar-log"></div>'
+    + (GARENA.over && GARENA.mvp ? garenaMvpHtml() : "")
+    + '<div style="text-align:center;margin-top:8px">'
+    + (GARENA.over ? "" : '<button class="btn" id="gaPause">'+(GARENA.paused?"▶ 繼續":"⏸ 暫停")+'</button> ')
+    + '<button class="btn danger" id="gaQuit">'+(GARENA.over?"關閉":"結束離場")+'</button></div></div>';
+}
+/* tick 局部更新(不整頁重繪) */
+function garenaRenderField(){
+  const fs = Object.values(GARENA.fighters);
+  for(const f of fs){
+    const el = document.querySelector('[data-gfighter="'+f.sid+'"]');
+    if(!el) continue;
+    const C = GARENA.cell||46; el.style.left = (f.x*C+3)+"px"; el.style.top = (f.y*C+3)+"px";
+    const bar = el.querySelector(".ga-hp i");
+    if(bar) bar.style.width = (f.hp/f.max*100)+"%";
+    el.classList.toggle("ga-ko", !!f.ko);
+    el.style.opacity = f.stealth>0 ? .35 : "";               // 🌫 隱身半透明(大屏仍隱約可見)
+    el.style.outline = f.tauntT>0 ? "3px dashed #f5731f" : "";   // 📣 被嘲諷橘框
+  }
+  const t = document.getElementById("gaTime");
+  if(t) t.textContent = Math.max(0, Math.ceil(GARENA.DURATION - (Date.now()-GARENA.startTs)/1000));
+  const ar = document.getElementById("gaAliveR"), ab = document.getElementById("gaAliveB");
+  if(ar) ar.textContent = fs.filter(f=>f.team==="red"&&!f.ko).length;
+  if(ab) ab.textContent = fs.filter(f=>f.team==="blue"&&!f.ko).length;
+}
+function arenaBattleHtml(){
+  const A = stu(ARENA.a), B = stu(ARENA.b);
+  return '<div class="arena-stage">'
+    + '<div id="arWinner" class="ar-winner" style="display:none"></div>'
+    + '<div class="ar-row">'
+    + '<div class="ar-side"><div class="ar-name">'+esc(A.name)+' <span class="mini num">Lv.'+A.level+'</span></div>'
+    + '<div class="ar-hpbar"><i id="hpA" style="width:100%"></i></div><div class="mini num" id="hpAt">'+ARENA.hpA+'/'+ARENA.maxA+'</div></div>'
+    + '<div class="ar-vs">VS</div>'
+    + '<div class="ar-side"><div class="ar-name">'+esc(B.name)+' <span class="mini num">Lv.'+B.level+'</span></div>'
+    + '<div class="ar-hpbar"><i id="hpB" style="width:100%"></i></div><div class="mini num" id="hpBt">'+ARENA.hpB+'/'+ARENA.maxB+'</div></div>'
+    + '</div>'
+    + '<div class="ar-field">'
+    + '<div class="ar-fighter">'
+    + '<div class="ar-doll" id="dollA">'+dollSVG(A,150)+'</div>'
+    + '<div class="ar-gauge"><i id="gaugeA" style="width:0%"></i></div>'
+    + '<div class="ar-glabel">⚡ 行動</div>'
+    + '</div>'
+    + '<div class="ar-fighter">'
+    + '<div class="ar-doll ar-flip" id="dollB">'+dollSVG(B,150)+'</div>'
+    + '<div class="ar-gauge"><i id="gaugeB" style="width:0%"></i></div>'
+    + '<div class="ar-glabel">⚡ 行動</div>'
+    + '</div>'
+    + '</div>'
+    + '<div id="arLog" class="ar-log"></div>'
+    + '<div style="text-align:center;margin-top:10px">'
+    + '<button class="btn" id="arPause">'+(ARENA.timer?"⏸ 暫停":"▶ 繼續")+'</button> '
+    + '<button class="btn" id="arSpeed">⏩ 速度 x'+ARENA.speed+'</button> '
+    + '<button class="btn danger" id="arQuit">結束離場</button></div>'
+    + '</div>';
+}
+function teacherTitles(){
+  const stuOpts = state.students.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");
+  const effOpts = [
+    ["atk3","⚔ ATK +3"],["def3","🛡 DEF +3"],["agi3","💨 AGI +3"],["int3","🔮 INT +3"],
+    ["hp20","❤️ HP 上限 +20"],["xp10","✨ XP +10%"],["gold10","💰 金幣 +10%"],
+    ["all1","👑 全屬性 +1"],["off10","🏷 商店 9 折"],["none","(無效果,純榮譽)"]
+  ].map(([k,n])=>'<option value="'+k+'">'+n+'</option>').join("");
+  const rows = TITLE_DEFS.map(t=>
+    '<tr><td><b>【'+esc(t.name)+'】</b></td><td>'+esc(t.fx)+'</td><td class="mini">'+esc(t.hint)+'</td>'
+    + '<td><select data-grantsel="'+esc(t.name)+'" style="max-width:110px">'+stuOpts+'</select> '
+    + '<button class="btn gold" data-grant="'+esc(t.name)+'">頒發</button></td></tr>').join("");
+  const customRows = (state.customTitleDefs||[]).map((t,i)=>
+    '<tr><td><b>【'+esc(t.name)+'】</b></td><td>'+esc(t.fx||"—")+'</td><td class="mini">自訂</td>'
+    + '<td><select data-grantsel="'+esc(t.name)+'" style="max-width:110px">'+stuOpts+'</select> '
+    + '<button class="btn gold" data-grant="'+esc(t.name)+'">頒發</button> '
+    + '<button class="btn danger" data-tddel="'+i+'">刪除</button></td></tr>').join("");
+  const ownedRows = state.students.filter(x=>ownedTitles(x).length).map(x=>
+    '<tr><td>'+esc(x.name)+'</td><td>'+ownedTitles(x).map(t=>
+      '<span class="badge">【'+esc(t)+'】'+(x.title===t?" ✓配戴中":"")
+      + ' <a href="#" data-revoke="'+x.id+'|'+esc(t)+'" style="color:#c0392b;text-decoration:none">✕</a></span>').join(" ")
+    + '</td></tr>').join("") || '<tr><td colspan="2" class="mini">還沒有學生獲得稱號</td></tr>';
+  return '<div class="panel"><h3>🎖 稱號目錄(僅教師可見,學生看不到未獲得的稱號與條件)</h3>'
+    + '<div class="mini" style="margin-bottom:8px">配戴才生效;「建議頒發時機」只是參考,你可以彈性認定。也可在「任務」的獎勵稱號欄綁定,審核通過自動頒發。</div>'
+    + '<table><thead><tr><th>稱號</th><th>隱藏效果</th><th>建議頒發時機</th><th>頒發給</th></tr></thead><tbody>'+rows+customRows+'</tbody></table></div>'
+    + '<div class="panel"><h3>➕ 自訂稱號</h3><div class="inline-form">'
+    + '<input type="text" id="tdName" placeholder="稱號名稱(例:朗讀之星)" style="width:170px">'
+    + '<select id="tdEff">'+effOpts+'</select>'
+    + '<button class="btn gold" id="tdAdd">建立</button></div></div>'
+    + '<div class="panel"><h3>📜 已頒發紀錄(點 ✕ 可撤回)</h3><table><tbody>'+ownedRows+'</tbody></table></div>';
+}
+function teacherRank(){
+  const byXp = [...state.students].sort((a,b)=>(b.totalXp||0)-(a.totalXp||0));
+  const rows = byXp.map((st,i)=>{
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+    return '<tr><td style="width:36px;text-align:center">'+medal+'</td><td>'+dollSVG(st,30)+' '+esc(st.name)
+      + '</td><td class="mini">'+esc(st.group)+' 組</td><td class="num" style="text-align:right">Lv.'+st.level
+      + '</td><td class="num" style="text-align:right">'+(st.totalXp||0)+' XP</td></tr>';
+  }).join("") || '<tr><td class="mini">尚無學生</td></tr>';
+  const gRank = state.groups.map(g=>({g, xp: state.students.filter(x=>x.group===g).reduce((a,x)=>a+(x.totalXp||0),0)}))
+    .sort((a,b)=>b.xp-a.xp)
+    .map((r,i)=>'<tr><td style="width:36px;text-align:center">'+(i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1))+'</td><td>'+esc(r.g)+' 組</td><td class="num" style="text-align:right">'+r.xp+' XP</td></tr>').join("");
+  const world = (CLOUD.on()
+    ? '<div class="panel"><h3>🌍 世界排行榜</h3>'
+      + (state.lbOptIn
+        ? '<div class="mini" style="margin-bottom:8px">本班參加中(暱稱:'+esc(state.lbName||"")+')</div>'
+        : '<div class="mini" style="margin-bottom:8px">尚未參加——到「名冊管理」開啟並取暱稱,全班一起跟其他班級較勁!</div>')
+      + '<button class="btn gold" id="tRankWorld">看世界排行榜</button></div>'
+    : '<div class="panel"><h3>🌍 世界排行榜</h3><div class="mini">需要登入雲端班級才能使用。</div></div>');
+  return '<div class="rank-grid">'
+    + '<div class="panel"><h3>🏆 個人排行</h3><table><tbody>'+rows+'</tbody></table></div>'
+    + '<div class="panel"><h3>⚔️ 小組排行</h3><table><tbody>'+gRank+'</tbody></table></div>'
+    + world
+    + '</div>';
 }
 function bossBanner(){
   const b = state.boss; if(!b) return "";
@@ -2994,6 +4531,31 @@ function bossBanner(){
     + '<button class="btn" id="bsRestBoard">全員休息</button></div>'
     + '</div>';
 }
+/* 每日閘門進度列(大屏頂部) */
+function progBannerHtml(){
+  const pg = progCheck();
+  const pct = Math.min(100, Math.round(pg.exploreXp / Math.max(1,pg.exploreGoal) * 100));
+  const stages = [
+    pg.stage===0 ? '🗺 <b>探索中</b>' : '🗺 ✅',
+    pg.stage===0 ? '<span style="opacity:.4">⚔️ 魔王</span>' : (pg.stage===1 ? '⚔️ <b>魔王討伐中</b>' : '⚔️ ✅'),
+    pg.stage<2 ? '<span style="opacity:.4">🏟 競技場</span>' : '🏟 <b>已開放</b>'
+  ];
+  const castleTag = state.castle && state.castle.owner
+    ? '<span style="background:linear-gradient(135deg,#f5c518,#e2a500);border:2px solid #141414;border-radius:8px;padding:2px 10px;font-weight:900;font-size:13px">👑 榮耀之城・'+esc(state.castle.owner)+' 組</span>'
+    : '<span class="mini" style="opacity:.6">👑 榮耀之城・無人佔領</span>';
+  return '<div class="panel" style="padding:8px 14px;margin-bottom:10px">'
+    + '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+    + '<b class="mini">今日冒險</b>'
+    + '<span style="font-size:14px">'+stages.join(' <span style="opacity:.35">→</span> ')+'</span>'
+    + (pg.stage===0
+       ? '<span style="flex:1;min-width:120px;height:12px;background:#eee;border:2px solid #141414;border-radius:6px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--gold)"></i></span>'
+         + '<span class="num mini">'+pg.exploreXp+' / '+pg.exploreGoal+' XP</span>'
+         + '<a href="#" id="progGoalEdit" class="mini" style="color:#888">⚙</a>'
+       : '')
+    + (pg.stage<2 ? ' <button class="btn" id="progUnlock" style="padding:2px 10px;font-size:12px">🔓 教師直接解鎖</button>' : '')
+    + '<span class="hsp"></span>' + castleTag
+    + '</div></div>';
+}
 function castingBanner(){
   const b = state.boss;
   if(!b || !b.casting) return "";
@@ -3004,17 +4566,18 @@ function teacherBoard(){
   const walls = state.groups.map(gn=>{
     const members = state.students.filter(s=>s.group===gn);
     const mm = members.map(s=>{
-      const bd = s.achievements.slice(0,3).map(id=>{const a=ACHIEVEMENTS.find(x=>x.id===id); return a?a.icon:"";}).join("");
+      const bd = s.title ? "【"+esc(s.title)+"】" : "";
       const effMax = s.maxHp + skillMaxHpBonus(s);
       const hpPct = Math.max(0, Math.round(s.currentHp/effMax*100));
       const down = s.currentHp<=0;
       const hpColor = hpPct>50?"#5cc47a":hpPct>25?"#f0b429":"#e05252";
-      return '<button class="member'+(down?" downed":"")+'" data-award="'+s.id+'" data-charwall="'+s.id+'">'
+      const picked = view.multiSel && view.multiSel.includes(s.id);
+      return '<button class="member'+(down?" downed":"")+(picked?" msel":"")+'" data-award="'+s.id+'" data-charwall="'+s.id+'">'
+        + (picked?'<span class="msel-badge">✓</span>':'')
         + '<span'+(down?' style="filter:grayscale(1) brightness(.6)"':'')+'>'+dollSVG(s, 60)+'</span>'
-        + '<span class="mname">'+esc(s.name)+(down?' 💀':'')+'</span>'
+        + '<span class="mname"><span class="mlv-in num">Lv.'+s.level+'</span> '+esc(s.name)+(down?' 💀':'')+'</span>'
         + '<div style="width:52px;height:6px;background:#2a3350;border-radius:3px;overflow:hidden;margin:2px auto"><i style="display:block;height:100%;width:'+hpPct+'%;background:'+hpColor+'"></i></div>'
-        + '<span class="mlv num">Lv.'+s.level+'</span>'
-        + '<span class="mbadges">'+bd+'</span></button>';
+        + (bd?'<span class="mtitle">'+bd+'</span>':'')+'</button>';
     }).join("") || '<div class="mini" style="grid-column:1/-1">尚無成員——到名冊管理加入學生</div>';
     return '<div class="group-card">'
       + '<div class="group-head"><span class="gname">'+esc(gn)+' 組</span>'
@@ -3022,14 +4585,15 @@ function teacherBoard(){
       + '<button class="gaward" data-gaward="'+esc(gn)+'">整組 +10 XP</button></div>'
       + '<div class="member-grid">'+mm+'</div></div>';
   }).join("");
-  return castingBanner()
+  return progBannerHtml() + castingBanner()
     + '<div class="group-wall">'+walls+'</div>'
     + floatConsole(toolbar);
 }
 /* ── 浮動控制台:可拖曳,收合成圓鈕仍可拖 ── */
 function floatConsole(toolbar){
-  const g = state.classGoal;
-  const pct = Math.min(100, Math.round(g.progress/g.target*100));
+  const pg = progCheck();
+  const pct = Math.min(100, Math.round(pg.exploreXp/Math.max(1,pg.exploreGoal)*100));
+  const stageTxt = pg.stage===0 ? "🗺 探索" : (pg.stage===1 ? "⚔️ 魔王" : "🏟 競技場");
   const b = state.boss;
   let bossCtl = "";
   if(b){
@@ -3057,15 +4621,58 @@ function floatConsole(toolbar){
     + '<div class="fc-bar" id="fcDrag"><span class="fc-title">🎮 老師控制台</span>'
     + '<button class="fc-min" id="fcMin" title="收合">—</button></div>'
     + '<div class="fc-body">'
-    + '<div class="fc-goal">🏆 班級目標 <b class="num">'+g.progress+'/'+g.target+'</b>('+pct+'%)'
-    + '<button class="btn" id="goalEdit" style="margin-left:6px;padding:2px 10px">設定</button></div>'
+    + '<div class="fc-goal">'+stageTxt+' <b class="num">'+(pg.stage===0 ? pg.exploreXp+'/'+pg.exploreGoal+'('+pct+'%)' : (pg.stage===1?'討伐中':'已開放'))+'</b>'
+    + (pg.stage===0 ? '<button class="btn" id="goalEdit" style="margin-left:6px;padding:2px 10px">設定</button>' : '')+'</div>'
     + bossCtl
     + '<div class="fc-btns" style="margin-top:8px">'
     + '<button class="btn'+(view.locked?" gold":"")+'" id="btnLock">'+(view.locked?"🔒 投影中":"🔓 投影模式")+'</button>'
+    + '<button class="btn'+(view.multiSel?" gold":"")+'" id="btnMulti">'+(view.multiSel?"☑ 已選 "+view.multiSel.length+" 人(點角色勾選)":"☑ 批次加分")+'</button>'
+    + (CLOUD.on() ? '<button class="btn" id="btnQr">📱 登入 QR</button>' : "")
+    + (view.multiSel && view.multiSel.length ? '<button class="btn gold" id="btnMultiGo">💰 發獎勵給 '+view.multiSel.length+' 人</button>' : "")
     + (pendingSubs().length?'<span class="stat-chip">📌 待審 '+pendingSubs().length+'</span>':"")
     + '</div></div>'
     + '<button id="fcBubble" class="fc-bubble" title="展開控制台">🎮</button>'
     + '</div>';
+}
+/* ── 平時成績結算(#7):XP快照差值 → 線性換算 → CSV ── */
+function gradeCalc(){
+  const ti = state.termInfo;
+  return state.students.map(st=>{
+    const earned = Math.max(0, (st.totalXp||0) - (st.termStartXp||0));
+    const raw = ti.minScore + (earned / Math.max(1, ti.target)) * (ti.maxScore - ti.minScore);
+    const score = Math.round(Math.min(ti.maxScore, Math.max(ti.minScore, raw)));
+    return { sno: st.sno||st.seat||"", name: st.name, earned, score };
+  }).sort((a,b)=> (parseInt(a.sno)||999) - (parseInt(b.sno)||999));
+}
+function gradePanelHtml(){
+  const ti = state.termInfo;
+  const rows = view.gradePreview ? gradeCalc().map(r=>
+    '<tr><td class="num">'+esc(String(r.sno))+'</td><td>'+esc(r.name)+'</td><td class="num">'+r.earned+'</td><td class="num" style="font-weight:900">'+r.score+'</td></tr>').join("") : "";
+  return '<div class="panel"><h3>📊 平時成績結算</h3>'
+    + '<div class="mini" style="margin-bottom:8px">結算「計分週期」內獲得的 XP,線性換算成平時成績。'
+    + (ti.startDate ? '目前週期自 <b>'+esc(ti.startDate)+'</b> 開始。' : '<b style="color:#c0392b">尚未開始週期(將以開班至今全部 XP 計算)。</b>')
+    + '</div>'
+    + '<div class="inline-form" style="margin-bottom:8px">'
+    + '<button class="btn" id="gTermStart">🔄 開始新計分週期</button>'
+    + '<label class="mini">滿分所需XP <input type="number" id="gTarget" value="'+ti.target+'" min="50" style="width:70px"></label>'
+    + '<label class="mini">最低 <input type="number" id="gMin" value="'+ti.minScore+'" min="0" max="100" style="width:56px"></label>'
+    + '<label class="mini">最高 <input type="number" id="gMax" value="'+ti.maxScore+'" min="0" max="100" style="width:56px"></label>'
+    + '<button class="btn gold" id="gPreview">計算預覽</button>'
+    + (view.gradePreview ? '<button class="btn gold" id="gCsv">⬇ 匯出 CSV</button>' : "")
+    + '</div>'
+    + (view.gradePreview ? '<div style="max-height:40vh;overflow:auto"><table><thead><tr><th>座號</th><th>姓名</th><th>週期XP</th><th>平時成績</th></tr></thead><tbody>'+rows+'</tbody></table></div>' : "")
+    + '</div>';
+}
+function gradeCsvDownload(){
+  const rows = gradeCalc();
+  const csv = "\uFEFF座號,姓名,週期獲得XP,平時成績\n"
+    + rows.map(r=> r.sno+","+r.name.replace(/,/g,"、")+","+r.earned+","+r.score).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "平時成績_"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("已匯出 "+rows.length+" 筆成績");
 }
 function teacherRoster(){
   const gOpts = state.groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join("");
@@ -3074,11 +4681,14 @@ function teacherRoster(){
     const gSel = state.groups.map(g=>'<option value="'+esc(g)+'" '+(s.group===g?"selected":"")+'>'+esc(g)+'</option>').join("");
     return '<tr><td>'+dollSVG(s,34)+'</td>'
       + '<td><b>'+esc(s.name)+'</b><div class="mini num">'+JOB_INFO[s.job].name+'</div>'
-      + '<div class="mini">座<input type="text" data-seat="'+s.id+'" value="'+esc(String(s.seat||""))+'" style="width:40px;padding:2px 4px"> '
+      + '<div class="mini">學號<input type="text" data-sno="'+s.id+'" value="'+esc(String(s.sno||""))+'" placeholder="唯一" style="width:70px;padding:2px 4px"> 座<input type="text" data-seat="'+s.id+'" value="'+esc(String(s.seat||""))+'" style="width:40px;padding:2px 4px"> '
       + '生日<input type="text" data-birth="'+s.id+'" value="'+esc(String(s.birth||""))+'" placeholder="20130215" style="width:90px;padding:2px 4px"></div>'
       + '<div class="mini">📧<input type="text" data-email="'+s.id+'" value="'+esc(s.email||"")+'" placeholder="學生Google信箱" style="width:170px;padding:2px 4px"></div></td>'
       + '<td class="num">Lv.'+s.level+'<div class="mini num">'+s.gold+' 金・SP '+s.spPoints+'</div></td>'
-      + '<td><select data-gchange="'+s.id+'">'+gSel+'</select></td>'
+      + '<td><select data-gchange="'+s.id+'">'+gSel+'</select>'
+      + '<select data-mentor="'+s.id+'" title="組員獲得XP時,組長得到的鑽石數(鼓勵指導)" style="margin-top:4px">'
+      + [[1,"💎×1 標準"],[2,"💎×2 加倍"],[3,"💎×3 三倍"]].map(m=>'<option value="'+m[0]+'"'+((s.mentorTier||1)===m[0]?" selected":"")+'>'+m[1]+'</option>').join("")
+      + '</select></td>'
       + '<td><button class="btn" data-skreset="'+s.id+'" title="退還此生SP">洗技</button> <button class="btn danger" data-del="'+s.id+'">移除</button></td></tr>';
   }).join("");
   const twl = (state.teacherEmails||[]).map((em,i)=>
@@ -3096,14 +4706,31 @@ function teacherRoster(){
     + '<table><thead><tr><th></th><th>姓名</th><th>等級</th><th>分組</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'
     + '<div class="inline-form" style="margin-top:12px">'
     + '<input type="text" id="nsName" placeholder="新學生姓名" style="width:130px">'
+    + '<input type="text" id="nsSno" placeholder="學號" style="width:90px">'
     + '<select id="nsJob">'+jOpts+'</select>'
     + '<select id="nsGroup">'+gOpts+'</select>'
-    + '<button class="btn gold" id="nsAdd">加入學生</button></div></div>'
+    + '<button class="btn gold" id="nsAdd">加入學生</button></div>'
+    + '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:900;color:#b8860b">📋 批次匯入(一次貼整班)</summary>'
+    + '<div class="mini" style="margin:8px 0">每行一位學生,用<b>逗號或 Tab</b>分隔。可從 Excel 直接複製貼上。支援欄位順序:'
+    + '<br>・<b>座號, 姓名, 信箱</b>(推薦)<br>・座號, 姓名(信箱之後補)<br>・座號, 姓名, 信箱, 生日(8碼,家長查看用)'
+    + '<br>第一行若是標題(含「姓名」「座號」等字)會自動略過。座號會同時當學號。</div>'
+    + '<textarea id="bulkText" rows="6" style="width:100%;font-family:monospace;font-size:13px;padding:8px" placeholder="1,王小明,ming@gmail.com&#10;2,李小華,hua@gmail.com&#10;3,張大同,tong@gmail.com"></textarea>'
+    + '<div class="inline-form" style="margin-top:8px"><select id="bulkJob">'+jOpts+'</select><select id="bulkGroup">'+gOpts+'</select>'
+    + '<button class="btn gold" id="bulkImport">預覽並匯入</button></div>'
+    + '<div id="bulkPreview" class="mini" style="margin-top:8px"></div></details></div>'
+    + gradePanelHtml()
     + '<div class="panel"><h3>分組</h3>'
     + '<div class="group-manage-list">'
-    + state.groups.map(g=>'<div class="group-manage-row">'
-        + '<span class="gm-name">'+esc(g)+' 組('+state.students.filter(s=>s.group===g).length+' 人)</span>'
-        + '<button class="btn danger gm-del" data-gdel="'+esc(g)+'">✕ 刪除</button></div>').join("")
+    + state.groups.map(g=>{
+        const members = state.students.filter(s=>s.group===g);
+        const lid = state.groupLeaders[g] || "";
+        const lSel = '<select data-gleader="'+esc(g)+'"><option value="">— 組長 —</option>'
+          + members.map(m=>'<option value="'+m.id+'"'+(m.id===lid?" selected":"")+'>👑 '+esc(m.name)+'</option>').join("")+'</select>';
+        return '<div class="group-manage-row">'
+        + '<span class="gm-name">'+esc(g)+' 組('+members.length+' 人)</span>'
+        + lSel
+        + '<button class="btn danger gm-del" data-gdel="'+esc(g)+'">✕ 刪除</button></div>';
+      }).join("")
     + '</div>'
     + '<div class="inline-form" style="margin-top:10px">'
     + '<input type="text" id="ngName" placeholder="新組名" style="width:120px">'
@@ -3114,7 +4741,7 @@ function teacherRoster(){
     + '<div class="inline-form" style="margin-top:10px">'
     + '<input type="text" id="twAdd" placeholder="新增教師 Gmail" style="width:200px">'
     + '<button class="btn" id="twAddBtn">加入白名單</button></div>'
-    + '<div class="mini" style="margin-top:6px">學生登入:在上方名冊填入學生的 Google 信箱。家長查看:填座號+生日(8碼)。</div></div>'
+    + '<div class="mini" style="margin-top:6px">學生登入:在上方名冊填入學生的 Google 信箱。家長查看:填學號+生日(8碼),記得幫每位學生填學號。</div></div>'
     + (CLOUD.on() ? '<div class="panel"><h3>🔗 班級連結與世界排行榜</h3>'
       + '<div class="inline-form"><input type="text" id="classLink" readonly value="'+esc(location.origin+location.pathname+"?class="+CLOUD.cid)+'" style="flex:1;font-size:12px">'
       + '<button class="btn gold" id="copyLink">複製連結</button></div>'
@@ -3126,20 +4753,25 @@ function teacherRoster(){
 }
 function teacherTasks(){
   const scopeOpts = ['<option value="all">全班</option>'].concat(
-    state.groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+' 組</option>')).join("");
+    state.groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+' 組</option>')).join("")
+    + '<option value="pick">🎯 指定學生(可勾多人,專屬任務)</option>';
+  const pickBoxes = state.students.map(x=>
+    '<label style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:2px solid #141414;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px;font-weight:700">'
+    + '<input type="checkbox" class="tkPick" value="'+x.id+'"> '+esc(x.name)+'</label>').join(" ");
   const pend = pendingSubs().map(x=>{
     const s = stu(x.sid); const t = taskById(x.taskId);
     if(!s || !t) return "";
     return '<tr><td>'+dollSVG(s,30)+' '+esc(s.name)+'</td>'
-      + '<td>'+esc(t.title)+'<div class="mini num">+'+t.xp+' XP,+'+t.gold+' 金・'+x.t+'</div></td>'
+      + '<td>'+esc(t.title)+(t.tiers?' <b>'+TIER_ICONS[x.tier||0]+TIER_NAMES[x.tier||0]+'</b>':'')
+      + '<div class="mini num">+'+taskReward(t,x.tier||0).xp+' XP,+'+taskReward(t,x.tier||0).gold+' 金・'+x.t+'</div></td>'
       + '<td><button class="btn gold" data-approve="'+t.id+'|'+s.id+'">通過</button> '
       + '<button class="btn danger" data-reject="'+t.id+'|'+s.id+'">退回</button></td></tr>';
   }).join("") || '<tr><td colspan="3" class="mini">目前沒有待審核的回報。</td></tr>';
   const rows = state.tasks.map(t=>{
     const done = state.submissions.filter(x=>x.taskId===t.id && x.status==="approved").length;
     return '<tr '+(t.active?"":'style="opacity:.5"')+'><td><b>'+esc(t.title)+'</b>'
-      + '<div class="mini">'+(t.scope==="all"?"全班":esc(t.scope)+" 組")+'・已完成 '+done+' 人'+(t.active?"":"・已停用")+'</div></td>'
-      + '<td class="num">+'+t.xp+' XP<br>+'+t.gold+' 金</td>'
+      + '<div class="mini">'+(t.scope==="all"?"全班":(t.scope&&t.scope.indexOf("stu:")===0?("🎯 專屬:"+esc(t.scope.slice(4).split(",").map(id=>(stu(id)||{name:"?"}).name).join("、"))):esc(t.scope)+" 組"))+'・已完成 '+done+' 人'+(t.active?"":"・已停用")+'</div></td>'
+      + '<td class="num">'+(t.tiers? t.tiers.map((r,i)=>TIER_ICONS[i]+r.xp+"X/"+r.gold+"金").join("<br>") : '+'+t.xp+' XP<br>+'+t.gold+' 金')+'</td>'
       + '<td><button class="btn" data-ttoggle="'+t.id+'">'+(t.active?"停用":"啟用")+'</button> '
       + '<button class="btn danger" data-tdel="'+t.id+'">刪除</button></td></tr>';
   }).join("") || '<tr><td colspan="3" class="mini">還沒有任務——用下方表單發布第一個。</td></tr>';
@@ -3148,13 +4780,33 @@ function teacherTasks(){
     + '<div class="panel"><h3>任務清單</h3><table><tbody>'+rows+'</tbody></table>'
     + '<div class="inline-form" style="margin-top:12px">'
     + '<input type="text" id="tkTitle" placeholder="任務名稱(例:訂正完數學考卷)" style="flex:1;min-width:170px">'
+    + '<select id="tkTier"><option value="single">單一難度</option><option value="tiered">三層難度(差異化)</option></select>'
     + '<input type="number" id="tkXp" placeholder="XP" min="0" value="20">'
     + '<input type="number" id="tkGold" placeholder="金幣" min="0" value="30">'
+    + '<input type="text" id="tkTitleReward" placeholder="獎勵稱號(選填)" style="width:130px">'
     + '<select id="tkScope">'+scopeOpts+'</select>'
     + '<button class="btn gold" id="tkAdd">發布任務</button></div>'
+    + '<div class="inline-form" id="tierRow" style="display:none;margin-top:8px">'
+    + '<span class="mini">🟢基礎=上方數值・🟡進階:</span>'
+    + '<input type="number" id="tkXp2" placeholder="XP" min="0" value="40" style="width:70px">'
+    + '<input type="number" id="tkGold2" placeholder="金" min="0" value="60" style="width:70px">'
+    + '<span class="mini">🔴挑戰:</span>'
+    + '<input type="number" id="tkXp3" placeholder="XP" min="0" value="60" style="width:70px">'
+    + '<input type="number" id="tkGold3" placeholder="金" min="0" value="90" style="width:70px">'
+    + '<span class="mini">學生自選一層完成</span></div>'
+    + '<div id="pickRow" style="display:none;margin-top:8px"><div class="mini" style="margin-bottom:6px">🎯 勾選要派送的學生(其他人看不到這個任務):'
+    + '<a href="#" id="pickAll" style="margin-left:8px">全選</a> <a href="#" id="pickNone" style="margin-left:6px">清空</a></div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px">'+pickBoxes+'</div></div>'
     + '<div class="mini" style="margin-top:8px">學生在自己的「任務」分頁回報完成,老師在這裡審核通過後才發獎勵;退回的任務學生可以再挑戰。</div></div>';
 }
 function teacherBoss(){
+  const pg = progCheck();
+  if(pg.stage < 1 && !state.boss){                           // 探索未完且無進行中Boss→鎖定
+    return progBannerHtml()
+      + '<div class="panel" style="text-align:center;padding:36px"><div style="font-size:44px">🗺</div>'
+      + '<h3 style="justify-content:center">今日探索尚未完成</h3>'
+      + '<div class="mini">全班累計獲得 <b class="num">'+pg.exploreXp+' / '+pg.exploreGoal+'</b> XP 後,魔王就會現身!<br>(上課表現、任務、批次加分都算探索進度)</div></div>';
+  }
   const b = state.boss;
   if(b && !b.standby) b.standby = {};      // 相容:v29 以前開始的戰鬥沒有此欄位
   if(!b){
@@ -3262,11 +4914,20 @@ function teacherArt(){
     + '<div class="panel"><h3>裝備圖層</h3><table><tbody>'+itemRows+'</tbody></table></div>';
 }
 function teacherLog(){
+  const alog = (state.awardLog||[]).slice(-40).reverse().map(lg=>{
+    const s = stu(lg.sid);
+    return '<tr'+(lg.reverted?' style="opacity:.45;text-decoration:line-through"':'')+'>'
+      + '<td class="mini num">'+esc(lg.t)+'</td><td>'+(s?esc(s.name):"?")+'</td>'
+      + '<td>'+esc(lg.reason)+'</td><td class="num">'+(lg.xp?"+"+lg.xp+"XP ":"")+(lg.gold?"+"+lg.gold+"金":"")+'</td>'
+      + '<td>'+(lg.reverted?'<span class="mini">已撤回</span>':'<button class="btn danger" data-revaward="'+lg.id+'" style="padding:2px 10px;font-size:12px">撤回</button>')+'</td></tr>';
+  }).join("") || '<tr><td colspan="5" class="mini">還沒有加分紀錄</td></tr>';
   const logs = state.log.slice(0,80).map(l=>{
     const s = stu(l.sid);
     return '<li><span class="num">['+l.t+']</span> '+(s?esc(s.name):"")+':'+esc(l.msg)+'</li>';
   }).join("") || '<li>還沒有任何紀錄。</li>';
-  return '<div class="panel"><h3>冒險日誌(最近 80 筆)</h3><ul class="log-list" style="max-height:60vh">'+logs+'</ul></div>';
+  return '<div class="panel"><h3>💰 加分紀錄(最近 40 筆,點錯可撤回)</h3>'
+    + '<div style="max-height:38vh;overflow:auto"><table><thead><tr><th>時間</th><th>學生</th><th>理由</th><th>發放</th><th></th></tr></thead><tbody>'+alog+'</tbody></table></div></div>'
+    + '<div class="panel"><h3>冒險日誌(最近 80 筆)</h3><ul class="log-list" style="max-height:40vh">'+logs+'</ul></div>';
 }
 /* 浮動控制台:拖曳(滑鼠+觸控)、收合成圓鈕(圓鈕也可拖) */
 let _fcPos = null;      // 記住位置
@@ -3335,9 +4996,44 @@ function bindTeacher(){
   app.querySelectorAll("[data-award]").forEach(b=>{
     b.onclick = (ev)=>{
       if(view.locked){ toast("投影模式中,操作已鎖定", true); return; }
+      if(view.multiSel){                                     // 批次模式:點角色=勾選/取消
+        const sid = b.dataset.award;
+        const i = view.multiSel.indexOf(sid);
+        if(i>=0) view.multiSel.splice(i,1); else view.multiSel.push(sid);
+        render(); return;
+      }
       openAwardModal(b.dataset.award, ev);
     };
   });
+  const bq = document.getElementById("btnQr");
+  if(bq) bq.onclick = openQrModal;
+  const pge = document.getElementById("progGoalEdit");
+  if(pge) pge.onclick = (e)=>{
+    e.preventDefault();
+    const pg = progCheck();
+    const v = prompt("設定今日探索目標 XP(全班累計):", pg.exploreGoal);
+    if(v===null) return;
+    const n = Math.max(10, parseInt(v)||0);
+    pg.exploreGoal = n;
+    if(pg.stage===0 && pg.exploreXp >= n){ pg.stage = 1; addLog("-","🗺 探索完成!魔王現身!"); }
+    save(); render(); toast("探索目標:"+n+" XP");
+  };
+  const pgu = document.getElementById("progUnlock");
+  if(pgu) pgu.onclick = ()=>{
+    const pg = progCheck();
+    pg.stage = 2;
+    addLog("-","🔓 老師直接開放了今日競技場");
+    sfx("goal");
+    save(); render(); toast("🔓 已解鎖今日競技場(含公會戰)");
+  };
+  const bm = document.getElementById("btnMulti");
+  if(bm) bm.onclick = ()=>{
+    view.multiSel = view.multiSel ? null : [];
+    render();
+    if(view.multiSel) toast("批次模式:點角色勾選,再按「發獎勵」");
+  };
+  const bmg = document.getElementById("btnMultiGo");
+  if(bmg) bmg.onclick = ()=> openMultiModal();
   app.querySelectorAll("[data-gaward]").forEach(b=>{
     b.onclick = ()=>{
       if(view.locked){ toast("投影模式中,操作已鎖定", true); return; }
@@ -3352,9 +5048,14 @@ function bindTeacher(){
   };
   const ge = document.getElementById("goalEdit");
   if(ge) ge.onclick = ()=>{
-    const v = prompt("設定班級目標 XP(目前 "+state.classGoal.target+"):", state.classGoal.target);
+    const pg = progCheck();
+    const v = prompt("設定今日探索目標 XP(全班累計,目前 "+pg.exploreGoal+"):", pg.exploreGoal);
     const n = parseInt(v,10);
-    if(n>0){ state.classGoal.target=n; state.classGoal.celebrated = state.classGoal.progress>=n; save(); render(); }
+    if(n>0){
+      pg.exploreGoal = n;
+      if(pg.stage===0 && pg.exploreXp >= n){ pg.stage=1; addLog("-","🗺 探索完成!魔王現身!"); }
+      save(); render();
+    }
   };
   const ex = document.getElementById("btnExport"); if(ex) ex.onclick = exportData;
   const skT = document.getElementById("btnSkillToggle");
@@ -3386,20 +5087,106 @@ function bindTeacher(){
   const nsAdd = document.getElementById("nsAdd");
   if(nsAdd) nsAdd.onclick = ()=>{
     const name = document.getElementById("nsName").value.trim();
+    const sno = (document.getElementById("nsSno")?document.getElementById("nsSno").value:"").trim();
     if(!name){ toast("請輸入姓名", true); return; }
+    if(!sno){ toast("請輸入學號(家長查看與識別用,不可重複)", true); return; }
+    if(state.students.some(x=>String(x.sno||"")===sno)){ toast("學號 "+sno+" 已存在,請確認", true); return; }
     const id = "S" + String(state.nextIdNum++).padStart(2,"0");
-    state.students.push(newStudent(id, name, document.getElementById("nsJob").value, document.getElementById("nsGroup").value));
+    const ns = newStudent(id, name, document.getElementById("nsJob").value, document.getElementById("nsGroup").value);
+    ns.sno = sno;
+    state.students.push(ns);
     addLog(id, "加入公會,冒險開始!");
-    save(); render(); toast(name+" 已加入("+id+")");
+    save(); render(); toast(name+"(學號 "+sno+")已加入");
+  };
+  // ── 批次匯入 ──
+  app.querySelectorAll("[data-mentor]").forEach(sel=>{
+    sel.onchange = ()=>{
+      const st = stu(sel.dataset.mentor); if(!st) return;
+      st.mentorTier = +sel.value || 1;
+      save(); toast(st.name+" 指導獎勵:💎×"+st.mentorTier);
+    };
+  });
+  app.querySelectorAll("[data-gleader]").forEach(sel=>{
+    sel.onchange = ()=>{
+      const g = sel.dataset.gleader;
+      if(sel.value) state.groupLeaders[g] = sel.value;
+      else delete state.groupLeaders[g];
+      save(); toast(sel.value ? "👑 "+g+" 組組長:"+(stu(sel.value)||{}).name : g+" 組組長已清除");
+    };
+  });
+  // 平時成績結算
+  const gTS = document.getElementById("gTermStart");
+  if(gTS) gTS.onclick = ()=>{
+    if(!confirm("開始新計分週期?\n將以「現在」為起點重新累計每人 XP(舊週期數字請先匯出)。")) return;
+    state.students.forEach(st=>{ st.termStartXp = st.totalXp||0; });
+    state.termInfo.startDate = new Date().toLocaleDateString("zh-TW");
+    view.gradePreview = false;
+    save(); render(); toast("新計分週期已開始");
+  };
+  const gPv = document.getElementById("gPreview");
+  if(gPv) gPv.onclick = ()=>{
+    state.termInfo.target = Math.max(50, +document.getElementById("gTarget").value||500);
+    state.termInfo.minScore = Math.min(100, Math.max(0, +document.getElementById("gMin").value||60));
+    state.termInfo.maxScore = Math.min(100, Math.max(state.termInfo.minScore, +document.getElementById("gMax").value||100));
+    view.gradePreview = true;
+    save(); render();
+  };
+  const gCv = document.getElementById("gCsv");
+  if(gCv) gCv.onclick = gradeCsvDownload;
+  const bulkBtn = document.getElementById("bulkImport");
+  if(bulkBtn) bulkBtn.onclick = ()=>{
+    const raw = (document.getElementById("bulkText").value||"").trim();
+    if(!raw){ toast("請先貼上名冊", true); return; }
+    const job = document.getElementById("bulkJob").value;
+    const grp = document.getElementById("bulkGroup").value;
+    const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+    const parsed = [], errors = [];
+    const existSno = new Set(state.students.map(x=>String(x.sno||"")));
+    const seenSno = new Set();
+    lines.forEach((line, idx)=>{
+      const cols = line.split(/[,\t]/).map(c=>c.trim());
+      // 略過標題列
+      if(idx===0 && /姓名|座號|學號|名字|name|seat/i.test(line)){ return; }
+      // 欄位辨識:找 email、找數字座號、剩下當姓名
+      let sno="", name="", email="", birth="";
+      cols.forEach(c=>{
+        if(/@/.test(c)) email = c;
+        else if(/^\d{8}$/.test(c) && !birth) birth = c;        // 8碼=生日
+        else if(/^\d{1,3}$/.test(c) && !sno) sno = c;          // 1-3碼=座號
+        else if(c && !name && !/^\d+$/.test(c)) name = c;      // 非純數字=姓名
+      });
+      // 若沒抓到座號,用行號補
+      if(!sno) sno = String(state.students.length + parsed.length + 1);
+      if(!name){ errors.push("第"+(idx+1)+"行:找不到姓名 → "+line); return; }
+      if(existSno.has(sno) || seenSno.has(sno)){ errors.push("第"+(idx+1)+"行:座號 "+sno+" 重複 → "+name); return; }
+      seenSno.add(sno);
+      parsed.push({sno, name, email, birth});
+    });
+    const pv = document.getElementById("bulkPreview");
+    if(!parsed.length){ pv.innerHTML = '<span style="color:#c0392b">沒有可匯入的資料。</span>'+(errors.length?'<br>'+errors.join("<br>"):""); return; }
+    // 執行匯入
+    parsed.forEach(pd=>{
+      const id = "S" + String(state.nextIdNum++).padStart(2,"0");
+      const ns = newStudent(id, pd.name, job, grp);
+      ns.sno = pd.sno; ns.seat = pd.sno;
+      if(pd.email) ns.email = pd.email;
+      if(pd.birth) ns.birth = pd.birth;
+      state.students.push(ns);
+      addLog(id, "加入公會,冒險開始!");
+    });
+    save(); render();
+    toast("成功匯入 "+parsed.length+" 位學生"+(errors.length?"("+errors.length+" 筆跳過)":""));
+    if(errors.length) setTimeout(()=>alert("以下資料被跳過:\n"+errors.join("\n")), 300);
   };
   app.querySelectorAll("[data-gchange]").forEach(sel=>{
-    sel.onchange = ()=>{ const s=stu(sel.dataset.gchange); if(s){ s.group=sel.value; save(); render(); } };
+    sel.onchange = ()=>{ const s=stu(sel.dataset.gchange); if(s){ s.group=sel.value; reconcileLeadersCastle(); save(); render(); } };
   });
   app.querySelectorAll("[data-del]").forEach(b=>{
     b.onclick = ()=>{
       const s = stu(b.dataset.del); if(!s) return;
       if(confirm("移除 "+s.name+"?其資料會刪除(建議先匯出備份)。")){
         state.students = state.students.filter(x=>x.id!==s.id);
+        reconcileLeadersCastle();
         save(); render();
       }
     };
@@ -3419,9 +5206,19 @@ function bindTeacher(){
       const fallback = state.groups.find(x=>x!==g);
       state.students.forEach(s=>{ if(s.group===g) s.group=fallback; });
       state.groups = state.groups.filter(x=>x!==g);
+      if(state.groupLeaders[g]) delete state.groupLeaders[g];   // 該組組長卸任
+      reconcileLeadersCastle();
       save(); render();
     };
   });
+  const tkTierSel = document.getElementById("tkTier");
+  if(tkTierSel) tkTierSel.onchange = ()=>{ const r=document.getElementById("tierRow"); if(r) r.style.display = tkTierSel.value==="tiered" ? "" : "none"; };
+  const tkScopeSel = document.getElementById("tkScope");
+  if(tkScopeSel) tkScopeSel.onchange = ()=>{ const r=document.getElementById("pickRow"); if(r) r.style.display = tkScopeSel.value==="pick" ? "" : "none"; };
+  const pAll = document.getElementById("pickAll");
+  if(pAll) pAll.onclick = (e)=>{ e.preventDefault(); app.querySelectorAll(".tkPick").forEach(c=>c.checked=true); };
+  const pNone = document.getElementById("pickNone");
+  if(pNone) pNone.onclick = (e)=>{ e.preventDefault(); app.querySelectorAll(".tkPick").forEach(c=>c.checked=false); };
   const tkAdd = document.getElementById("tkAdd");
   if(tkAdd) tkAdd.onclick = ()=>{
     const title = document.getElementById("tkTitle").value.trim();
@@ -3429,8 +5226,21 @@ function bindTeacher(){
     const x = Math.max(0, +document.getElementById("tkXp").value || 0);
     const g = Math.max(0, +document.getElementById("tkGold").value || 0);
     if(x===0 && g===0){ toast("XP 和金幣至少填一項", true); return; }
-    createTask(title, x, g, document.getElementById("tkScope").value);
-    render(); toast("任務已發布");
+    const tr = (document.getElementById("tkTitleReward")?document.getElementById("tkTitleReward").value:"").trim();
+    let scopeVal = document.getElementById("tkScope").value;
+    if(scopeVal==="pick"){
+      const picked = [...app.querySelectorAll(".tkPick")].filter(c=>c.checked).map(c=>c.value);
+      if(!picked.length){ toast("請至少勾選一位學生", true); return; }
+      scopeVal = "stu:" + picked.join(",");
+    }
+    const nt = createTask(title, x, g, scopeVal);
+    if(nt && tr) nt.titleReward = tr;
+    if(nt && document.getElementById("tkTier") && document.getElementById("tkTier").value==="tiered"){
+      const x2=+document.getElementById("tkXp2").value||0, g2=+document.getElementById("tkGold2").value||0;
+      const x3=+document.getElementById("tkXp3").value||0, g3=+document.getElementById("tkGold3").value||0;
+      nt.tiers = [{name:TIER_NAMES[0],xp:x,gold:g},{name:TIER_NAMES[1],xp:x2,gold:g2},{name:TIER_NAMES[2],xp:x3,gold:g3}];
+    }
+    save(); render(); toast("任務已發布"+(tr?"(通過可獲稱號【"+tr+"】)":""));
   };
   app.querySelectorAll("[data-approve]").forEach(b=> b.onclick = ()=>{
     const [t,s] = b.dataset.approve.split("|"); approveSubmission(+t, s);
@@ -3462,6 +5272,7 @@ function bindTeacher(){
   bindFloatConsole();
   // 名冊:座號/生日/信箱編輯
   app.querySelectorAll("[data-seat]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.seat); if(s){ s.seat=inp.value.trim(); save(); } }; });
+  app.querySelectorAll("[data-sno]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.sno); if(!s) return; const v=inp.value.trim(); if(v && state.students.some(x=>x.id!==s.id && String(x.sno||"")===v)){ toast("學號 "+v+" 已被其他學生使用", true); inp.value=s.sno||""; return; } s.sno=v; save(); } });
   app.querySelectorAll("[data-birth]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.birth); if(s){ const v=inp.value.trim(); if(v && !/^\d{8}$/.test(v)){ toast("生日請填 8 碼,例 20130215", true); inp.value=s.birth||""; return; } s.birth=v; save(); } }; });
   app.querySelectorAll("[data-email]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.email); if(s){ s.email=inp.value.trim().toLowerCase(); save(); } }; });
   // 教師白名單
@@ -3498,6 +5309,227 @@ function bindTeacher(){
   if(lbN) lbN.onchange = ()=>{ state.lbName = lbN.value.trim(); save(); };
   const lbV = document.getElementById("lbView");
   if(lbV) lbV.onclick = showLeaderboard;
+  const tRW = document.getElementById("tRankWorld");
+  if(tRW) tRW.onclick = showLeaderboard;
+  app.querySelectorAll("[data-revaward]").forEach(b=>{
+    b.onclick = ()=>{
+      const lg = (state.awardLog||[]).find(x=>x.id===b.dataset.revaward);
+      if(!lg) return;
+      const s = stu(lg.sid);
+      if(confirm("撤回 "+(s?s.name:"?")+" 的「"+lg.reason+"」(-"+lg.xp+"XP -"+lg.gold+"金)?")) reverseAward(lg.id);
+    };
+  });
+  // 競技場
+  if(ARENA.active && view.tview!=="arena"){ arenaStop(); }   // 換分頁自動結束
+  const arS = document.getElementById("arStart");
+  if(arS) arS.onclick = ()=>{
+    arenaStart(document.getElementById("arA").value, document.getElementById("arB").value,
+      document.getElementById("arFriendly").checked);
+  };
+  const arP = document.getElementById("arPause");
+  if(arP) arP.onclick = ()=>{
+    if(ARENA.timer){ clearInterval(ARENA.timer); ARENA.timer=null; arP.textContent="▶ 繼續"; }
+    else if(!ARENA.over){ ARENA.timer=setInterval(arenaTick,50); arP.textContent="⏸ 暫停"; }
+  };
+  const arSp = document.getElementById("arSpeed");
+  if(arSp) arSp.onclick = ()=>{ ARENA.speed = ARENA.speed>=4 ? 1 : ARENA.speed*2; arSp.textContent="⏩ 速度 x"+ARENA.speed; };
+  const arQ = document.getElementById("arQuit");
+  if(arQ) arQ.onclick = ()=>{ arenaStop(); ARENA.over=false; render(); };
+  // 團體戰
+  if(GARENA.active && view.tview!=="arena"){ garenaStop(); }
+  const csA = document.getElementById("csAdd");
+  if(csA) csA.onclick = ()=>{
+    state.castleShopItems.push({key:"c"+Date.now(), icon:"🎫", name:"新道具卡", desc:"說明", price:10});
+    save(); render();
+  };
+  const csS = document.getElementById("csSave");
+  if(csS) csS.onclick = ()=>{
+    app.querySelectorAll("[data-csi]").forEach(inp=>{ state.castleShopItems[+inp.dataset.csi].icon = inp.value.trim()||"🎫"; });
+    app.querySelectorAll("[data-csn]").forEach(inp=>{ state.castleShopItems[+inp.dataset.csn].name = inp.value.trim()||"道具卡"; });
+    app.querySelectorAll("[data-csd]").forEach(inp=>{ state.castleShopItems[+inp.dataset.csd].desc = inp.value.trim(); });
+    app.querySelectorAll("[data-csp]").forEach(inp=>{ state.castleShopItems[+inp.dataset.csp].price = Math.max(1,+inp.value||1); });
+    save(); render(); toast("城堡商店已更新");
+  };
+  app.querySelectorAll("[data-csdel]").forEach(b=> b.onclick = ()=>{
+    if(!confirm("刪除「"+state.castleShopItems[+b.dataset.csdel].name+"」?")) return;
+    state.castleShopItems.splice(+b.dataset.csdel,1); save(); render();
+  });
+  app.querySelectorAll("[data-csdone]").forEach(b=> b.onclick = ()=>{
+    const lg = (state.realItemLog||[]).find(x=>x.id===b.dataset.csdone);
+    if(lg){ lg.done = true; save(); render(); toast("已標記執行:"+lg.itemName); }
+  });
+  const sgT = document.getElementById("siegeTest");
+  if(sgT) sgT.onchange = ()=>{
+    state.siege.testMode = sgT.checked;
+    save(); render();
+    toast(sgT.checked ? "測試模式:公會戰每日開放" : "已關閉測試模式:僅週五開放");
+  };
+  const sgF = document.getElementById("siegeForce");
+  if(sgF) sgF.onclick = ()=>{
+    state.siege.forceDate = new Date().toLocaleDateString("sv");
+    sfx("goal");
+    save(); render(); toast("🏰 今日公會戰已開啟!");
+  };
+  app.querySelectorAll("[data-siegejoin]").forEach(b=>{
+    b.onclick = ()=>{
+      const g = b.dataset.siegejoin;
+      const lid = state.groupLeaders[g]; const leader = stu(lid);
+      if(leader && !leader.consumables) leader.consumables = {};
+      if(!leader || !(leader.consumables[31]>0)){ toast("組長沒有攻城卷", true); return; }
+      siegeEntriesToday().push({group:g, leaderId:lid, date:new Date().toLocaleDateString("sv")});   // 攜帶制:報名不消耗(結算才扣,免確認)
+      addLog(lid, "🏰 攜帶攻城卷,為 "+g+" 組報名公會戰!");
+      save(); render(); toast("🏰 "+g+" 組已報名(攻城卷攜帶中)");
+    };
+  });
+  const trS = document.getElementById("tourStart");
+  if(trS) trS.onclick = ()=>{
+    const groups = siegeEntriesToday().map(e=>e.group);
+    if(groups.length<3){ toast("循環賽需要至少三組", true); return; }
+    tourStart(groups);
+    addLog("-","🏆 公會戰積分循環賽開始!"+groups.join("、")+" 共 "+(groups.length*(groups.length-1)/2)+" 場");
+    save(); render(); toast("🏆 循環賽開始!依賽程逐場開打");
+  };
+  app.querySelectorAll("[data-tourgo]").forEach(b=> b.onclick = ()=>{
+    const t = state.siege.tournament; if(!t) return;
+    const m = t.matches[+b.dataset.tourgo];
+    if(!m || m.done) return;
+    for(const grp of [m.red, m.blue]){
+      const ld = stu(state.groupLeaders[grp]);
+      if(!ld || !(((ld.consumables||{})[31])>0)){ toast(grp+" 組組長的攻城卷不見了", true); return; }
+    }
+    const red = state.students.filter(x=>x.group===m.red).map(x=>x.id);
+    const blue = state.students.filter(x=>x.group===m.blue).map(x=>x.id);
+    if(!red.length || !blue.length){ toast("有一組沒有成員", true); return; }
+    GARENA.siege = true;
+    GARENA.siegeTournament = true;
+    GARENA.siegeTeams = { red:m.red, blue:m.blue };
+    garenaStart(red, blue, !CLOUD.on());
+    garenaLog("🏆 循環賽:"+m.red+" 組 vs "+m.blue+" 組!");
+  });
+  const trA = document.getElementById("tourAbort");
+  if(trA) trA.onclick = ()=>{
+    if(!confirm("中止整個循環賽?已打場次的獎勵保留,但不會佔城、不耗攻城卷。")) return;
+    state.siege.tournament = null;
+    addLog("-","🛑 老師中止了循環賽");
+    save(); render();
+  };
+  const sgS = document.getElementById("siegeStart");
+  if(sgS) sgS.onclick = ()=>{
+    const rg = document.getElementById("siegeRed").value;
+    const bg = document.getElementById("siegeBlue").value;
+    if(rg===bg){ toast("兩邊不能是同一組", true); return; }
+    const red = state.students.filter(x=>x.group===rg).map(x=>x.id);
+    const blue = state.students.filter(x=>x.group===bg).map(x=>x.id);
+    if(!red.length || !blue.length){ toast("有一組沒有成員", true); return; }
+    for(const grp of [rg,bg]){                               // 攜帶制:開戰時複驗持券
+      const ld = stu(state.groupLeaders[grp]);
+      if(!ld || !(((ld.consumables||{})[31])>0)){ toast(grp+" 組組長的攻城卷不見了,無法開戰", true); return; }
+    }
+    GARENA.siege = true;                                     // 公會戰旗標(獎勵加碼)
+    GARENA.siegeTeams = { red:rg, blue:bg };                 // 佔城判定用
+    garenaStart(red, blue, !CLOUD.on());                     // 離線→AI代打
+    garenaLog("🏰 公會戰:"+rg+" 組 vs "+bg+" 組!");
+  };
+  const gaAi = document.getElementById("gaStartAi");
+  if(gaAi) gaAi.onclick = ()=>{
+    let red = [...app.querySelectorAll('.gaPick[data-team="red"]')].filter(c=>c.checked).map(c=>c.value);
+    let blue = [...app.querySelectorAll('.gaPick[data-team="blue"]')].filter(c=>c.checked).map(c=>c.value);
+    const dup = red.filter(id=>blue.includes(id));
+    if(dup.length){ toast("同一人不能同時在兩隊", true); return; }
+    if(!red.length && !blue.length){                          // 沒勾→自動抓前4人示範
+      const ids = state.students.slice(0,4).map(x=>x.id);
+      red = ids.filter((_,i)=>i%2===0); blue = ids.filter((_,i)=>i%2===1);
+    }
+    if(!red.length || !blue.length){ toast("兩隊都至少要一人", true); return; }
+    garenaStart(red, blue, true);
+    toast("🤖 AI 演練開始,純觀戰(仍會發放勝敗XP)");
+  };
+  const gaS = document.getElementById("gaStart");
+  if(gaS) gaS.onclick = ()=>{
+    const red = [...app.querySelectorAll('.gaPick[data-team="red"]')].filter(c=>c.checked).map(c=>c.value);
+    const blue = [...app.querySelectorAll('.gaPick[data-team="blue"]')].filter(c=>c.checked).map(c=>c.value);
+    const dup = red.filter(id=>blue.includes(id));
+    if(dup.length){ toast("同一人不能同時在兩隊:"+dup.map(id=>(stu(id)||{}).name).join("、"), true); return; }
+    if(!red.length || !blue.length){ toast("兩隊都至少要一人", true); return; }
+    garenaStart(red, blue);
+  };
+  const gaP = document.getElementById("gaPause");
+  if(gaP) gaP.onclick = ()=>{
+    if(GARENA.paused){
+      GARENA.startTs += (Date.now() - GARENA.pausedAt);      // 補回暫停時間,計時不失真
+      GARENA.paused = false; gaP.textContent = "⏸ 暫停";
+    }else{
+      GARENA.paused = true; GARENA.pausedAt = Date.now(); gaP.textContent = "▶ 繼續";
+    }
+  };
+  const gaQ = document.getElementById("gaQuit");
+  if(gaQ) gaQ.onclick = ()=>{ garenaStop(); GARENA.over=false; GARENA.mvp=null; render(); };
+  app.querySelectorAll("[data-mvpaward]").forEach(b=>{
+    b.onclick = ()=>{
+      const [sid, title] = b.dataset.mvpaward.split("|");
+      const st = stu(sid); if(!st) return;
+      // 確保「競技場MVP」稱號存在(不存在自動建,帶ATK+2小獎勵)
+      if(!titleDefOf(title)){
+        if(!state.customTitleDefs) state.customTitleDefs = [];
+        state.customTitleDefs.push({name:title, effect:{atk:2}, fx:"⚔ ATK +2"});
+      }
+      if(ownedTitles(st).includes(title)){ toast(st.name+" 已擁有【"+title+"】", true); return; }
+      grantTitle(st, title); save(); render();
+      toast("🏅 已頒發【"+title+"】給 "+st.name);
+    };
+  });
+  // 稱號設計:頒發
+  app.querySelectorAll("[data-grant]").forEach(b=>{
+    b.onclick = ()=>{
+      const nm = b.dataset.grant;
+      const sel = app.querySelector('[data-grantsel="'+nm.replace(/"/g,'\\"')+'"]');
+      const st = sel ? stu(sel.value) : null;
+      if(!st){ toast("請選擇學生", true); return; }
+      if(ownedTitles(st).includes(nm)){ toast(st.name+" 已擁有【"+nm+"】", true); return; }
+      grantTitle(st, nm); save(); render();
+    };
+  });
+  // 自訂稱號建立
+  const tdAdd = document.getElementById("tdAdd");
+  if(tdAdd) tdAdd.onclick = ()=>{
+    const nm = (document.getElementById("tdName").value||"").trim();
+    if(!nm){ toast("請輸入稱號名稱", true); return; }
+    if(titleDefOf(nm) || ACHIEVEMENTS.some(a=>a.title===nm)){ toast("稱號【"+nm+"】已存在", true); return; }
+    const EFF = { atk3:[{atk:3},"⚔ ATK +3"], def3:[{def:3},"🛡 DEF +3"], agi3:[{agi:3},"💨 AGI +3"], int3:[{int:3},"🔮 INT +3"],
+      hp20:[{hp:20},"❤️ HP 上限 +20"], xp10:[{xpMul:0.10},"✨ XP +10%"], gold10:[{goldMul:0.10},"💰 金幣 +10%"],
+      all1:[{atk:1,def:1,agi:1,int:1},"👑 全屬性 +1"], off10:[{shopOff:0.10},"🏷 商店 9 折"], none:[{},"—"] };
+    const pick = EFF[document.getElementById("tdEff").value] || EFF.none;
+    if(!state.customTitleDefs) state.customTitleDefs = [];
+    state.customTitleDefs.push({name:nm, effect:pick[0], fx:pick[1]});
+    save(); render(); toast("稱號【"+nm+"】已建立,可頒發");
+  };
+  // 刪除自訂稱號
+  app.querySelectorAll("[data-tddel]").forEach(b=>{
+    b.onclick = ()=>{
+      const i = +b.dataset.tddel; const t = state.customTitleDefs[i];
+      if(!t) return;
+      if(!confirm("刪除自訂稱號【"+t.name+"】?已頒發給學生的會一併收回。")) return;
+      state.students.forEach(x=>{
+        if(x.customTitles) x.customTitles = x.customTitles.filter(n=>n!==t.name);
+        if(x.title===t.name) x.title="";
+      });
+      state.customTitleDefs.splice(i,1); save(); render();
+    };
+  });
+  // 撤回單一學生稱號
+  app.querySelectorAll("[data-revoke]").forEach(b=>{
+    b.onclick = (e)=>{
+      e.preventDefault();
+      const [sid, nm] = b.dataset.revoke.split("|");
+      const st = stu(sid); if(!st) return;
+      if(!confirm("撤回 "+st.name+" 的稱號【"+nm+"】?")) return;
+      if(st.customTitles) st.customTitles = st.customTitles.filter(n=>n!==nm);
+      const ach = ACHIEVEMENTS.find(a=>a.title===nm);
+      if(ach) st.achievements = st.achievements.filter(id=>id!==ach.id);   // 成就稱號撤回=移除成就
+      if(st.title===nm) st.title="";
+      save(); render(); toast("已撤回");
+    };
+  });
   const bsSk = document.getElementById("bsSkip");
   if(bsSk) bsSk.onclick = skipGroupTurn;
   app.querySelectorAll("[data-bscounter]").forEach(b=> b.onclick = ()=>{
@@ -3576,12 +5608,13 @@ function openAwardModal(sid, ev){
     + '<h4>'+esc(s.name)+'</h4>'
     + '<div class="msub num">Lv.'+s.level+'・'+s.xp+'/'+xpForNextLevel(s.level)+' XP・'+s.gold+' 金幣</div>'
     + '<div class="big-grid">'
-    + '<button class="big-btn" data-r="10|0|課堂表現">+10 XP<small>課堂表現</small></button>'
-    + '<button class="big-btn" data-r="30|0|作業繳交">+30 XP<small>作業繳交</small></button>'
-    + '<button class="big-btn" data-r="0|20|小組合作">+20 金幣<small>小組合作</small></button>'
-    + '<button class="big-btn" data-r="50|30|考試進步">大獎勵<small>+50 XP +30 金</small></button>'
+    + state.awardPresets.map(pr=>{
+        const lbl = (pr.xp>0?"+"+pr.xp+" XP":"") + (pr.xp>0&&pr.gold>0?" ":"") + (pr.gold>0?"+"+pr.gold+" 金":"");
+        return '<button class="big-btn" data-r="'+pr.xp+'|'+pr.gold+'|'+esc(pr.name)+'">'+(lbl||"獎勵")+'<small>'+esc(pr.name)+'</small></button>';
+      }).join("")
     + (state.boss ? '<button class="big-btn" style="grid-column:1/-1;border-color:var(--hp)" data-atk="1">⚔ 攻擊 Boss「'+esc(state.boss.name)+'」<small>依 ATK 造成 15–25 基礎傷害</small></button>' : "")
     + '</div>'
+    + '<div style="text-align:right;margin-top:-4px"><a href="#" id="mEditPresets" class="mini" style="color:#888">⚙ 編輯快捷鈕</a></div>'
     + '<div class="custom">'
     + '<input type="number" id="mXp" placeholder="XP" min="0" value="10">'
     + '<input type="number" id="mGold" placeholder="金幣" min="0" value="0">'
@@ -3608,6 +5641,116 @@ function openAwardModal(sid, ev){
     const r = document.getElementById("mReason").value.trim() || "老師獎勵";
     close(); reward(sid, x, g, r, pt);
   };
+  const edp = document.getElementById("mEditPresets");
+  if(edp) edp.onclick = (e)=>{ e.preventDefault(); close(); openPresetEditor(); };
+}
+/* 班級登入 QR(投影給學生平板掃碼) */
+let _qrLibState = 0;   // 0未載 1載入中 2完成 -1失敗
+function loadQrLib(cb){
+  if(_qrLibState===2){ cb(true); return; }
+  if(_qrLibState===-1){ cb(false); return; }
+  const pend = ()=>{ if(_qrLibState===2) cb(true); else if(_qrLibState===-1) cb(false); else setTimeout(pend, 120); };
+  if(_qrLibState===1){ pend(); return; }
+  _qrLibState = 1;
+  const sc = document.createElement("script");
+  sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+  sc.onload = ()=>{ _qrLibState = 2; cb(true); };
+  sc.onerror = ()=>{ _qrLibState = -1; cb(false); };
+  document.body.appendChild(sc);
+}
+function openQrModal(){
+  const link = location.origin + location.pathname + "?class=" + CLOUD.cid;
+  const cname = state.className || state.lbName || "本班";
+  modalHost.innerHTML = '<div class="overlay" id="ovl"><div class="modal" style="max-width:440px;text-align:center">'
+    + '<h4>📱 '+esc(cname)+'・學生登入</h4>'
+    + '<div class="msub">平板/手機掃碼 → 學生登入 → 第一次登入認領角色</div>'
+    + '<div id="qrBox" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:10px auto;width:fit-content;min-width:260px;min-height:260px;align-items:center">產生中…</div>'
+    + '<div class="inline-form" style="justify-content:center"><input type="text" readonly value="'+esc(link)+'" id="qrLink" style="flex:1;font-size:11px;max-width:280px"><button class="btn" id="qrCopy">複製</button></div>'
+    + '<button class="btn" id="mClose" style="margin-top:8px">關閉</button></div></div>';
+  const close = ()=>{ modalHost.innerHTML=""; };
+  document.getElementById("ovl").onclick = (e)=>{ if(e.target.id==="ovl") close(); };
+  document.getElementById("mClose").onclick = close;
+  document.getElementById("qrCopy").onclick = ()=>{
+    const inp = document.getElementById("qrLink"); inp.select();
+    try{ document.execCommand("copy"); toast("連結已複製"); }catch(e){ toast("請手動複製", true); }
+  };
+  loadQrLib(ok=>{
+    const box = document.getElementById("qrBox");
+    if(!box) return;
+    if(ok && window.QRCode){
+      box.innerHTML = "";
+      new QRCode(box, { text: link, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+    }else{
+      box.innerHTML = '<div class="mini">QR 產生器載入失敗(網路限制)。<br>請直接把下方連結發到班群。</div>';
+    }
+  });
+}
+/* 快捷加分鈕編輯器 */
+function openPresetEditor(){
+  const rows = state.awardPresets.map((pr,i)=>
+    '<div class="inline-form" style="margin-bottom:6px">'
+    + '<input type="text" value="'+esc(pr.name)+'" data-pn="'+i+'" style="width:110px">'
+    + '<input type="number" value="'+pr.xp+'" data-px="'+i+'" min="0" style="width:64px" placeholder="XP">'
+    + '<input type="number" value="'+pr.gold+'" data-pg="'+i+'" min="0" style="width:64px" placeholder="金">'
+    + '<button class="btn danger" data-pdel="'+i+'">✕</button></div>').join("");
+  modalHost.innerHTML = '<div class="overlay" id="ovl"><div class="modal" style="max-width:380px">'
+    + '<h4>⚙ 快捷加分鈕</h4><div class="msub">名稱 / XP / 金幣(全班共用,最多 6 顆)</div>'
+    + '<div style="text-align:left">'+rows+'</div>'
+    + (state.awardPresets.length<6 ? '<button class="btn" id="pAdd">➕ 新增一顆</button> ' : "")
+    + '<button class="btn gold" id="pSave">儲存</button> <button class="btn" id="mClose">取消</button></div></div>';
+  const close = ()=>{ modalHost.innerHTML=""; };
+  document.getElementById("ovl").onclick = (e)=>{ if(e.target.id==="ovl") close(); };
+  document.getElementById("mClose").onclick = close;
+  const pAdd = document.getElementById("pAdd");
+  if(pAdd) pAdd.onclick = ()=>{ state.awardPresets.push({name:"新項目", xp:10, gold:0}); openPresetEditor(); };
+  modalHost.querySelectorAll("[data-pdel]").forEach(b=> b.onclick = ()=>{
+    state.awardPresets.splice(+b.dataset.pdel, 1); openPresetEditor();
+  });
+  document.getElementById("pSave").onclick = ()=>{
+    modalHost.querySelectorAll("[data-pn]").forEach(inp=>{ state.awardPresets[+inp.dataset.pn].name = inp.value.trim()||"獎勵"; });
+    modalHost.querySelectorAll("[data-px]").forEach(inp=>{ state.awardPresets[+inp.dataset.px].xp = Math.max(0,+inp.value||0); });
+    modalHost.querySelectorAll("[data-pg]").forEach(inp=>{ state.awardPresets[+inp.dataset.pg].gold = Math.max(0,+inp.value||0); });
+    save(); close(); toast("快捷鈕已更新");
+  };
+}
+/* 批次發獎彈窗 */
+function openMultiModal(){
+  const ids = view.multiSel || [];
+  if(!ids.length){ toast("還沒勾選學生", true); return; }
+  const names = ids.map(id=>(stu(id)||{name:"?"}).name).join("、");
+  modalHost.innerHTML = '<div class="overlay" id="ovl"><div class="modal">'
+    + '<h4>批次獎勵('+ids.length+' 人)</h4>'
+    + '<div class="msub" style="max-height:60px;overflow:auto">'+esc(names)+'</div>'
+    + '<div class="big-grid">'
+    + state.awardPresets.map(pr=>{
+        const lbl = (pr.xp>0?"+"+pr.xp+" XP":"") + (pr.xp>0&&pr.gold>0?" ":"") + (pr.gold>0?"+"+pr.gold+" 金":"");
+        return '<button class="big-btn" data-r="'+pr.xp+'|'+pr.gold+'|'+esc(pr.name)+'">'+(lbl||"獎勵")+'<small>'+esc(pr.name)+'</small></button>';
+      }).join("")
+    + '</div>'
+    + '<div class="custom">'
+    + '<input type="number" id="mXp" placeholder="XP" min="0" value="10">'
+    + '<input type="number" id="mGold" placeholder="金幣" min="0" value="0">'
+    + '<input type="text" id="mReason" placeholder="原因(選填)" style="width:120px">'
+    + '<button class="btn gold" id="mGo">發放</button></div>'
+    + '<button class="btn" id="mClose">關閉</button></div></div>';
+  const close = ()=>{ modalHost.innerHTML=""; };
+  const fire = (x,g,r)=>{
+    ids.forEach(id=> reward(id, x, g, r));
+    view.multiSel = null;
+    close(); render();
+    toast("已發獎勵給 "+ids.length+" 人:"+r);
+  };
+  document.getElementById("ovl").onclick = (e)=>{ if(e.target.id==="ovl") close(); };
+  document.getElementById("mClose").onclick = close;
+  modalHost.querySelectorAll("[data-r]").forEach(b=> b.onclick = ()=>{
+    const [x,g,r] = b.dataset.r.split("|"); fire(+x, +g, r||"批次獎勵");
+  });
+  document.getElementById("mGo").onclick = ()=>{
+    const x = Math.max(0, +document.getElementById("mXp").value||0);
+    const g = Math.max(0, +document.getElementById("mGold").value||0);
+    if(x===0 && g===0){ toast("XP 和金幣至少填一項", true); return; }
+    fire(x, g, document.getElementById("mReason").value.trim()||"批次獎勵");
+  };
 }
 function openGroupModal(gname){
   const n = state.students.filter(s=>s.group===gname).length;
@@ -3616,23 +5759,105 @@ function openGroupModal(gname){
     + '<h4>'+esc(gname)+' 組・整組獎勵</h4>'
     + '<div class="msub">共 '+n+' 名成員,每人都會獲得</div>'
     + '<div class="big-grid">'
-    + '<button class="big-btn" data-r="10|0">+10 XP<small>小組秩序</small></button>'
-    + '<button class="big-btn" data-r="20|0">+20 XP<small>討論優秀</small></button>'
-    + '<button class="big-btn" data-r="0|15">+15 金幣<small>互助合作</small></button>'
-    + '<button class="big-btn" data-r="30|20">大獎勵<small>+30 XP +20 金</small></button>'
+    + state.awardPresets.map(pr=>{
+        const lbl = (pr.xp>0?"+"+pr.xp+" XP":"") + (pr.xp>0&&pr.gold>0?" ":"") + (pr.gold>0?"+"+pr.gold+" 金":"");
+        return '<button class="big-btn" data-r="'+pr.xp+'|'+pr.gold+'|'+esc(pr.name)+'">'+(lbl||"獎勵")+'<small>'+esc(pr.name)+'</small></button>';
+      }).join("")
     + '</div><button class="btn" id="mClose">關閉</button></div></div>';
   const close = ()=>{ modalHost.innerHTML=""; };
   document.getElementById("ovl").onclick = (e)=>{ if(e.target.id==="ovl") close(); };
   document.getElementById("mClose").onclick = close;
   modalHost.querySelectorAll("[data-r]").forEach(b=>{
-    b.onclick = ()=>{ const [x,g] = b.dataset.r.split("|"); close(); rewardGroup(gname, +x, +g, gname+" 組獎勵"); };
+    b.onclick = ()=>{ const [x,g,rs] = b.dataset.r.split("|"); close(); rewardGroup(gname, +x, +g, gname+" 組・"+(rs||"獎勵")); };
   });
 }
 
 /* ── 學生端 ───────────────────────────────────────── */
+/* 學生遙控端狀態 */
+const GPAD = { live:null, unsub:null, sid:null };
+function garenaStudentInit(sid){
+  if(GPAD.unsub && GPAD.sid===sid) return;                  // 已在監聽
+  if(GPAD.unsub) GPAD.unsub();
+  GPAD.sid = sid;
+  GPAD.unsub = CLOUD.garenaListenLive(live=>{
+    const wasIn = GPAD.live && GPAD.live.fighters && GPAD.live.fighters.some(f=>f.sid===sid);
+    GPAD.live = live;
+    const nowIn = live && live.active && live.fighters && live.fighters.some(f=>f.sid===sid && !f.ko);
+    // 進場/退場/狀態變化 → 重繪遙控器覆蓋層
+    garenaPadRender();
+  });
+}
+function garenaPadRender(){
+  let ov = document.getElementById("gpadOverlay");
+  const live = GPAD.live, sid = GPAD.sid;
+  const me = live && live.fighters && live.fighters.find(f=>f.sid===sid);
+  // 陣亡觀戰:自己KO但戰鬥還在→顯示觀戰畫面(不是收起遙控器)
+  if(live && live.active && me && me.ko && !live.over){
+    if(!ov){ ov=document.createElement("div"); ov.id="gpadOverlay"; ov.style.cssText="position:fixed;inset:0;background:rgba(20,16,10,.94);z-index:200;display:flex;flex-direction:column;justify-content:center"; document.body.appendChild(ov); }
+    ov.innerHTML = '<div class="gpad-wrap"><div style="font-size:42px">💀</div>'
+      + '<div style="color:#fff;font-weight:900;font-size:20px;margin:8px 0">你已陣亡,為隊友加油!</div>'
+      + '<div style="color:#ffd234;font-size:15px">🔴 '+live.aliveR+' 存活　VS　'+live.aliveB+' 🔵</div>'
+      + '<div style="color:#aaa;font-size:12px;margin-top:10px">戰鬥結束後自動關閉</div></div>';
+    return;
+  }
+  const show = live && live.active && me && !me.ko && !live.over;
+  if(!show){
+    if(ov){
+      if(live && live.over && me){                           // 戰鬥結束:遙控器變結果卡(2秒後自動收)
+        ov.innerHTML = '<div class="gpad-wrap"><div style="color:#ffd234;font-weight:900;font-size:22px">⚔️ 團體戰結束!</div>'
+          + '<div style="color:#fff;font-size:14px;margin-top:8px">'+(me.ko?"你已陣亡,但戰鬥到最後!":"你撐到了最後!")+'</div></div>';
+        setTimeout(()=>{ const o=document.getElementById("gpadOverlay"); if(o)o.remove(); }, 2500);
+      } else { ov.remove(); }
+    }
+    return;
+  }
+  const st = stu(sid);
+  const range = weaponRange(st);
+  const ready = st.level>=5 && !me.ultUsed;
+  const jsDef = JOB_SKILL[st.job] || null;
+  const jcNow = me.jc || 0;
+  if(!ov){
+    ov = document.createElement("div");
+    ov.id = "gpadOverlay";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(20,16,10,.92);z-index:200;display:flex;flex-direction:column;justify-content:center";
+    document.body.appendChild(ov);
+  }
+  // 小地圖:自己金點、隊友同色小點、敵人灰點
+  const mmW=Math.min(160, live.W*11), mmScale=mmW/live.W, mmH=live.H*mmScale;
+  const dots = live.fighters.filter(f=>!f.ko).map(f=>{
+    const isMe=f.sid===sid;
+    const ally = f.team===me.team;
+    if(!ally && (f.st||0)>0) return "";                      // 🌫 敵方隱身者:小地圖看不到
+    const col = isMe?"#f5c518":(ally?(me.team==="red"?"#e05252":"#5285e0"):"#999");
+    const sz = isMe?9:6;
+    const op = ally && (f.st||0)>0 ? ";opacity:.45" : "";    // 己方隱身:半透明可見
+    return '<div style="position:absolute;left:'+(f.x*mmScale)+'px;top:'+(f.y*mmScale)+'px;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+col+(isMe?';box-shadow:0 0 0 2px #fff,0 0 8px #f5c518;z-index:2':'')+op+'"></div>';
+  }).join("");
+  const minimap = '<div style="position:relative;width:'+mmW+'px;height:'+mmH+'px;margin:6px auto;background:rgba(255,255,255,.12);border:2px solid #ffd234;border-radius:6px">'+dots+'</div>';
+  ov.innerHTML = '<div class="gpad-wrap">'
+    + '<div style="color:#fff;font-weight:900;font-size:18px">⚔️ 團體戰進行中!</div>'
+    + '<div style="color:#ffd234;font-size:13px;margin:4px 0">HP '+me.hp+'/'+me.max+'・射程 '+range+' 格・'+(me.team==="red"?"🔴紅隊":"🔵藍隊")+'・🔴'+live.aliveR+' vs '+live.aliveB+'🔵</div>'
+    + '<div style="color:#fff;font-size:11px">📍 你的位置(金點)</div>' + minimap
+    + '<div class="gpad-grid">'
+    + '<div></div><div class="gpad-btn" data-gmove="up">▲</div><div></div>'
+    + '<div class="gpad-btn" data-gmove="left">◀</div><div class="gpad-btn" data-gmove="down">▼</div><div class="gpad-btn" data-gmove="right">▶</div>'
+    + '</div>'
+    + '<div class="gpad-act">'
+    + '<button class="gpad-btn gpad-atk" data-gact="attack">⚔️ 攻擊</button>'
+    + (jsDef ? '<button class="gpad-btn gpad-job" data-gact="jobskill"'+(jcNow>0?" disabled":"")+'>'+jsDef.icon+' '+jsDef.name+(jcNow>0?'<br><span style="font-size:12px">'+Math.ceil(jcNow/2)+'s</span>':"")+'</button>' : "")
+    + '<button class="gpad-btn gpad-ult" data-gact="ult"'+(ready?"":" disabled")+'>💫 大招</button>'
+    + '</div>'
+    + (jsDef ? '<div style="color:#aaa;font-size:11px;margin-top:4px">'+jsDef.icon+' '+jsDef.desc+'</div>' : "")
+    + '<div style="color:#aaa;font-size:11px;margin-top:10px">移動到敵人射程內再攻擊・攻擊有冷卻</div>'
+    + '</div>';
+  const send = (cmd)=> CLOUD.garenaCmd(sid, cmd).catch(e=>console.warn(e));
+  ov.querySelectorAll("[data-gmove]").forEach(b=> b.onclick = ()=> send({move:b.dataset.gmove}));
+  ov.querySelectorAll("[data-gact]").forEach(b=> b.onclick = ()=>{ if(!b.disabled) send({act:b.dataset.gact}); });
+}
 function renderStudent(){
   const s = stu(view.sid);
   if(!s){ view={page:"home"}; render(); return; }
+  garenaStudentInit(s.id);                                   // 掛團體戰監聽(進場自動彈遙控器)
   const e = equipStatSum(s);
   const nxt = xpForNextLevel(s.level);
   const xpPct = Math.min(100, Math.round(s.xp/nxt*100));
@@ -3648,26 +5873,40 @@ function renderStudent(){
   const bonus = (base, extra)=> extra ? base+extra+' <span class="mini">(+'+extra+')</span>' : String(base);
   const myPend = tasksForStudent(s).filter(t=>{ const x=subFor(t.id,s.id); return !x || x.status==="rejected"; }).length;
   const readOk_ = s.readDate===todayStr();
+  const isCastleLord = state.castle && state.castle.owner && state.castle.owner===s.group && state.groupLeaders[s.group]===s.id;
   const tabs = [["stats","能力值"],["skills","🌳 技能樹"+(s.spPoints>0&&skillsEnabled()?"(+"+s.spPoints+")":"")],["announce","📣 公告"+(readOk_?"":"❗")],["wheel","🎡 轉盤"],["quests","任務"+(myPend?"("+myPend+")":"")],["shop","商店"],["craft","🎨 工坊"],["bag","背包"],["board","排行榜"]]
+    .concat(isCastleLord ? [["castle","🏰 城堡商店"]] : [])
     .map(([k,n])=>'<button class="tab '+(view.tab===k?"on":"")+'" data-tab="'+k+'">'+n+'</button>').join("");
 
   let body = "";
   if(view.tab==="stats"){
     const g = JOB_INFO[s.job].growth;
-    const badges = ACHIEVEMENTS.map(a=>{
-      const has = s.achievements.includes(a.id);
-      return '<span class="badge '+(has?"":"locked")+'" title="'+esc(a.desc)+'">'+a.icon+" "+esc(a.name)+'</span>';
-    }).join("");
-    body = '<div class="panel"><h3>能力值</h3>'
+    const owned = ownedTitles(s);
+    const badges = owned.map(t=>{
+      const on = s.title===t;
+      const d = titleDefOf(t);
+      return '<button class="badge title-pick'+(on?" on":"")+'" data-picktitle="'+esc(t)+'">'+(on?"✓ ":"")+'【'+esc(t)+'】'+(d&&d.fx?' <span class="mini">'+esc(d.fx)+'</span>':'')+'</button>';
+    }).join("") || '<span class="mini">還沒有稱號——用心表現,老師會頒發神秘稱號!</span>';
+
+    const al = s.alloc || {atk:0,agi:0,int:0,def:0};
+    const pts = s.statPoints || 0;
+    const chip = (icon,label,base,eq,alv,key)=>
+      '<span class="stat-chip">'+icon+' '+label+' <b class="num">'+bonus(base+alv,eq)+'</b>'
+      + (alv?' <span class="mini" style="color:#b8860b">(自點+'+alv+')</span>':'')
+      + (pts>0?' <button class="btn gold" data-alloc="'+key+'" style="padding:0 8px;font-size:14px;line-height:20px">＋</button>':'')
+      + '</span>';
+    body = '<div class="panel"><h3>能力值'
+      + (pts>0 ? ' <span class="tag" style="background:var(--gold)">可分配 '+pts+' 點</span>' : '')
+      + '</h3>'
       + '<div class="stat-strip">'
-      + '<span class="stat-chip">⚔️ ATK <b class="num">'+bonus(s.baseAtk,e.atk)+'</b></span>'
-      + '<span class="stat-chip">🛡️ DEF <b class="num">'+bonus(s.baseDef,e.def)+'</b></span>'
-      + '<span class="stat-chip">💨 AGI <b class="num">'+bonus(s.baseAgi,e.agi)+'</b></span>'
-      + '<span class="stat-chip">🔮 INT <b class="num">'+bonus(s.baseInt,e.int)+'</b></span>'
+      + chip("⚔️","ATK",s.baseAtk,e.atk,al.atk,"atk")
+      + chip("🛡️","DEF",s.baseDef,e.def,al.def,"def")
+      + chip("💨","AGI",s.baseAgi,e.agi,al.agi,"agi")
+      + chip("🔮","INT",s.baseInt,e.int,al.int,"int")
       + '</div>'
-      + '<div class="stat-legend">⚔️ ATK:提升 Boss 傷害 🛡️ DEF:降低受到傷害<br>'
-      + '💨 AGI:金幣倍率 ×<span class="num">'+goldMultiplier(s).toFixed(2)+'</span> '
-      + '🔮 INT:XP 倍率 ×<span class="num">'+xpMultiplier(s).toFixed(2)+'</span><br>'
+      + '<div class="stat-legend">⚔️ ATK:提升傷害 🛡️ DEF:降低受到傷害<br>'
+      + '💨 AGI:迴避率 <span class="num">'+agiDodge(s).toFixed(1)+'%</span>(競技場閃避攻擊) '
+      + '🔮 INT:技能觸發率 +<span class="num">'+intSkillBonus(s).toFixed(1)+'%</span><br>'
       + '升級成長('+JOB_INFO[s.job].name+'):每級 '
       + (g.atk?"ATK+"+g.atk+" ":"")+(g.def?"DEF+"+g.def+" ":"")+(g.agi?"AGI+"+g.agi+" ":"")+(g.int?"INT+"+g.int+" ":"")
       + ',HP 上限 +10 並回滿<br>'
@@ -3693,19 +5932,33 @@ function renderStudent(){
             + '<div class="mini" style="margin-top:10px">升級自動換上職業服(展示為素體,商店裝備會穿在職業服外層)。'
             + '結構已預留:法師/遊俠/牧師各補一條轉職線即可全面推廣。</div></div>';
         })() : "")
-      + '<div class="panel"><h3>成就</h3><div class="badge-row">'+badges+'</div></div>';
+      + '<div class="panel"><h3>🎖 我的稱號'+(s.title?'(配戴中:【'+esc(s.title)+'】)':'(未配戴)')+'</h3>'
+      + '<div class="badge-row">'+badges+'</div>'
+      + (s.title?'<div style="margin-top:8px"><button class="btn" id="titleOff">卸下稱號</button></div>':'')
+      + '</div>';
   }else if(view.tab==="quests"){
     const list = tasksForStudent(s).map(t=>{
       const sub = subFor(t.id, s.id);
       const st = sub ? sub.status : null;
-      let btn;
-      if(st==="approved") btn = '<button class="btn" disabled>已完成 ✓</button>';
-      else if(st==="pending") btn = '<button class="btn" disabled>審核中…</button>';
-      else btn = '<button class="btn gold" data-submit="'+t.id+'">回報完成</button>';
-      return '<div class="item-card"><div class="iic">📌</div>'
+      const scopeTxt = t.scope==="all" ? "全班任務" : (t.scope && t.scope.indexOf("stu:")===0 ? "🎯 你的專屬任務" : esc(t.scope)+" 組任務");
+      let btn, priceTxt;
+      if(st==="approved"){
+        btn = '<button class="btn" disabled>已完成'+(t.tiers?"("+TIER_NAMES[sub.tier||0]+")":"")+' ✓</button>';
+        priceTxt = '+'+taskReward(t, sub?sub.tier||0:0).xp+' XP・+'+taskReward(t, sub?sub.tier||0:0).gold+' 金';
+      }else if(st==="pending"){
+        btn = '<button class="btn" disabled>審核中'+(t.tiers?"("+TIER_NAMES[sub.tier||0]+")":"")+'…</button>';
+        priceTxt = '+'+taskReward(t, sub?sub.tier||0:0).xp+' XP・+'+taskReward(t, sub?sub.tier||0:0).gold+' 金';
+      }else if(t.tiers){
+        btn = t.tiers.map((r,i)=>'<button class="btn'+(i===2?" gold":"")+'" data-submit="'+t.id+'|'+i+'" style="margin:2px 0;width:100%">'+TIER_ICONS[i]+' '+TIER_NAMES[i]+'(+'+r.xp+'XP/+'+r.gold+'金)</button>').join("");
+        priceTxt = '自選難度回報';
+      }else{
+        btn = '<button class="btn gold" data-submit="'+t.id+'|0">回報完成</button>';
+        priceTxt = '+'+t.xp+' XP・+'+t.gold+' 金';
+      }
+      return '<div class="item-card"><div class="iic">'+(t.scope&&t.scope.indexOf("stu:")===0?"🎯":"📌")+'</div>'
         + '<div class="inm">'+esc(t.title)+'</div>'
-        + '<div class="istats">'+(t.scope==="all"?"全班任務":esc(t.scope)+" 組任務")+(st==="rejected"?"・被退回,可再挑戰":"")+'</div>'
-        + '<div class="price num">+'+t.xp+' XP・+'+t.gold+' 金</div>'+btn+'</div>';
+        + '<div class="istats">'+scopeTxt+(st==="rejected"?"・被退回,可再挑戰":"")+'</div>'
+        + '<div class="price num">'+priceTxt+'</div>'+btn+'</div>';
     }).join("") || '<div class="mini">目前沒有可挑戰的任務,等老師發布。</div>';
     body = '<div class="panel"><h3>任務板(完成後回報,老師審核通過就發獎勵)</h3><div class="shop-grid">'+list+'</div></div>';
   }else if(view.tab==="craft"){
@@ -3767,18 +6020,12 @@ function renderStudent(){
             .filter(f=>ti.fx.includes(f[0]))
             .map(f=>'<option value="'+f[0]+'"'+(ed.fx===f[0]?" selected":"")+'>'+f[1]+'</option>').join("")
           + '</select>'; })()
-        + (ed.img ?
-          ' 位置 <button class="btn" data-imove="-2,0">←</button><button class="btn" data-imove="0,-2">↑</button><button class="btn" data-imove="0,2">↓</button><button class="btn" data-imove="2,0">→</button>'
-          + ' <button class="btn" data-izoom="1.1">➕放大</button><button class="btn" data-izoom="0.9091">➖縮小</button>'
-          + ' <button class="btn" data-irot="-15">↺ 左轉15°</button><button class="btn" data-irot="15">↻ 右轉15°</button>'
-          + '<button class="btn" id="edImgReset">重設</button>'
-          + '<span class="mini num">縮放 '+Math.round(((ed.imgT&&ed.imgT.s)||1)*100)+'%・旋轉 '+(((ed.imgT&&ed.imgT.r)||0))+'°</span>'
-          :
+        + '</div>'
+        + '<div class="inline-form" style="margin-bottom:10px">'
+        + (ed.img ? '' :
           '<button class="btn'+(ed.smooth?" gold":"")+'" id="edSmooth">'+(ed.smooth?"🫧 平滑:開":"🔲 平滑:關")+'</button>'
           + '<button class="btn" id="edUndo"'+((ed.undo&&ed.undo.length)?"":" disabled")+'>⟲ 上一步</button>'
           + '<button class="btn" id="edRedo"'+((ed.redo&&ed.redo.length)?"":" disabled")+'>⟳ 下一步</button>'
-          + ' 移動 <button class="btn" data-move="-1,0" title="左移">←</button><button class="btn" data-move="0,-1" title="上移">↑</button><button class="btn" data-move="0,1" title="下移">↓</button><button class="btn" data-move="1,0" title="右移">→</button>'
-          + ' <button class="btn" data-zoom="1.25" title="等比放大">➕放大</button><button class="btn" data-zoom="0.8" title="等比縮小">➖縮小</button>'
           + '<button class="btn" id="edAI">🤖 AI指令</button><button class="btn" id="edImport">📥 匯入</button><button class="btn" id="edExport">📤 匯出</button>')
         + '<button class="btn" id="edImgBtn">🖼 匯入圖片</button>'
         + (ed.img ? '<button class="btn danger" id="edImgDel">✖ 移除圖片(回像素模式)</button>' : "")
@@ -3791,6 +6038,27 @@ function renderStudent(){
             + '<div class="palette" style="margin-top:8px">'+sw+'</div></div>')
         + '<div style="text-align:center"><span id="edPreview">'+dollSVG(s, 130, {type:ed.type, pixels:ed.pixels, gw:gridW(ed.type), gh:gridH(ed.type), fx:ed.fx, smooth:ed.smooth, img:ed.img, imgT:ed.imgT})+'</span>'
         + '<div class="mini">穿在自己身上的即時預覽</div></div></div>'
+        + (function(){                                        // 📐 位置與大小(獨立面板,D-pad)
+            const mv = ed.img ? "data-imove" : "data-move";
+            const stp = ed.img ? 2 : 1;
+            return '<div class="adj-bar">'
+              + '<span style="font-weight:900;font-size:14px">📐 位置與大小</span>'
+              + '<div class="adj-pad">'
+              + '<i></i><button class="btn" '+mv+'="0,-'+stp+'" title="上移">▲</button><i></i>'
+              + '<button class="btn" '+mv+'="-'+stp+',0" title="左移">◀</button><i></i><button class="btn" '+mv+'="'+stp+',0" title="右移">▶</button>'
+              + '<i></i><button class="btn" '+mv+'="0,'+stp+'" title="下移">▼</button><i></i>'
+              + '</div>'
+              + '<div class="adj-group">'
+              + (ed.img
+                ? '<button class="btn" data-izoom="1.1">➕ 放大</button><button class="btn" data-izoom="0.9091">➖ 縮小</button>'
+                : '<button class="btn" data-zoom="1.25">➕ 放大</button><button class="btn" data-zoom="0.8">➖ 縮小</button>')
+              + '</div>'
+              + (ed.img
+                ? '<div class="adj-group"><button class="btn" data-irot="-15">↺ 左轉</button><button class="btn" data-irot="15">↻ 右轉</button><button class="btn" id="edImgReset">重設</button></div>'
+                  + '<span class="mini num">縮放 '+Math.round(((ed.imgT&&ed.imgT.s)||1)*100)+'%・旋轉 '+(((ed.imgT&&ed.imgT.r)||0))+'°</span>'
+                : '')
+              + '</div>';
+          })()
         + '<div class="inline-form" style="margin-top:12px">'
         + '<button class="btn gold" id="edSubmit">送審上架</button>'
         + '<button class="btn" id="edCancel">取消</button></div>'
@@ -3825,6 +6093,7 @@ function renderStudent(){
     const costLabel = info.left<=0 ? "今日次數已用完"
       : (info.cost===0 ? "本次免費!" : "本次花費 "+info.cost+" 金");
     body = '<div class="panel" style="text-align:center"><h3 style="justify-content:center">命運輪盤</h3>'
+      + '<div class="stat-pill" style="display:inline-block;margin-bottom:8px">💰 持有 <b class="num">'+s.gold+'</b> 金</div>'
       + (info.readOk ? "" : '<div class="mini" style="margin-bottom:8px;color:#ffb3b3">先到「📣 公告」看完今天的公告,才能解鎖轉盤!</div>')
       + wheelHtml()
       + '<div style="margin-top:16px"><button class="btn gold" id="spinBtn" style="padding:12px 28px;font-size:16px"'
@@ -3832,9 +6101,12 @@ function renderStudent(){
       + '<div class="mini" style="margin-top:10px">今日剩餘 <b class="num">'+info.left+'</b> 次・費用:免費 → 20 → 40 → 80 → 160 金<br>'
       + '獎品機率:📜圖紙 5%・💰100金 5%・💰30金 15%・✨20XP 15%・🧪藥水 10%・💰10金 20%・✨5XP 15%・💨銘謝惠顧 15%</div></div>';
   }else if(view.tab==="shop"){
+    const goldBar = '<div class="stat-pill" style="display:inline-block;margin-bottom:10px">💰 持有 <b class="num">'+s.gold+'</b> 金'
+      + (isGroupLeader(s) ? ' <span style="margin-left:8px">💎 <b class="num">'+(s.diamonds||0)+'</b></span>' : '')+'</div>';
     const filters = [["all","全部"],["hat","帽子"],["clothes","衣服"],["weapon","武器"],["back","背飾"],["shoes","鞋子"],["face","造型"],["consumable","道具"]]
       .map(([k,n])=>'<button class="tab '+(view.shopFilter===k?"on":"")+'" data-filter="'+k+'">'+n+'</button>').join("");
     const items = allShopItems()
+      .filter(i=> i.rarity!=="Legendary" || s[i.type+"Id"]===i.id)   // 🔒 傳說裝備商店隱藏(神祕感);自己穿著的仍顯示
       .filter(i=> view.shopFilter==="all"
         || (view.shopFilter==="face" ? FACE_SLOTS.includes(i.type) : i.type===view.shopFilter))
       .map(i=>{
@@ -3864,8 +6136,33 @@ function renderStudent(){
             + '<button class="btn danger" data-recycle="'+slot+'">♻ 回收</button></div>';
         }).join("")
       : '<div class="mini">目前沒有可回收的裝備。</div>';
-    body = '<div class="panel"><h3>冒險商店</h3><div class="tabs">'+filters+'</div><div class="shop-grid">'+items+'</div></div>'
+    body = '<div class="panel"><h3>冒險商店</h3>'+goldBar+'<div class="tabs">'+filters+'</div><div class="shop-grid">'+items+'</div></div>'
       + '<div class="panel"><h3>♻ 回收裝備(退回售價 20%)</h3><div class="shop-grid">'+recycleHtml+'</div></div>';
+  }else if(view.tab==="castle"){
+    const isLord = state.castle && state.castle.owner===s.group && state.groupLeaders[s.group]===s.id;
+    if(!isLord){
+      body = '<div class="panel"><div class="mini">只有榮耀之城城主組的組長能進入城堡商店。</div></div>';
+    }else{
+      const members = state.students.filter(x=>x.group===s.group);
+      const shopRows = state.castleShopItems.map(it=>
+        '<div class="shop-item"><div style="font-size:34px;text-align:center">'+it.icon+'</div>'
+        + '<div style="text-align:center;font-weight:900">'+esc(it.name)+'</div>'
+        + '<div class="istats" style="min-height:34px">'+esc(it.desc)+'</div>'
+        + '<div class="price num">💎 '+it.price+'</div>'
+        + '<button class="btn gold" data-cbuy="'+esc(it.key)+'"'+((s.diamonds||0)>=it.price?"":" disabled")+'>購買</button></div>').join("");
+      const myCards = state.castleShopItems.filter(it=>(s.realItems[it.key]||0)>0).map(it=>
+        '<div class="shop-item"><div style="font-size:30px;text-align:center">'+it.icon+'</div>'
+        + '<div style="text-align:center;font-weight:900">'+esc(it.name)+' ×'+s.realItems[it.key]+'</div>'
+        + '<div class="inline-form" style="justify-content:center">'
+        + '<select data-cwho="'+esc(it.key)+'">'+members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join("")+'</select>'
+        + '<button class="btn" data-cuse="'+esc(it.key)+'">使用</button></div></div>').join("")
+        || '<div class="mini">還沒有道具卡——用鑽石購買吧!</div>';
+      body = '<div class="panel"><h3>🏰 城堡商店 <span class="tag" style="background:var(--gold)">💎 '+(s.diamonds||0)+'</span></h3>'
+        + '<div class="mini" style="margin-bottom:10px">城主組組長專屬!指導組員賺鑽石,兌換<b>現實特權卡</b>。使用後老師會收到通知並執行。</div>'
+        + '<div class="shop-grid">'+shopRows+'</div></div>'
+        + '<div class="panel"><h3>🎟 我的道具卡</h3><div class="shop-grid">'+myCards+'</div>'
+        + '<div class="mini" style="margin-top:6px">使用時選擇受益的組員(自己也可以),老師端會看到使用紀錄。</div></div>';
+    }
   }else if(view.tab==="bag"){
     const cons = Object.entries(s.consumables);
     const consHtml = cons.length ? cons.map(([id,n])=>{
@@ -3917,7 +6214,7 @@ function renderStudent(){
     + '<div class="equip-col">' + RIGHT_SLOTS.map(slotHtml).join("") + '</div>'
     + '</div>'
     + '<div class="stat-line-row">'
-    + '<span class="stat-pill lvp"><b>Lv.'+s.level+'</b> '+esc(s.name)+'</span>'
+    + '<span class="stat-pill lvp"><b>Lv.'+s.level+'</b>'+(s.title?' <span class="ttl">【'+esc(s.title)+'】</span>':'')+' '+esc(s.name)+'</span>'
     + '<span class="stat-pill"><b>HP</b> <span class="num">'+s.currentHp+'/'+s.maxHp+'</span></span>'
     + '<span class="stat-pill"><b>XP</b> <span class="num">'+s.xp+'/'+nxt+'</span></span>'
     + '</div>'
@@ -3929,11 +6226,50 @@ function renderStudent(){
   app.querySelectorAll("[data-tab]").forEach(b=> b.onclick = ()=>{ view.tab=b.dataset.tab; render(); });
   const stuLb = document.getElementById("stuLbView");
   if(stuLb) stuLb.onclick = showLeaderboard;
+  app.querySelectorAll("[data-picktitle]").forEach(b=>{
+    b.onclick = ()=>{
+      const t = b.dataset.picktitle;
+      s.title = (s.title===t) ? "" : t;    // 點配戴中的=卸下
+      save(); render();
+    };
+  });
+  const tOff = document.getElementById("titleOff");
+  if(tOff) tOff.onclick = ()=>{ s.title=""; save(); render(); };
   app.querySelectorAll("[data-filter]").forEach(b=> b.onclick = ()=>{ view.shopFilter=b.dataset.filter; render(); });
   app.querySelectorAll("[data-buy]").forEach(b=> b.onclick = ()=> buyItem(s.id, +b.dataset.buy));
+  app.querySelectorAll("[data-cbuy]").forEach(b=> b.onclick = ()=>{
+    const it = state.castleShopItems.find(x=>x.key===b.dataset.cbuy); if(!it) return;
+    if((s.diamonds||0) < it.price){ toast("鑽石不足", true); return; }
+    s.diamonds -= it.price;
+    s.realItems[it.key] = (s.realItems[it.key]||0) + 1;
+    addLog(s.id, "🏰 在城堡商店購買「"+it.name+"」(-"+it.price+" 💎)");
+    sfx("chest"); save(); render();
+  });
+  app.querySelectorAll("[data-cuse]").forEach(b=> b.onclick = ()=>{
+    const it = state.castleShopItems.find(x=>x.key===b.dataset.cuse); if(!it) return;
+    if(!(s.realItems[it.key]>0)) return;
+    const sel = app.querySelector('[data-cwho="'+b.dataset.cuse+'"]');
+    const who = stu(sel ? sel.value : s.id) || s;
+    s.realItems[it.key]--;
+    state.realItemLog.push({ id: Date.now()+"-"+Math.floor(Math.random()*1e4),
+      itemKey: it.key, itemName: it.icon+" "+it.name, byId: s.id, byName: s.name,
+      forId: who.id, forName: who.name, t: new Date().toLocaleString("zh-TW",{hour12:false}), done:false });
+    if(state.realItemLog.length > 200) state.realItemLog = state.realItemLog.slice(-200);
+    addLog(s.id, "🎟 為 "+who.name+" 使用「"+it.name+"」,等待老師執行");
+    sfx("goal"); save(); render();
+    toast("已使用!請向老師出示("+who.name+")");
+  });
+  app.querySelectorAll("[data-alloc]").forEach(b=> b.onclick = ()=>{
+    if((s.statPoints||0) <= 0) return;
+    if(!s.alloc) s.alloc = {atk:0,agi:0,int:0,def:0};
+    s.alloc[b.dataset.alloc]++;
+    s.statPoints--;
+    sfx("coin"); save(); render();
+    toast("＋1 "+({atk:"⚔️ ATK",def:"🛡️ DEF",agi:"💨 AGI",int:"🔮 INT"}[b.dataset.alloc])+"(剩 "+s.statPoints+" 點)");
+  });
   app.querySelectorAll("[data-use]").forEach(b=> b.onclick = ()=> useConsumable(s.id, +b.dataset.use));
   app.querySelectorAll("[data-recycle]").forEach(b=> b.onclick = ()=> openRecycleModal(s.id, b.dataset.recycle));
-  app.querySelectorAll("[data-submit]").forEach(b=> b.onclick = ()=> submitTask(s.id, +b.dataset.submit));
+  app.querySelectorAll("[data-submit]").forEach(b=> b.onclick = ()=>{ const [tid,ti]=b.dataset.submit.split("|"); submitTask(s.id, +tid, +ti||0); });
   const syncEd = ()=>{
     const ed = view.editor; if(!ed) return;
     const n = document.getElementById("edName"); if(n) ed.name = n.value;
@@ -4189,6 +6525,14 @@ function renderStudent(){
 }
 
 document.getElementById("btnHome").onclick = ()=>{
+  // 教師(已登入):直接回「我的班級」切換班級,不用重新登入
+  if(CLOUD.role==="teacher" && FB.ready && FB.user){
+    CLOUD.stopListen && CLOUD.stopListen();                  // 停掉目前班級的監聽
+    if(GARENA.active) garenaStop();                          // 團體戰進行中一併收掉
+    view = {page:"classes", role:"teacher"};
+    renderClasses((FB.user.email||"").toLowerCase());
+    return;
+  }
   if(FB.ready && FB.user){ FB.auth.signOut().catch(()=>{}); FB.user=null; }
   view={page:"home"}; render();
 };
