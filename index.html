@@ -34,6 +34,10 @@
   .home h2{color:var(--parch);letter-spacing:4px;font-size:24px}
   .home p{color:var(--dim);font-size:13px;max-width:460px;line-height:1.7}
   .role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;width:100%;max-width:640px}
+  .job-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;width:100%;max-width:900px;margin:0 auto}
+  .job-card{background:#fff;border:3px solid #141414;border-radius:12px;padding:12px 10px;color:#141414;cursor:pointer;text-align:center;box-shadow:4px 4px 0 rgba(20,20,20,.75);transition:transform .12s}
+  .job-card:hover{transform:translateY(-4px)}
+  .job-card:active{transform:translateY(0)}
   .role-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 8px;color:var(--ink);display:flex;flex-direction:column;gap:5px;align-items:center;transition:transform .12s,border-color .12s}
   .role-card:hover{transform:translateY(-2px);border-color:var(--gold)}
   .role-card .nm{font-size:14px}
@@ -440,10 +444,30 @@ if(typeof FB === "undefined"){ var FB = { ready:false, auth:null, user:null, db:
 const LS_KEY = "rpg-offline-test-v2";
 const OLD_KEY = "rpg-offline-test-v1";
 const JOB_INFO = {
-  Warrior:{name:"戰士", growth:{atk:2,def:1,agi:0,int:0}},
-  Mage:{name:"法師", growth:{atk:0,def:1,agi:0,int:2}},
-  Rogue:{name:"遊俠", growth:{atk:1,def:0,agi:2,int:0}},
-  Cleric:{name:"牧師", growth:{atk:0,def:2,agi:0,int:1}},
+  Warrior:{name:"戰士", growth:{atk:2,def:1,agi:0,int:0},
+    emoji:"⚔️", role:"前排坦克", color:"#f5c518", diff:"易上手",
+    tagline:"高攻高防的最前線,替隊友扛下傷害",
+    stats:{atk:5,def:4,agi:2,int:1},
+    ult:"聖劍・破空斬(2.2倍傷害+回血)", skill:"震地嘲諷:逼敵人集火自己",
+    tip:"新手推薦!站前面砍就對了,團體戰能保護後排" },
+  Mage:{name:"法師", growth:{atk:0,def:1,agi:0,int:2},
+    emoji:"🔮", role:"範圍輸出", color:"#e2593b", diff:"中等",
+    tagline:"最高爆發,一次打一片,但很脆",
+    stats:{atk:2,def:2,agi:2,int:5},
+    ult:"禁咒・隕星雨(2.5倍,全職最高)", skill:"烈焰風暴:射程內全體敵人受傷",
+    tip:"傷害之王,敵人擠一起時最強;要躲在前排後面" },
+  Rogue:{name:"遊俠", growth:{atk:1,def:0,agi:2,int:0},
+    emoji:"🌪", role:"敏捷刺客", color:"#6a5acd", diff:"進階",
+    tagline:"高閃避、遠程連擊,來去如風的暗殺者",
+    stats:{atk:4,def:1,agi:5,int:1},
+    ult:"絕影・千連擊(連砍兩次)", skill:"疾風隱身:短暫消失,敵人打不到你",
+    tip:"迴避率最高,擅長繞後偷襲;操作講技巧" },
+  Cleric:{name:"牧師", growth:{atk:0,def:2,agi:0,int:1},
+    emoji:"✨", role:"治療支援", color:"#ffd234", diff:"中等",
+    tagline:"團隊的生命線,補血又耐打",
+    stats:{atk:2,def:4,agi:1,int:4},
+    ult:"神蹟・聖光審判(傷害+大量回血)", skill:"聖光普照:治療周圍所有隊友",
+    tip:"團體戰的靈魂,跟緊隊友補血;單挑也很耐磨" },
 };
 const TYPE_ICON = { hat:"🎩", clothes:"👕", weapon:"⚔️", back:"🎒", shoes:"👟", hair:"💇", eyes:"👀", brows:"〰️", nose:"👃", consumable:"🧪" };
 const TYPE_NAME = { hat:"帽子", clothes:"衣服", weapon:"武器", back:"背飾", shoes:"鞋子", hair:"髮型", eyes:"眼睛", brows:"眉毛", nose:"鼻子", consumable:"道具" };
@@ -1552,6 +1576,7 @@ function backfill(p){
     if(p.boss.poison===undefined) p.boss.poison = null;
     if(!p.boss.revivedThisFight) p.boss.revivedThisFight = {};
   }
+  if(p.allowJobPick===undefined) p.allowJobPick = true;   // 學生認領時可自選職業
   if(!p.castleShopItems) p.castleShopItems = [       // 🏰 城堡商店(現實道具卡,教師可自訂)
     {key:"pardon", icon:"🎖️", name:"免死金牌", desc:"抵銷一次犯錯機會(使用後由老師審查執行)", price:15},
     {key:"seat",   icon:"🔀", name:"換位卡",   desc:"本次上課可自由換位置", price:8},
@@ -3424,25 +3449,68 @@ function renderClaim(email){
     + '<div style="margin-top:12px"><button class="btn" id="cbk">← 取消</button></div></div>';
   document.getElementById("cbk").onclick=()=>{ FB.auth.signOut(); FB.user=null; view={page:"home"}; render(); };
   app.querySelectorAll("[data-claim]").forEach(b=>{
-    b.onclick = async ()=>{
+    b.onclick = ()=>{
       const st = stu(b.dataset.claim); if(!st) return;
       const ans = prompt("確認身分:請輸入「"+st.name+"」的座號");
       if(ans===null) return;
       if(String(ans).trim() !== String(st.sno||st.seat||"").trim()){ toast("座號不符,請再確認", true); return; }
-      st.email = email;
-      try{
-        await FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id)
-          .set(JSON.parse(JSON.stringify(st)));
-        addLog(st.id, "🎉 完成帳號綁定,冒險正式開始!");
-        save();
-        toast("認領成功!歡迎加入,"+st.name);
-        view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"}; render();
-      }catch(e){
-        st.email = "";                                       // 寫入失敗回滾
-        toast("綁定失敗:"+(e.message||e)+"(可能是安全規則未更新)", true);
-      }
+      if(state.allowJobPick) renderJobPick(st, email);       // 選職業
+      else finishClaim(st, email, st.job);                   // 教師關閉→用名冊既有職業
     };
   });
+}
+/* 職業選擇頁(認領時) */
+function renderJobPick(st, email){
+  const jobs = ["Warrior","Mage","Rogue","Cleric"];
+  const radar = (j)=>{
+    const S = JOB_INFO[j].stats, keys=[["atk","攻"],["def","防"],["agi","敏"],["int","智"]];
+    return '<div style="display:flex;gap:8px;justify-content:center;margin:6px 0">'
+      + keys.map(k=>'<span class="mini">'+k[1]+'<div style="width:10px;height:'+(S[k[0]]*7+6)+'px;background:'+JOB_INFO[j].color+';border:1.5px solid #141414;border-radius:2px;margin:2px auto 0"></div></span>').join("")
+      + '</div>';
+  };
+  const cards = jobs.map(j=>{
+    const J = JOB_INFO[j];
+    const preview = Object.assign({}, st, {job:j});
+    return '<button class="job-card" data-job="'+j+'" style="border-color:'+J.color+'">'
+      + '<div style="font-size:30px">'+J.emoji+'</div>'
+      + '<div style="font-weight:900;font-size:18px">'+J.name+'</div>'
+      + '<div class="tag" style="background:'+J.color+';font-size:11px">'+J.role+'・'+J.diff+'</div>'
+      + radar(j)
+      + '<div class="mini" style="min-height:32px;margin:4px 0">'+esc(J.tagline)+'</div>'
+      + '<div class="mini" style="text-align:left;line-height:1.6"><b>💫 大招</b> '+esc(J.ult)+'<br><b>🎯 戰術技</b> '+esc(J.skill)+'</div>'
+      + '<div class="mini" style="background:#fff8e0;border-radius:6px;padding:4px;margin-top:6px;text-align:left">💡 '+esc(J.tip)+'</div>'
+      + '</button>';
+  }).join("");
+  app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+',選擇你的職業</h2>'
+    + '<p>四種職業各有特色,選好之後就是你這學期的冒險身分!<br>(不確定選哪個?<b>戰士</b>最好上手)</p>'
+    + '<div class="job-grid">'+cards+'</div>'
+    + '<div style="margin-top:12px"><button class="btn" id="cbk">← 返回</button></div></div>';
+  document.getElementById("cbk").onclick=()=>{ renderClaim(email); };
+  app.querySelectorAll("[data-job]").forEach(b=>{
+    b.onclick = ()=>{ finishClaim(st, email, b.dataset.job); };
+  });
+}
+/* 完成認領:寫入信箱+職業,重算該職業成長 */
+async function finishClaim(st, email, job){
+  st.email = email;
+  if(job && job!==st.job){                                   // 換職業→以新職重算基礎屬性與成長
+    st.job = job;
+    st.baseAtk=10; st.baseDef=10; st.baseAgi=10; st.baseInt=10; st.maxHp=100;
+    const gr = JOB_INFO[job].growth;
+    for(let L=2; L<=st.level; L++){ st.baseAtk+=gr.atk; st.baseDef+=gr.def; st.baseAgi+=gr.agi; st.baseInt+=gr.int; st.maxHp+=10; }
+    st.currentHp = st.maxHp;
+  }
+  try{
+    await FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id)
+      .set(JSON.parse(JSON.stringify(st)));
+    addLog(st.id, "🎉 完成綁定,成為"+JOB_INFO[st.job].name+"!冒險開始!");
+    save();
+    toast("歡迎加入,"+st.name+"("+JOB_INFO[st.job].name+")!");
+    view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"}; render();
+  }catch(e){
+    st.email = "";
+    toast("綁定失敗:"+(e.message||e)+"(可能是安全規則未更新)", true);
+  }
 }
 /* 教師:班級選擇頁 */
 async function renderClasses(email){
@@ -5098,6 +5166,8 @@ function bindTeacher(){
     addLog(id, "加入公會,冒險開始!");
     save(); render(); toast(name+"(學號 "+sno+")已加入");
   };
+  const ajp = document.getElementById("allowJobPick");
+  if(ajp) ajp.onchange = ()=>{ state.allowJobPick = ajp.checked; save(); toast(ajp.checked?"學生可自選職業":"學生沿用名冊職業"); };
   // ── 批次匯入 ──
   app.querySelectorAll("[data-mentor]").forEach(sel=>{
     sel.onchange = ()=>{
