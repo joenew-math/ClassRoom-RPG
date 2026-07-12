@@ -4751,7 +4751,11 @@ function teacherRoster(){
       + '<td><b>'+esc(s.name)+'</b><div class="mini num">'+JOB_INFO[s.job].name+'</div>'
       + '<div class="mini">學號<input type="text" data-sno="'+s.id+'" value="'+esc(String(s.sno||""))+'" placeholder="唯一" style="width:70px;padding:2px 4px"> 座<input type="text" data-seat="'+s.id+'" value="'+esc(String(s.seat||""))+'" style="width:40px;padding:2px 4px"> '
       + '生日<input type="text" data-birth="'+s.id+'" value="'+esc(String(s.birth||""))+'" placeholder="20130215" style="width:90px;padding:2px 4px"></div>'
-      + '<div class="mini">📧<input type="text" data-email="'+s.id+'" value="'+esc(s.email||"")+'" placeholder="學生Google信箱" style="width:170px;padding:2px 4px"></div></td>'
+      + '<div class="mini">📧<input type="text" data-email="'+s.id+'" value="'+esc(s.email||"")+'" placeholder="學生Google信箱" style="width:150px;padding:2px 4px">'
+      + ((s.email||"").trim()
+          ? ' <span class="tag" style="background:#3a7;font-size:10px">已綁定</span> <button class="btn danger" data-unbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="清空信箱,讓學生重新認領">解綁</button>'
+          : ' <span class="tag" style="background:#999;font-size:10px">待認領</span>')
+      + '</div></td>'
       + '<td class="num">Lv.'+s.level+'<div class="mini num">'+s.gold+' 金・SP '+s.spPoints+'</div></td>'
       + '<td><select data-gchange="'+s.id+'">'+gSel+'</select>'
       + '<select data-mentor="'+s.id+'" title="組員獲得XP時,組長得到的鑽石數(鼓勵指導)" style="margin-top:4px">'
@@ -5168,6 +5172,15 @@ function bindTeacher(){
   };
   const ajp = document.getElementById("allowJobPick");
   if(ajp) ajp.onchange = ()=>{ state.allowJobPick = ajp.checked; save(); toast(ajp.checked?"學生可自選職業":"學生沿用名冊職業"); };
+  app.querySelectorAll("[data-unbind]").forEach(b=>{
+    b.onclick = ()=>{
+      const st = stu(b.dataset.unbind); if(!st) return;
+      if(!confirm("解除「"+st.name+"」的帳號綁定?\n該生下次登入需重新認領角色(角色資料不會遺失)。")) return;
+      st.email = "";
+      if(CLOUD.on()){ FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id).set(JSON.parse(JSON.stringify(st))).catch(()=>{}); }
+      save(); render(); toast("已解除 "+st.name+" 的綁定");
+    };
+  });
   // ── 批次匯入 ──
   app.querySelectorAll("[data-mentor]").forEach(sel=>{
     sel.onchange = ()=>{
