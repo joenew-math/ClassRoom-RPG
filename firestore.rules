@@ -18,6 +18,15 @@ service cloud.firestore {
     function ownStudent(cid) {
       return get(/databases/$(database)/documents/classes/$(cid)/students/$(account().data.sid));
     }
+    function isInitialStudentClaim(cid, sid) {
+      return ownSid(cid, sid)
+        && resource.data.get("email", "") == ""
+        && request.resource.data.email == email()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "email", "job", "gender", "baseVariant", "baseTune",
+          "baseAtk", "baseDef", "baseAgi", "baseInt", "maxHp", "currentHp"
+        ]);
+    }
 
     match /classes/{cid} {
       allow create: if signedIn() && email() != ""
@@ -65,7 +74,7 @@ service cloud.firestore {
         allow create: if isTeacher(cid) || (ownSid(cid, sid)
           && request.resource.data.id == sid
           && request.resource.data.email == email());
-        allow update: if isTeacher(cid) || (ownSid(cid, sid)
+        allow update: if isTeacher(cid) || isInitialStudentClaim(cid, sid) || (ownSid(cid, sid)
           && request.resource.data.id == resource.data.id
           && request.resource.data.email == resource.data.email
           && request.resource.data.level == resource.data.level
