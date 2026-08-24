@@ -3234,7 +3234,7 @@ function freshState(){
     announcements:[], nextAnnId:1, announcementSchedules:[], nextAnnScheduleId:1, goldBurned:0,
     economy:{goldPerDiamond:10000,dailyGoldCap:500,dungeonDailyGoldCap:20,peerReviewGold:100,peerReviewDiamondEvery:20,peerReviewWeeklyDiamondCap:1,goldIssued:0,goldSpent:0},
     art:{}, skillsOff:false,
-    classSession:{active:false,startedAt:0,endedAt:0,token:""}, // 🔐 每節課獨立 QR 通行證
+    classSession:{active:false,startedAt:0,endedAt:0,expiresAt:0,token:""}, // 🔐 每節課獨立 QR 通行證
     dailyCapOn:true,                                       // 📊 每日常規 EXP 上限開關
     unlockedMaps:[],                                       // 🗺 已解鎖戰場(擊敗對應屬性魔王取得)
     classUnlocks:{enabled:true,manualStage:0,scale:1,celebrated:[]}, // 🏫 全班累積 XP 漸進解鎖
@@ -3310,10 +3310,11 @@ function backfill(p){
   p.nextTaskId = p.nextTaskId || 1;
   if(p.dailyCapOn===undefined) p.dailyCapOn = true;
   if(!Array.isArray(p.unlockedMaps)) p.unlockedMaps = [];
-  if(!p.classSession || typeof p.classSession!=="object") p.classSession={active:false,startedAt:0,endedAt:0,token:""};
+  if(!p.classSession || typeof p.classSession!=="object") p.classSession={active:false,startedAt:0,endedAt:0,expiresAt:0,token:""};
   p.classSession.active=!!p.classSession.active;
   p.classSession.startedAt=Number(p.classSession.startedAt)||0;
   p.classSession.endedAt=Number(p.classSession.endedAt)||0;
+  p.classSession.expiresAt=Number(p.classSession.expiresAt)||0;
   p.classSession.token=String(p.classSession.token||"");
   if(!p.classUnlocks || typeof p.classUnlocks!=="object") p.classUnlocks={enabled:true,manualStage:0,scale:1,celebrated:[]};
   if(p.classUnlocks.enabled===undefined) p.classUnlocks.enabled=true;
@@ -3629,6 +3630,14 @@ const CLOUD = {
     }
     if(force){const old=await col.get();old.docs.forEach(d=>{if(!current.has(d.id))ops.push(d.ref.delete());});}
     for(let i=0;i<ops.length;i+=25)await Promise.all(ops.slice(i,i+25));
+  },
+  async lookupEnrollment(cid,sno,seat){
+    if(!FB.user||!FB.user.uid)throw new Error("請先完成 Google 登入");
+    const key=await this.enrollmentKey(cid,sno,seat),snap=await FB.db.collection("classes").doc(cid).collection("enrollments").doc(key).get();
+    if(!snap.exists)throw new Error("名冊中找不到這組學號與座號");
+    const data=snap.data()||{};
+    if(data.claimedUid&&data.claimedUid!==FB.user.uid)throw new Error("此名冊資料已綁定其他帳號，請洽老師解綁");
+    return Object.assign({enrollmentKey:key},data);
   },
   async beginEnrollment(user,cid,sno,seat,email){
     if(!user||!user.uid)throw new Error("請先完成 Google 登入");
@@ -4000,6 +4009,10 @@ const CLOUD = {
         meta.students = state.students; meta.customItems = state.customItems;meta.submissions=state.submissions;
         state = backfill(meta);
         this._lastSnap.meta = j;
+        if(this.role==="student"){
+          const entryToken=String(new URLSearchParams(location.search).get("session")||"");
+          if(entryToken&&!classSessionIsLive(state.classSession,entryToken))setTimeout(()=>forceStudentClassExit("老師已結束本節課，這台裝置已安全登出。"),0);
+        }
       });
     }));
   },
@@ -4061,7 +4074,7 @@ const CLOUD = {
   async createClass(name, email, fromState){
     // 新生班級代碼固定 5 碼；排除 0/O、1/I，方便教室口頭告知。舊班級 ID 仍完全相容。
     const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let cid=""; for(let i=0;i<5;i++) cid += alphabet[Math.floor(Math.random()*alphabet.length)];
+    let cid="";for(let i=0;i<5;i++)cid+=alphabet[Math.floor(Math.random()*alphabet.length)];
     const src = fromState ? backfill(JSON.parse(JSON.stringify(fromState))) : emptyClassState();
     src.className = name;
     await FB.db.collection("classes").doc(cid).set({
@@ -8204,17 +8217,22 @@ async function loginSuccess(user, role){
         if(!join||normalizeClassCode(join.cid)!==normalizeClassCode(cid)){renderClaim(email,join);return;}
         enrollment=await CLOUD.beginEnrollment(user,cid,join.sno,join.seat,email);
       }
+      if(studentMode==="qr-register"){
+        const accountDoc=await FB.db.collection("studentAccounts").doc(user.uid).get();
+        const account=accountDoc.exists?accountDoc.data():null;
+        if(!account||String(account.cid||"")!==String(cid)){
+          CLOUD.cid=cid;
+          renderClaim(email,{cid});
+          return;
+        }
+        sessionStorage.setItem("rpg-student-mode","login");
+      }
       await CLOUD.loadClass(cid, email);
       if((studentMode==="login"||studentMode==="qr-register") && !wantsMoba && !wantsReward){
         const live=state.classSession||{};
-        if(!sessionToken || !live.active || sessionToken!==String(live.token||"")){
+        if(!sessionToken || !classSessionIsLive(live,sessionToken)){
           renderStudentSessionMissing(email,"這張課堂 QR 已失效，或老師尚未按下「開始上課」。請掃描大屏目前顯示的新 QR Code。"); return;
         }
-      }
-      if(studentMode==="qr-register"){
-        const existing=state.students.find(x=>(x.email||"").toLowerCase()===email);
-        if(!existing){renderClaim(email,{cid});return;}
-        sessionStorage.setItem("rpg-student-mode","login");
       }
       if(enrollment){
         const matched=state.students.find(x=>String(x.id)===String(enrollment.sid));
@@ -8265,6 +8283,7 @@ function renderStudentLoginMissing(email){
 function googleLogin(role){
   if(!FB.ready){ toast("登入服務未連線,請用離線模式", true); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"}); // 共用平板每次明確選帳號，避免沿用上一位學生
   FB.auth.signInWithPopup(provider).then(res=>{
     loginSuccess(res.user, role);
   }).catch(err=>{
@@ -8288,10 +8307,26 @@ function googleLogin(role){
     toast("登入失敗:"+(err&&err.message||err), true);
   });
 }
+function offerStudentQuickLogin(user){
+  if(!user||!document.getElementById("studentQrGoogle")||document.getElementById("studentQuickLogin"))return;
+  const grid=document.getElementById("studentQrGoogle").parentElement;if(!grid)return;
+  const email=String(user.email||""),parts=email.split("@"),masked=parts.length>1?(parts[0].slice(0,2)+"•••@"+parts[1]):"目前的 Google 帳號";
+  const box=document.createElement("div");box.id="studentQuickLogin";box.style.cssText="padding:10px;border:2px solid #3fae76;border-radius:10px;background:#effff5;text-align:center";
+  box.innerHTML='<div class="mini">這台裝置目前登入：<b>'+esc(user.displayName||masked)+'</b>（'+esc(masked)+'）</div><button class="btn gold" id="studentQuickContinue" style="width:100%;margin-top:7px">⚡ 使用目前帳號快速進入</button><div class="mini" style="margin-top:5px">若不是你的帳號，請改按下方 Google 登入或註冊並重新選擇。</div>';
+  grid.insertBefore(box,grid.firstChild);
+  document.getElementById("studentQuickContinue").onclick=()=>{
+    const q=new URLSearchParams(location.search),cid=normalizeClassCode(q.get("class")||"");
+    try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}
+    loginSuccess(user,"student");
+  };
+}
 /* 新生註冊:以班級代碼+學號+座號精準核對，避免公開未認領姓名名單。 */
 function renderClaim(email,prefill){
+  prefill=prefill||{};
+  const pendingCid=normalizeClassCode(prefill.cid||CLOUD.cid||"");
+  const onlinePending=CLOUD.role==="student"&&!!FB.user&&!!pendingCid;
   const free = state.students.filter(x=>!(x.email||"").trim());
-  if(!free.length){
+  if(!free.length&&!onlinePending){
     if(state.allowSelfEnroll&&!CLOUD.on()){ renderEnroll(email); return; } // 自助註冊僅限離線示範班
     app.innerHTML = '<div class="home"><div class="crest">🧑‍🎓</div><h2>找不到可認領的角色</h2>'
       + '<p>名冊中沒有你的信箱('+esc(email)+'),而且所有角色都已被認領。<br>請請老師在名冊確認你的資料。</p>'
@@ -8299,7 +8334,6 @@ function renderClaim(email,prefill){
     document.getElementById("cbk").onclick=()=>{ FB.auth.signOut(); FB.user=null; view={page:"home"}; render(); };
     return;
   }
-  prefill=prefill||{};
   app.innerHTML = '<div class="home"><div class="crest">🧑‍🎓</div><h2>新生註冊・核對班級名冊</h2>'
     + '<p>登入信箱:<b>'+esc(email)+'</b><br>請輸入老師名冊中的學號與座號，系統只會顯示核對成功的本人資料。</p>'
     + '<div class="panel" style="width:100%;max-width:430px;margin:0 auto;text-align:left">'
@@ -8315,14 +8349,17 @@ function renderClaim(email,prefill){
   const claim=async()=>{
     const sno=document.getElementById("claimSno").value.trim(),seat=document.getElementById("claimSeat").value.trim();
     if(!sno||!seat){toast("請輸入學號與座號",true);return;}
-    const st=state.students.find(x=>String(x.sno||"").trim()===sno && String(x.seat||x.sno||"").trim()===seat);
-    if(!st){document.getElementById("claimResult").innerHTML='<span style="color:#c0392b">找不到資料，請檢查班級代碼、學號與座號。</span>';return;}
-    if((st.email||"").trim()&&(st.email||"").toLowerCase()!==email){toast("此學生資料已綁定其他帳號，請老師先解綁",true);return;}
-    if(!confirm("名冊核對成功："+seat+" 號「"+st.name+"」\n確定綁定目前的登入帳號？")) return;
     const btn=document.getElementById("claimGo");btn.disabled=true;btn.textContent="正在安全綁定…";
     try{
-      const enrollment=await CLOUD.beginEnrollment(FB.user,CLOUD.cid,sno,seat,email);
+      let st=null;
+      if(onlinePending){const preview=await CLOUD.lookupEnrollment(pendingCid,sno,seat);st=preview.student||null;}
+      else st=state.students.find(x=>String(x.sno||"").trim()===sno && String(x.seat||x.sno||"").trim()===seat);
+      if(!st)throw new Error("找不到資料，請檢查班級代碼、學號與座號");
+      if((st.email||"").trim()&&(st.email||"").toLowerCase()!==email)throw new Error("此學生資料已綁定其他帳號，請老師先解綁");
+      if(!confirm("名冊核對成功："+seat+" 號「"+st.name+"」\n確定綁定目前的登入帳號？")){btn.disabled=false;btn.textContent="核對名冊並加入班級";return;}
+      const enrollment=await CLOUD.beginEnrollment(FB.user,pendingCid||CLOUD.cid,sno,seat,email);
       if(String(enrollment.sid)!==String(st.id))throw new Error("名冊核對資料不一致，請重新整理後再試");
+      if(onlinePending){await CLOUD.loadClass(pendingCid,email);st=state.students.find(x=>String(x.id)===String(enrollment.sid))||st;}
       try{sessionStorage.removeItem("rpg-student-join");sessionStorage.removeItem("rpg-student-mode");}catch(_){}
       // 正式名冊認領也必須先選擇已由教師校正的素體；即使班級鎖定職業，仍保留外型選擇。
       renderJobPick(st,email);
@@ -8552,8 +8589,8 @@ async function renderClasses(email){
       try{
         await CLOUD.loadClass(b.dataset.cid);
         view={page:"teacher",tview:"classhome",role:"teacher"};
-        if(!(state.classSession||{}).active){
-          state.classSession={active:true,startedAt:Date.now(),endedAt:0,token:randomClassSessionToken()};
+        if(!classSessionIsLive(state.classSession||{})){
+          state.classSession=makeClassSession();
           addLog("-","📚 教師選擇班級並開始上課");save();
           if(CLOUD.on())await CLOUD.pushDirty();
         }
@@ -8713,11 +8750,14 @@ function renderParent(){
 }
 /* 統一登出:清雲端登入、監聽、回首頁 */
 function doLogout(){
+  const wasStudent=CLOUD.role==="student";
   try{ if(GARENA.active) garenaStop(); }catch(e){}
   try{ CLOUD.stopListen && CLOUD.stopListen(); }catch(e){}
   if(FB.ready && FB.user){ FB.auth.signOut().catch(()=>{}); }
   FB.user = null; CLOUD.role = null;
   try{ localStorage.removeItem("rpg-last-role"); }catch(_){}    // 主動登出→下次不自動恢復
+  try{sessionStorage.removeItem("rpg-student-mode");sessionStorage.removeItem("rpg-student-join");sessionStorage.removeItem("rpg-login-role");}catch(_){}
+  if(wasStudent){try{const clean=new URL(location.href);clean.search="";clean.hash="";history.replaceState(null,"",clean.toString());}catch(_){}}
   view = {page:"home"}; render();
   toast("已登出");
 }
@@ -8730,8 +8770,42 @@ function randomClassSessionToken(){
   try{ if(crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,""); }catch(_){}
   return Date.now().toString(36)+Math.random().toString(36).slice(2,12);
 }
+const CLASS_SESSION_MAX_MS=8*60*60*1000;
+function makeClassSession(){
+  const now=Date.now();
+  return {active:true,startedAt:now,endedAt:0,expiresAt:now+CLASS_SESSION_MAX_MS,token:randomClassSessionToken()};
+}
+function classSessionIsLive(cs,expectedToken){
+  cs=cs||{};
+  if(!cs.active||!String(cs.token||""))return false;
+  if(expectedToken&&String(expectedToken)!==String(cs.token||""))return false;
+  const expires=Number(cs.expiresAt)||(Number(cs.startedAt)?Number(cs.startedAt)+CLASS_SESSION_MAX_MS:0);
+  return !expires||Date.now()<expires;
+}
+let _studentSessionExit=false;
+function forceStudentClassExit(message){
+  if(_studentSessionExit)return;_studentSessionExit=true;
+  try{CLOUD.stopListen&&CLOUD.stopListen();}catch(_){}
+  try{sessionStorage.removeItem("rpg-student-mode");sessionStorage.removeItem("rpg-student-join");}catch(_){}
+  try{localStorage.removeItem("rpg-last-role");}catch(_){}
+  try{const clean=new URL(location.href);clean.search="";clean.hash="";history.replaceState(null,"",clean.toString());}catch(_){}
+  const signedOut=FB.ready&&FB.auth?FB.auth.signOut().catch(()=>{}):Promise.resolve();
+  FB.user=null;CLOUD.role=null;
+  signedOut.finally(()=>{
+    app.innerHTML='<div class="home"><div class="crest">🏁</div><h2>本節課已結束</h2><div class="panel" style="max-width:500px;margin:0 auto;text-align:center"><p>'+esc(message||"老師已結束本節課，你已安全登出。")+'</p><div class="mini">下次上課請重新掃描老師大屏顯示的新 QR Code。</div></div><button class="btn gold" id="classEndedHome" style="margin-top:12px">回到首頁</button></div>';
+    const b=document.getElementById("classEndedHome");if(b)b.onclick=()=>{_studentSessionExit=false;view={page:"home"};render();};
+  });
+}
+async function revalidateStudentClassSession(){
+  if(CLOUD.role!=="student"||!CLOUD.on())return;
+  const token=String(new URLSearchParams(location.search).get("session")||"");if(!token)return;
+  try{
+    const doc=await FB.db.collection("classes").doc(CLOUD.cid).collection("public").doc("main").get();
+    if(!doc.exists||!classSessionIsLive((doc.data()||{}).classSession,token))forceStudentClassExit("本節課已結束或登入通行證已更新，這台裝置已安全登出。");
+  }catch(e){console.warn("class session recheck",e);}
+}
 function teacherClassHome(){
-  const cs=state.classSession||{}, live=!!cs.active;
+  const cs=state.classSession||{}, live=classSessionIsLive(cs);
   const className=state.className||state.lbName||"本班";
   const started=cs.startedAt?new Date(cs.startedAt).toLocaleString("zh-TW",{hour12:false}):"尚未開始";
   const count=state.students.filter(s=>s&&!s.archived).length;
@@ -12954,7 +13028,7 @@ function bindTeacher(){
   if(classStartBtn) classStartBtn.onclick=()=>{
     if((state.classSession||{}).active){
       modalConfirm("確定結束本節課？目前的學生登入 QR Code 會立即失效。",async()=>{
-        state.classSession.active=false; state.classSession.endedAt=Date.now(); state.classSession.token="";
+        state.classSession.active=false; state.classSession.endedAt=Date.now(); state.classSession.expiresAt=0; state.classSession.token="";
         addLog("-","🏁 教師結束本節課"); save();
         try{ if(CLOUD.on()) await CLOUD.pushDirty(); }catch(e){ toast("課堂狀態雲端同步失敗："+(e.message||e),true); }
         render(); toast("本節課已結束，QR Code 已失效");
@@ -12962,7 +13036,7 @@ function bindTeacher(){
       return;
     }
     (async()=>{
-      state.classSession={active:true,startedAt:Date.now(),endedAt:0,token:randomClassSessionToken()};
+      state.classSession=makeClassSession();
       addLog("-","📚 教師開始上課"); save();
       try{
         if(CLOUD.on()) await CLOUD.pushDirty();
@@ -14032,7 +14106,7 @@ function loadQrLib(cb){
   if(_qrLibState===1){ pend(); return; }
   _qrLibState = 1;
   const sc = document.createElement("script");
-  sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+  sc.src = "vendor/qrcode/qrcode.min.js";
   sc.onload = ()=>{ _qrLibState = 2; cb(true); };
   sc.onerror = ()=>{ _qrLibState = -1; cb(false); };
   document.body.appendChild(sc);
@@ -14040,7 +14114,7 @@ function loadQrLib(cb){
 function openQrModal(){
   const cs=state.classSession||{};
   if(!CLOUD.cid){ toast("離線測試無法產生學生登入 QR",true); return; }
-  if(!cs.active || !cs.token){ toast("請先回課堂首頁按下「開始上課」",true); return; }
+  if(!classSessionIsLive(cs)){ toast("本節課通行證已失效，請回課堂首頁重新按下「開始上課」",true); return; }
   openClassQr(CLOUD.cid, state.className || state.lbName || "本班", cs.token);
 }
 function openClassQr(cid, cname, sessionToken){
@@ -15621,8 +15695,9 @@ function flushCloudNow(){
     }
   }catch(_){}
 }
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") flushCloudNow(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") flushCloudNow(); else revalidateStudentClassSession(); });
 window.addEventListener("beforeunload", flushCloudNow);
+window.addEventListener("online",revalidateStudentClassSession);
 
 /* ── 線上登入優化:整頁跳轉登入回跳接手 + 重新整理自動恢復 ── */
 if(FB.ready&&!_mobaPhonePage){
@@ -15643,7 +15718,10 @@ if(FB.ready&&!_mobaPhonePage){
     let role = null;
     const entry=new URLSearchParams(location.search),entryCid=normalizeClassCode(entry.get("class")||"");
     if(entry.get("teacher")==="1")role="teacher";
-    else if(entryCid&&(entry.get("session")||entry.get("dota")||entry.get("reward")))role="student";
+    else if(entryCid&&(entry.get("session")||entry.get("dota")||entry.get("reward"))){
+      // 共用平板不可自動沿用上一位學生；顯示可辨識的快速登入，讓本人明確確認。
+      FB.user=user;offerStudentQuickLogin(user);return;
+    }
     else try{ role = localStorage.getItem("rpg-last-role"); }catch(_){}
     if(!role) return;                                          // 沒有上次身分紀錄→停留登入頁
     _loginResumed = true;
