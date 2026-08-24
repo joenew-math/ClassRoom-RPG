@@ -1067,9 +1067,9 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 </style>
 </head>
 <body>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="vendor/firebase/firebase-app-compat.js"></script>
+<script src="vendor/firebase/firebase-auth-compat.js"></script>
+<script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="./Lession/question-bank-data.js"></script>
@@ -4059,10 +4059,9 @@ const CLOUD = {
     return null;
   },
   async createClass(name, email, fromState){
-    // 新生需要手動輸入，因此新班級改用排除 0/O、1/I 的易讀代碼；舊班級 ID 仍完全相容。
+    // 新生班級代碼固定 5 碼；排除 0/O、1/I，方便教室口頭告知。舊班級 ID 仍完全相容。
     const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let token=""; for(let i=0;i<8;i++) token += alphabet[Math.floor(Math.random()*alphabet.length)];
-    const cid = "RPG-"+token; // 32^8 種組合；避免建立前讀取不存在文件而被安全規則拒絕
+    let cid=""; for(let i=0;i<5;i++) cid += alphabet[Math.floor(Math.random()*alphabet.length)];
     const src = fromState ? backfill(JSON.parse(JSON.stringify(fromState))) : emptyClassState();
     src.className = name;
     await FB.db.collection("classes").doc(cid).set({
@@ -8012,7 +8011,7 @@ function homeGuideHtml(forceOpen){
     + '<div class="home-guide-body">'
     + '<div class="home-guide-index"><span>① 🏫 新生取代碼</span><span>② 🪪 完成一次註冊</span><span>③ 🔐 之後直接登入</span></div>'
     + '<div class="guide-steps">'
-    + '<div class="guide-step"><span class="guide-step-icon">🏫</span><div><b>步驟 1・只有新生註冊需要班級代碼</b><div class="mini">第一次加入時向老師取得代碼，用來確認要加入哪一個班級；已註冊學生不用再輸入。</div><div class="guide-example"><span>班級代碼：RPG-7K9M2Q</span></div></div></div>'
+    + '<div class="guide-step"><span class="guide-step-icon">🏫</span><div><b>步驟 1・只有新生註冊需要班級代碼</b><div class="mini">第一次加入時向老師取得 5 碼代碼，用來確認要加入哪一個班級；已註冊學生不用再輸入。</div><div class="guide-example"><span>班級代碼：7K9M2</span></div></div></div>'
     + '<div class="guide-step"><span class="guide-step-icon">🪪</span><div><b>步驟 2・填入名冊上的學號與座號</b><div class="mini">要和老師匯入的資料完全相同；學號不是座號，也不要輸入暱稱。</div><div class="guide-example"><span>學號：1120345</span><span>座號：15</span></div></div></div>'
     + '<div class="guide-step"><span class="guide-step-icon">🔐</span><div><b>步驟 3・之後直接按「學生登入」</b><div class="mini">系統會依第一次綁定的 Google 帳號自動找到班級，不需要再次填寫班級代碼、學號或座號。</div><div class="guide-example"><span>使用原本綁定的 student@mail.edu.tw</span></div></div></div>'
     + '<div class="guide-step"><span class="guide-step-icon">🧍</span><div><b>步驟 4・第一次選角色</b><div class="mini">核對成功後選擇生理男／生理女、素體與職業；以後直接登入即可回到同一個角色。</div></div></div>'
@@ -8021,7 +8020,7 @@ function homeGuideHtml(forceOpen){
 }
 function normalizeClassCode(v){
   v=String(v||"").trim();
-  return /^rpg-/i.test(v) ? v.toUpperCase() : v;             // 舊版小寫 ID 不強制改寫
+  return (/^rpg-/i.test(v)||/^[a-z2-9]{5}$/i.test(v)) ? v.toUpperCase() : v; // 新 5 碼與舊 RPG 代碼均相容
 }
 const EDU_OIDC = {
   enabled:false, uiVisible:false, clientId:"", redirectUri:"", // 申請通過後再將 enabled、uiVisible 設為 true
@@ -8117,8 +8116,9 @@ function renderHome(){
   if(studentEntry){
     const title=wantsMoba?(dotaEntry==="signup"?"Dota 即時報名":"Dota 戰場參戰"):(wantsReward?"領取教師獎勵":"本節課學生登入");
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>🎒 '+title+'</h3>'
-      +'<div class="mini" style="line-height:1.8">班級代碼 <b class="num">'+esc(cid)+'</b><br>請使用自己的 Google 帳號。已註冊會直接進入角色；第一次使用會自動進入名冊核對與角色註冊。</div>'
-      +'<button class="btn gold" id="studentQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:20px;padding:12px 24px;margin-top:14px">使用 Google 登入</button>'
+      +'<div class="mini" style="line-height:1.8">班級代碼 <b class="num">'+esc(cid)+'</b><br>請使用自己的 Google 帳號，並依照是否已建立角色選擇入口。</div>'
+      +'<div style="display:grid;gap:9px;margin-top:14px"><button class="btn gold" id="studentQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:18px;padding:11px 20px">已有角色・Google 登入</button>'
+      +'<button class="btn" id="studentQrRegister"'+(fbOk?'':' disabled')+' style="font-size:18px;padding:11px 20px;background:#e9f7ff">🆕 第一次使用・註冊角色</button></div>'
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
   }else if(teacherEntry){
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>📜 教師登入</h3><div class="mini">完成 Google 登入後，系統會顯示您建立或管理的班級。</div>'
@@ -8130,7 +8130,7 @@ function renderHome(){
       +'<button class="role-card" id="loginParent"><span class="face">👪</span><span class="nm">家長查看</span><span class="sub">班級代碼＋學號＋生日</span></button></div>'
       +'<div id="parentForm" style="display:none;max-width:340px;width:100%"><div class="panel"><h3>👪 家長查看</h3>'
       +(function(){try{const p=JSON.parse(sessionStorage.getItem("rpg-parent-last")||"null");window._pLast=p&&Date.now()-(p.ts||0)<30*60*1000?p:null;return window._pLast?'<div class="mini" style="color:#3fae76">本分頁暫存班級與學號（30 分鐘）・<a href="#" id="pForget">清除</a></div>':"";}catch(_){window._pLast=null;return "";}})()
-      +'<input type="text" id="pCid" autocomplete="off" placeholder="班級代碼，例如 RPG-7K9M2Q" style="width:100%;margin-bottom:6px"><input type="text" id="pSno" inputmode="numeric" autocomplete="off" placeholder="孩子學號" style="width:100%;margin-bottom:6px"><input type="password" id="pBirth" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="生日 8 碼，例如 20130215" style="width:100%;margin-bottom:6px"><div class="mini" style="margin-bottom:6px">為保護學生資料，生日不會保存在瀏覽器。</div><button class="btn gold" id="pGo" style="width:100%">查看學習狀況</button></div></div>'
+      +'<input type="text" id="pCid" autocomplete="off" maxlength="20" placeholder="班級代碼，例如 7K9M2" style="width:100%;margin-bottom:6px;text-transform:uppercase"><input type="text" id="pSno" inputmode="numeric" autocomplete="off" placeholder="孩子學號" style="width:100%;margin-bottom:6px"><input type="password" id="pBirth" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="生日 8 碼，例如 20130215" style="width:100%;margin-bottom:6px"><div class="mini" style="margin-bottom:6px">為保護學生資料，生日不會保存在瀏覽器。</div><button class="btn gold" id="pGo" style="width:100%">查看學習狀況</button></div></div>'
       +'<div class="home-footer-credit">系統設計者：誠兆老師・協作：Claude、Codex・版本：班級經營公會 v1.0<br><b>© 2025 誠兆(Joenew)．著作權所有</b>・未經書面同意不得重製、散布、公開傳輸或商業使用。</div></div>';
   }
   app.innerHTML='<div class="home home-classroom" style="position:relative"><div class="crest">🏰</div><h2>冒險者公會</h2><div class="home-pane-viewport"><div class="home-pane-scale" id="homePaneScale">'+pane+'</div></div></div>';
@@ -8138,6 +8138,7 @@ function renderHome(){
   if(!window._homeFitBound){window._homeFitBound=true;window.addEventListener("resize",()=>{if(view.page==="home")fitHomePane();});}
   if(studentEntry){
     document.getElementById("studentQrGoogle").onclick=()=>{try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}googleLogin("student");};
+    document.getElementById("studentQrRegister").onclick=()=>{try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","qr-register");sessionStorage.setItem("rpg-student-join",JSON.stringify({cid}));}catch(_){}googleLogin("student");};
     return;
   }
   if(teacherEntry){document.getElementById("teacherQrGoogle").onclick=()=>googleLogin("teacher");return;}
@@ -8204,11 +8205,16 @@ async function loginSuccess(user, role){
         enrollment=await CLOUD.beginEnrollment(user,cid,join.sno,join.seat,email);
       }
       await CLOUD.loadClass(cid, email);
-      if(studentMode==="login" && !wantsMoba && !wantsReward){
+      if((studentMode==="login"||studentMode==="qr-register") && !wantsMoba && !wantsReward){
         const live=state.classSession||{};
         if(!sessionToken || !live.active || sessionToken!==String(live.token||"")){
           renderStudentSessionMissing(email,"這張課堂 QR 已失效，或老師尚未按下「開始上課」。請掃描大屏目前顯示的新 QR Code。"); return;
         }
+      }
+      if(studentMode==="qr-register"){
+        const existing=state.students.find(x=>(x.email||"").toLowerCase()===email);
+        if(!existing){renderClaim(email,{cid});return;}
+        sessionStorage.setItem("rpg-student-mode","login");
       }
       if(enrollment){
         const matched=state.students.find(x=>String(x.id)===String(enrollment.sid));
@@ -8218,7 +8224,7 @@ async function loginSuccess(user, role){
         }
         sessionStorage.removeItem("rpg-student-join");
         if(!(matched.email||"").trim()){
-          if(state.allowJobPick) renderJobPick(matched,email); else await finishClaim(matched,email,matched.job);
+          renderJobPick(matched,email);
           return;
         }
       }
