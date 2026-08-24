@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國中數學平台 · 修改檢核清單</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF3F9;--surface:#fff;--ink:#16233B;--ink-soft:#5B6B84;--pos:#1F6FEB;
+ --pos-soft:#E4EEFD;--neg:#E23D45;--zero:#F0A81E;--zero-soft:#FCEFD3;--line:#C7D4E5;
+ --shadow:0 1px 2px rgba(22,35,59,.05),0 8px 24px rgba(22,35,59,.07);
+ --mono:"Space Grotesk",ui-monospace,monospace;
+ --han:"PingFang TC","Noto Sans TC","Microsoft JhengHei",-apple-system,sans-serif;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+ font-family:var(--han);line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+.credit{font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.top{position:sticky;top:0;z-index:30;background:rgba(238,243,249,.95);
+ backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 0}
+.top .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:19px;margin:0;font-weight:700}
+.count{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--pos);
+ background:var(--pos-soft);border:1px solid var(--pos);border-radius:9px;padding:5px 12px}
+.btn{font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+ border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+ padding:8px 14px;border-radius:9px}
+.btn:hover{border-color:var(--pos);color:var(--pos)}
+.btn.main{background:var(--pos);border-color:var(--pos);color:#fff}
+.btn.main:hover{opacity:.88;color:#fff}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 8px}
+.tab{font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+ border:1.5px solid var(--line);background:transparent;color:var(--ink-soft);
+ padding:7px 16px;border-radius:10px}
+.tab.on{border-color:var(--pos);background:var(--pos-soft);color:var(--pos)}
+.chap{background:var(--surface);border:1px solid var(--line);border-radius:15px;
+ box-shadow:var(--shadow);margin:14px 0;overflow:hidden}
+.chap-h{display:flex;align-items:center;gap:10px;padding:13px 18px;
+ background:#F7FAFE;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chap-h .g{font-family:var(--mono);font-size:11.5px;font-weight:700;color:#fff;
+ background:var(--ink);padding:3px 9px;border-radius:6px}
+.chap-h h2{font-size:16px;margin:0;font-weight:700}
+.chap-h .n{margin-left:auto;font-size:12px;color:var(--ink-soft)}
+.unit{padding:6px 0}
+.unit-h{font-size:13px;font-weight:700;color:var(--ink-soft);padding:8px 18px 4px}
+.row{display:flex;align-items:flex-start;gap:12px;padding:9px 18px;
+ border-top:1px solid #EEF2F7;cursor:pointer;transition:background .12s}
+.row:hover{background:#F7FAFE}
+.row.on{background:var(--zero-soft)}
+.row input{width:19px;height:19px;margin-top:3px;accent-color:var(--pos);cursor:pointer;flex:none}
+.row .t{font-size:14.5px;font-weight:600}
+.row .d{font-size:12.5px;color:var(--ink-soft)}
+.row .f{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
+ background:#F1F5FA;border-radius:5px;padding:2px 8px;white-space:nowrap;align-self:center}
+.note{background:var(--zero-soft);border:1px solid #EBC98C;border-radius:13px;
+ padding:13px 16px;margin:16px 0;font-size:13.5px}
+#out{width:100%;min-height:150px;font-family:var(--mono);font-size:12.5px;
+ border:1.5px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;
+ background:var(--surface);color:var(--ink);resize:vertical;display:none}
+footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:26px 0 40px}
+@media(max-width:640px){.row .f{display:none}}
+</style><style id="manga-theme">
+/* ===== 動漫畫框主題 Manga Panel Theme ===== */
+:root{
+  --mg-ink:#14161C;          /* 主線稿黑 */
+  --mg-paper:#FBF7EE;        /* 漫畫紙色 */
+  --mg-tone:#E4DED0;         /* 網點色 */
+  --mg-shadow:6px 6px 0 var(--mg-ink);
+  --mg-shadow-sm:4px 4px 0 var(--mg-ink);
+}
+
+/* 紙張 + 網點底 */
+body{
+  background-color:var(--mg-paper)!important;
+  background-image:
+    radial-gradient(var(--mg-tone) 1.6px, transparent 1.7px),
+    radial-gradient(var(--mg-tone) 1.6px, transparent 1.7px);
+  background-size:14px 14px;
+  background-position:0 0, 7px 7px;
+}
+
+/* 頂部橫幅：黑底白字，像漫畫的標題條 */
+.topbar,.top{
+  background:var(--mg-ink)!important;
+  border-bottom:4px solid var(--mg-ink)!important;
+  backdrop-filter:none!important;
+}
+.topbar .brand,.top h1{color:#fff!important;letter-spacing:.04em;font-weight:800!important}
+.topbar .brand b{color:#FFD166!important}
+.topbar .brand i{color:#FF6B6B!important}
+.topbar .crumb,.credit{color:#D8D4CA!important}
+
+/* 大標題：描邊字 */
+.hero h1{
+  color:var(--mg-ink)!important;font-weight:900!important;letter-spacing:-.02em;
+  text-shadow:4px 4px 0 rgba(0,0,0,.14);
+}
+.hero h1 em,.hero h1 .ch{color:#FF6B6B!important}
+.eyebrow{
+  display:inline-block;background:var(--mg-ink);color:#fff!important;
+  padding:5px 14px;border-radius:0;font-weight:800!important;letter-spacing:.18em;
+  transform:rotate(-1.2deg);
+}
+.hero p{color:#4A4638!important}
+
+/* 集氣線：hero 後方放射線 */
+.hero{position:relative;isolation:isolate}
+.hero::before{
+  content:'';position:absolute;inset:-10px -30px auto -30px;height:190px;z-index:0;
+  background:repeating-conic-gradient(from 0deg at 50% 0%,
+    rgba(20,22,28,.06) 0deg 2deg, transparent 2deg 8deg);
+  pointer-events:none;
+}
+.hero>*{position:relative;z-index:1}
+
+/* 單元標籤：像漫畫音效框 */
+.unit-tag,.tag,.lvl-badge,.chap-h .g{
+  background:var(--mg-ink)!important;color:#fff!important;
+  border:3px solid var(--mg-ink)!important;border-radius:0!important;
+  font-weight:800!important;transform:rotate(-1.5deg);box-shadow:3px 3px 0 rgba(0,0,0,.2);
+}
+.lvl-badge.b1{background:#2FA36B!important}
+.lvl-badge.b2{background:#2F6FE8!important}
+.lvl-badge.b3{background:#E8453C!important}
+.unit-head h2,.sec-head h2,.chap-h h2{font-weight:900!important;color:var(--mg-ink)!important}
+
+/* ── 畫框：所有卡片與面板 ── */
+.card,.ch,.stage,.qcard,.lb-list,.keybox,.note,.hint,.chap,.stat,
+.overall,.res-hero,.wrong-section,.canvas-card{
+  background:#fff!important;
+  border:3.5px solid var(--mg-ink)!important;
+  border-radius:0!important;
+  box-shadow:var(--mg-shadow)!important;
+}
+.card,.ch{transition:transform .12s ease, box-shadow .12s ease!important}
+.card:hover,.ch:hover{
+  transform:translate(-3px,-3px) rotate(-.6deg)!important;
+  box-shadow:9px 9px 0 var(--mg-ink)!important;
+}
+.card h3,.ch h3{font-weight:900!important;color:var(--mg-ink)!important}
+.card .desc,.ch .sub{color:#5A5648!important}
+.card .go,.ch .go{
+  font-weight:800!important;color:var(--mg-ink)!important;
+  border-top:2.5px dashed var(--mg-ink);padding-top:7px;margin-top:4px;
+}
+.card .tno,.ch .no{color:#7A7466!important;font-weight:700!important}
+
+/* 關卡卡片鎖定 */
+.lvl-card.locked{filter:grayscale(.7)!important;opacity:.6!important}
+.lvl-card.locked:hover{transform:none!important;box-shadow:var(--mg-shadow)!important}
+
+/* ── 按鈕：厚框 + 硬陰影 + 按壓感 ── */
+.btn,.qc,.opt,.q3c,.tab,.rank-tab,.fnbtn,.res-btn,.lobby-rank-btn,.go-btn,.next-btn,
+.backbtn,.ang-btn,.hdr-btn{
+  border:3px solid var(--mg-ink)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:var(--mg-ink)!important;
+  font-weight:800!important;
+  box-shadow:var(--mg-shadow-sm)!important;
+  transition:transform .08s ease, box-shadow .08s ease, background .12s!important;
+}
+.btn:hover:not([disabled]),.qc:hover:not([disabled]),.opt:hover:not([disabled]),
+.q3c:hover:not(:disabled),.tab:hover,.rank-tab:hover,.fnbtn:hover,.res-btn:hover,
+.next-btn:hover,.backbtn:hover{
+  background:#FFF3D6!important;
+  transform:translate(-2px,-2px)!important;
+  box-shadow:6px 6px 0 var(--mg-ink)!important;
+}
+.btn:active:not([disabled]),.qc:active,.opt:active,.q3c:active,.next-btn:active,
+.tab:active,.res-btn:active,.backbtn:active{
+  transform:translate(3px,3px)!important;
+  box-shadow:0 0 0 var(--mg-ink)!important;
+}
+/* 主要行動按鈕：黃底黑框，最顯眼 */
+.btn.primary,.next-btn,.go-btn,.res-btn.primary,.btn.main{
+  background:#FFC93C!important;color:var(--mg-ink)!important;
+}
+.btn.primary:hover,.next-btn:hover,.go-btn:hover,.res-btn.primary:hover{
+  background:#FFD666!important;color:var(--mg-ink)!important;
+}
+.tab.on,.rank-tab.on{background:#FFC93C!important;color:var(--mg-ink)!important}
+.btn[disabled],.qc:disabled,.q3c:disabled{
+  opacity:.45!important;box-shadow:2px 2px 0 var(--mg-ink)!important;
+}
+
+/* 答題對錯 */
+.qc.ok,.opt.correct,.q3c.ok,.ang-btn.ok{
+  background:#B9F6C8!important;border-color:var(--mg-ink)!important;color:#0F5B2E!important;
+}
+.qc.no,.opt.wrong,.q3c.no,.ang-btn.no{
+  background:#FFC2BE!important;border-color:var(--mg-ink)!important;color:#8E1B14!important;
+}
+
+/* ── 對白框：動畫說明做成漫畫對話框 ── */
+.caption{
+  position:relative;background:#fff!important;
+  border:3.5px solid var(--mg-ink)!important;border-radius:0!important;
+  box-shadow:var(--mg-shadow-sm)!important;margin-top:26px!important;
+}
+.caption::before{
+  content:'';position:absolute;top:-16px;left:44px;
+  border-left:14px solid transparent;border-right:14px solid transparent;
+  border-bottom:16px solid var(--mg-ink);
+}
+.caption::after{
+  content:'';position:absolute;top:-10px;left:48px;
+  border-left:10px solid transparent;border-right:10px solid transparent;
+  border-bottom:11px solid #fff;
+}
+.caption .dot{display:none!important}
+.caption p{font-weight:600!important;color:var(--mg-ink)!important}
+
+/* 重點框：像旁白框 */
+.keybox{background:#FFF3D6!important}
+.keybox b{color:#C2410C!important}
+
+/* 進度條 */
+.prog,.ov-bar .track,.prog-track{
+  border:2.5px solid var(--mg-ink)!important;border-radius:0!important;
+  background:#fff!important;height:12px!important;overflow:hidden;
+}
+.prog i,.ov-bar .track i,.prog-fill{background:#FFC93C!important;border-radius:0!important}
+
+/* 排行榜 */
+.lb-row,.rank-row{border-top:3px solid var(--mg-ink)!important;border-radius:0!important}
+.lb-row:first-child{border-top:none!important}
+.lb-row.me,.rank-row.me{background:#FFF3D6!important}
+.lb-row .rk,.rank-no{font-weight:900!important}
+
+/* 表單 */
+.namebox input,.name-input,#out{
+  border:3px solid var(--mg-ink)!important;border-radius:0!important;
+  background:#fff!important;font-weight:600!important;
+}
+.namebox input:focus,.name-input:focus{outline:3px solid #FFC93C!important;outline-offset:2px}
+
+/* 檢核清單 */
+.row{border-top:2px solid rgba(20,22,28,.15)!important}
+.row.on{background:#FFF3D6!important}
+.row input[type=checkbox]{
+  width:22px!important;height:22px!important;accent-color:#E8453C!important;
+  border:3px solid var(--mg-ink);border-radius:0;
+}
+.count{
+  border:3px solid var(--mg-ink)!important;border-radius:0!important;
+  background:#FFC93C!important;color:var(--mg-ink)!important;font-weight:800!important;
+}
+.unit-h{color:var(--mg-ink)!important;font-weight:800!important;
+  border-left:6px solid var(--mg-ink);margin-left:12px;padding-left:10px!important}
+
+/* 統計數字塊 */
+.stat .n,.s-chip .sn,.r-chip .rn{font-weight:900!important;color:var(--mg-ink)!important}
+.s-chip{border:3px solid var(--mg-ink)!important;border-radius:0!important;background:#fff!important}
+
+/* 結果頁 */
+.res-title{font-weight:900!important}
+.res-emoji{filter:drop-shadow(3px 3px 0 rgba(0,0,0,.18))}
+
+/* SVG 舞台外框 */
+.stage svg{border:2.5px dashed rgba(20,22,28,.25);background:#fff}
+
+footer{color:#6B6555!important;font-weight:600}
+
+@media(max-width:640px){
+  :root{--mg-shadow:4px 4px 0 var(--mg-ink);--mg-shadow-sm:3px 3px 0 var(--mg-ink)}
+  .card,.ch,.stage,.qcard{border-width:3px!important}
+}
+
+</style>
+<style id="uiscale-css">
+/* ===== 顯示大小調整 + 手機版最佳化 ===== */
+:root{--ui-z:1}
+
+/* 內容區依使用者設定縮放（固定側欄與浮動面板另外處理） */
+.view, #navlist{ zoom:var(--ui-z); }
+@supports not (zoom:1){                 /* 不支援 zoom 時退回字級縮放 */
+  .view{font-size:calc(15px * var(--ui-z))}
+  #navlist{font-size:calc(13px * var(--ui-z))}
+}
+
+/* 尺寸鈕 */
+#uiBtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:800;color:#fff;
+  background:transparent;border:2.5px solid #fff;padding:6px 11px;margin-left:8px;
+  transition:background .12s}
+#uiBtn:hover{background:rgba(255,255,255,.16)}
+#uiBtn .z{font-family:var(--mono);opacity:.85;font-size:11.5px}
+
+/* ── 手機版 ── */
+@media(max-width:640px){
+  .wrap{padding:0 12px}
+  .topbar .wrap,.top .wrap{height:auto;min-height:56px;padding-top:6px;padding-bottom:6px;
+    flex-wrap:wrap;row-gap:6px}
+  .topbar .brand{font-size:13px}
+  .credit{font-size:10px;width:100%;order:3}
+  .crumb{font-size:12px}
+  #lbBtn{padding:6px 10px;font-size:12.5px}
+  #uiBtn{padding:5px 9px;font-size:12px;margin-left:6px}
+
+  .hero{padding:26px 0 12px}
+  .hero h1{font-size:26px}
+  .hero p{font-size:14px}
+
+  /* 卡片單欄，點擊區更大 */
+  .grid,.chapters{grid-template-columns:1fr!important;gap:11px}
+  .card,.ch{min-height:0;padding:14px}
+  .card .motif,.ch .motif{display:none}
+
+  /* 動畫舞台：吃滿寬度、圖形放大 */
+  .stage{padding:12px 10px}
+  #topic .stage svg{max-height:46vh}
+  .eq{font-size:20px}
+  .caption{padding:12px 13px}
+  .caption p{font-size:15px}
+
+  /* 按鈕加大好按 */
+  .btn,.qc,.opt,.q3c,.next-btn,.res-btn{min-height:46px;font-size:15px}
+  .controls{flex-wrap:wrap;gap:8px}
+  .controls .btn{flex:1 1 30%}
+  .controls .steps{width:100%;text-align:center;margin-left:0}
+
+  /* 評量選項 */
+  .qtext{font-size:20px;margin:14px 0}
+  .opt{padding:13px 14px}
+}
+
+/* 橫向手機：圖形高度再拉高 */
+@media(max-height:520px) and (orientation:landscape){
+  #topic .stage svg{max-height:62vh}
+  .hero{padding:16px 0 8px}
+}
+
+/* 平板 */
+@media(min-width:641px) and (max-width:960px){
+  .grid,.chapters{grid-template-columns:repeat(2,1fr)}
+  #topic .stage svg{max-height:42vh}
+}
+
+</style>
+</head><body>
+<div class="top"><div class="wrap">
+  <h1>📋 修改檢核清單</h1>
+  <span class="credit">© 誠兆老師 設計　·　Claude 協作</span>
+  <span class="count" id="cnt">已勾選 0</span>
+  <button class="btn main" id="gen">產生修改清單</button>
+  <button class="btn" id="clr">清除全部</button>
+</div></div>
+<div class="wrap">
+  <div class="note"><b>使用方式：</b>勾選需要修改的主題，按「產生修改清單」，把下方文字複製給我，我就依序修改。
+  也可以在勾選後直接在文字框裡補充說明想改什麼。</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+  <textarea id="out" placeholder="按上方「產生修改清單」後，內容會出現在這裡"></textarea>
+  <footer>國中數學完整平台 · 23 章 / 190 主題</footer>
+</div>
+<script>
+const ROWS=[{"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-1 正數與負數", "topic": "正數與負數的意義", "desc": "認識比 0 大、比 0 小的數與分界點 0", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-1 正數與負數", "topic": "數線與大小比較", "desc": "在數線上，右邊的數比較大", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-1 正數與負數", "topic": "相反數", "desc": "距離 0 一樣遠、方向相反的兩個數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-1 正數與負數", "topic": "絕對值", "desc": "一個數到 0 的距離，永遠 ≥ 0", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-2 整數的加減", "topic": "整數加法（同號）", "desc": "同號相加：絕對值相加，符號不變", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-2 整數的加減", "topic": "整數加法（異號）", "desc": "異號相加：大的減小的，符號看大的", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-2 整數的加減", "topic": "舞池模型・加法", "desc": "公主＋1、王子−1，配對就消失", "frames": 6}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-2 整數的加減", "topic": "舞池模型・減法", "desc": "沒有的人要離開？先請一對進場", "frames": 8}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-2 整數的加減", "topic": "整數減法", "desc": "減負變加正：減去一個數 = 加它的相反數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-3 整數的乘除", "topic": "整數乘法", "desc": "同號得正、異號得負，負負得正", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-3 整數的乘除", "topic": "整數除法", "desc": "符號規則和乘法完全一樣", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "一", "chap": "整數的運算", "unit": "1-3 整數的乘除", "topic": "四則運算與順序", "desc": "先括號、再乘除、最後加減", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-1 因數、倍數與質數", "topic": "因數與倍數", "desc": "整除關係：誰是誰的因數、誰是誰的倍數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-1 因數、倍數與質數", "topic": "質數與合數", "desc": "只有 1 和自己兩個因數的數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-1 因數、倍數與質數", "topic": "質因數分解", "desc": "把一個數拆成質數相乘", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-2 最大公因數", "topic": "公因數與最大公因數", "desc": "兩數共同的因數中最大的那個", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-2 最大公因數", "topic": "用質因數分解求最大公因數", "desc": "取共同質factor的最小次方", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-2 最大公因數", "topic": "最大公因數的應用", "desc": "分組、切割問題就是找 HCF", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-3 最小公倍數", "topic": "公倍數與最小公倍數", "desc": "兩數共同的倍數中最小的那個", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-3 最小公倍數", "topic": "用質因數分解求最小公倍數", "desc": "所有質因數取最大次方", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "二", "chap": "因數與倍數", "unit": "2-3 最小公倍數", "topic": "最小公倍數的應用", "desc": "再次相遇、同時發生就是找 LCM", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-1 分數的認識", "topic": "分數與負分數", "desc": "把整體等分，認識分子、分母與負分數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-1 分數的認識", "topic": "等值分數與約分", "desc": "同大小的分數，化成最簡分數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-1 分數的認識", "topic": "通分與大小比較", "desc": "分母不同時，先化成同分母再比", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-2 分數的加減", "topic": "同分母加減", "desc": "分母不變，分子相加減", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-2 分數的加減", "topic": "異分母加減", "desc": "先通分成同分母，再加減", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-2 分數的加減", "topic": "假分數與帶分數", "desc": "分子≥分母時的兩種寫法", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-3 分數的乘除", "topic": "分數乘法", "desc": "分子乘分子、分母乘分母", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-3 分數的乘除", "topic": "分數除法", "desc": "除以一個分數＝乘它的倒數", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "三", "chap": "分數的運算", "unit": "2-3 分數的乘除", "topic": "分數四則混合", "desc": "先括號、再乘除、最後加減", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-1 代數式與列式", "topic": "用符號代表數", "desc": "把未知的量用 x 表示，寫成代數式", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-1 代數式與列式", "topic": "代數式求值與化簡", "desc": "代入數字算出值、合併同類項", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-1 代數式與列式", "topic": "由文字列出方程式", "desc": "把題目敘述翻譯成含等號的式子", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-2 解一元一次方程式", "topic": "等量公理（天平原理）", "desc": "兩邊同加同減、同乘同除，仍然平衡", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-2 解一元一次方程式", "topic": "移項法則", "desc": "跨過等號要變號，加變減、乘變除", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-2 解一元一次方程式", "topic": "兩邊都有未知數", "desc": "先把 x 集中一邊、常數集中另一邊", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-2 解一元一次方程式", "topic": "含括號與分數的方程式", "desc": "先去括號、去分母，再照步驟解", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-3 方程式的應用", "topic": "應用問題解題步驟", "desc": "設、列、解、驗四步驟", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-3 方程式的應用", "topic": "數量與年齡問題", "desc": "用同一個 x 表示相關的量", "frames": 4}, {"grade": "七年級", "sem": 1, "vol": 1, "cn": "四", "chap": "一元一次方程式", "unit": "4-3 方程式的應用", "topic": "幾何與速度問題", "desc": "用公式列出方程式", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-1 二元一次方程式", "topic": "認識二元一次式", "desc": "含有兩個未知數、次方都是 1 的式子", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-1 二元一次方程式", "topic": "二元一次方程式的解", "desc": "解是一組數對 (x, y)，而且有無限多組", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-1 二元一次方程式", "topic": "聯立方程式的意義", "desc": "兩個式子同時成立，解才唯一", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-2 解聯立方程式", "topic": "代入消去法", "desc": "用一式表示某未知數，代進另一式", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-2 解聯立方程式", "topic": "加減消去法", "desc": "兩式相加或相減，消掉一個未知數", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-2 解聯立方程式", "topic": "係數不同怎麼辦", "desc": "先乘倍數湊成相同係數，再消去", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-3 聯立方程式的應用", "topic": "應用問題解題步驟", "desc": "設兩個未知數、列兩個式子", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-3 聯立方程式的應用", "topic": "雞兔同籠問題", "desc": "用「頭數」和「腳數」列兩個式子", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "一", "chap": "二元一次聯立方程式", "unit": "1-3 聯立方程式的應用", "topic": "和差與數量問題", "desc": "兩數的和與差、倍數關係", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-1 直角坐標平面", "topic": "認識坐標平面", "desc": "兩條數線垂直相交，就能定出平面上的位置", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-1 直角坐標平面", "topic": "四個象限與符號", "desc": "依 x、y 的正負把平面分成四區", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-1 直角坐標平面", "topic": "標點與讀坐標", "desc": "由坐標找點、由點讀出坐標", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-2 二元一次方程式的圖形", "topic": "方程式的圖形是直線", "desc": "把所有解畫出來，會連成一條直線", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-2 二元一次方程式的圖形", "topic": "用兩點畫直線", "desc": "兩點決定一直線，取截距最方便", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-2 二元一次方程式的圖形", "topic": "水平線與鉛直線", "desc": "y = k 與 x = h 的特殊圖形", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-3 聯立方程式與圖形", "topic": "交點就是聯立解", "desc": "兩直線相交的那一點，同時滿足兩式", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-3 聯立方程式與圖形", "topic": "平行與重合的情況", "desc": "無解與無限多解的圖形意義", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "二", "chap": "直角坐標與圖形", "unit": "2-3 聯立方程式與圖形", "topic": "由圖形讀出解", "desc": "看圖判斷交點與方程式", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-1 比與比值", "topic": "比的意義", "desc": "用「a : b」表示兩個量的關係", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-1 比與比值", "topic": "比值與相等的比", "desc": "前項除以後項，就是比值", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-1 比與比值", "topic": "化成最簡整數比", "desc": "用最大公因數約掉，變成互質的整數比", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-2 比例式", "topic": "比例式與交叉相乘", "desc": "外項乘積等於內項乘積", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-2 比例式", "topic": "解比例式", "desc": "用交叉相乘求出未知項", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-2 比例式", "topic": "連比", "desc": "三個量的關係 a : b : c", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-3 正比與反比", "topic": "正比", "desc": "一個變大，另一個等倍變大", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-3 正比與反比", "topic": "反比", "desc": "一個變大，另一個等倍變小", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "三", "chap": "比與比例式", "unit": "3-3 正比與反比", "topic": "比例的應用", "desc": "分配問題、比例尺與換算", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-1 不等式的意義", "topic": "認識不等符號", "desc": "大於、小於、以上、以下的寫法", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-1 不等式的意義", "topic": "在數線上表示解", "desc": "空心圈不包含、實心圈包含", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-1 不等式的意義", "topic": "由文字列出不等式", "desc": "把「至少、最多、不超過」翻譯成符號", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-2 解一元一次不等式", "topic": "不等式的基本性質", "desc": "兩邊同加減，不等號方向不變", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-2 解一元一次不等式", "topic": "乘除負數要變號", "desc": "這章最重要、最容易錯的一條規則", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-2 解一元一次不等式", "topic": "解不等式的步驟", "desc": "和解方程式一樣，只多注意變號", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-3 不等式的應用", "topic": "應用問題解題步驟", "desc": "設、列、解、驗，並注意答案的合理性", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-3 不等式的應用", "topic": "最多與至少問題", "desc": "求範圍中的最大值或最小值", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "四", "chap": "一元一次不等式", "unit": "4-3 不等式的應用", "topic": "生活中的不等式", "desc": "預算、載重、方案比較", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-1 資料整理", "topic": "從原始資料到次數分配表", "desc": "把雜亂的數字分組整理", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-1 資料整理", "topic": "組距、組限與組中點", "desc": "分組的專有名詞", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-1 資料整理", "topic": "累積次數", "desc": "由上往下逐組累加", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-2 常見的統計圖", "topic": "長條圖", "desc": "比較各類別的多寡", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-2 常見的統計圖", "topic": "折線圖", "desc": "看隨時間變化的趨勢", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-2 常見的統計圖", "topic": "圓形圖", "desc": "看各部分佔整體的比例", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-3 資料分析與判讀", "topic": "相對次數", "desc": "用比例呈現，方便不同總數的比較", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-3 資料分析與判讀", "topic": "選擇合適的統計圖", "desc": "依目的挑圖表", "frames": 4}, {"grade": "七年級", "sem": 2, "vol": 2, "cn": "五", "chap": "統計圖表與資料分析", "unit": "5-3 資料分析與判讀", "topic": "看圖表要小心", "desc": "縱軸截斷與比例失真", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-1 乘法公式", "topic": "和的平方公式", "desc": "(a+b)² = a² + 2ab + b²，別忘了中間項", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-1 乘法公式", "topic": "差的平方公式", "desc": "(a−b)² = a² − 2ab + b²，中間變減號", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-1 乘法公式", "topic": "平方差公式", "desc": "(a+b)(a−b) = a² − b²", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-1 乘法公式", "topic": "(x+a)(x+b) 型", "desc": "和放中間、積放最後", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-2 多項式的認識與加減", "topic": "多項式的名詞", "desc": "項、係數、次數與降冪排列", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-2 多項式的認識與加減", "topic": "多項式的加減", "desc": "合併同類項就好", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-3 多項式的乘法與除法", "topic": "多項式的乘法", "desc": "用分配律，每一項都要乘到", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "一", "chap": "乘法公式與多項式", "unit": "1-3 多項式的乘法與除法", "topic": "多項式的除法", "desc": "用長除法，一次消掉最高次項", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-1 平方根與根號", "topic": "平方根的意義", "desc": "平方後等於某數的數，正負各一個", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-1 平方根與根號", "topic": "根號數有多大", "desc": "用夾擠法估計 √2、√5 的大小", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-1 平方根與根號", "topic": "最簡根式", "desc": "把根號內的平方因數拿出來", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-2 根式的運算", "topic": "根式的乘除", "desc": "根號內直接相乘除", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-2 根式的運算", "topic": "根式的加減", "desc": "只有同類方根才能合併", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-2 根式的運算", "topic": "分母有理化", "desc": "把分母的根號消掉", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-3 畢氏定理", "topic": "畢氏定理", "desc": "直角三角形兩股平方和等於斜邊平方", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-3 畢氏定理", "topic": "用畢氏定理求邊長", "desc": "已知兩邊求第三邊", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "二", "chap": "平方根與畢氏定理", "unit": "2-3 畢氏定理", "topic": "逆定理與應用", "desc": "判斷是不是直角三角形", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-1 因式分解與提公因式", "topic": "什麼是因式分解", "desc": "展開的反向操作，先記熟展開口訣", "frames": 7}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-1 因式分解與提公因式", "topic": "提公因式", "desc": "用表格算出各項的餘式", "frames": 6}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-2 利用乘法公式分解", "topic": "平方差公式的分解", "desc": "a² − b² = (a+b)(a−b)", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-2 利用乘法公式分解", "topic": "完全平方式的分解", "desc": "a² ± 2ab + b² = (a ± b)²", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-3 十字交乘法", "topic": "x² + bx + c 的分解", "desc": "找兩數，和為 b、積為 c", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-3 十字交乘法", "topic": "含負號的情形", "desc": "從正負號判斷兩數的符號", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "三", "chap": "因式分解", "unit": "3-3 十字交乘法", "topic": "ax² + bx + c 的十字交乘", "desc": "首項係數不是 1 時", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-1 一元二次方程式與解", "topic": "認識一元二次方程式", "desc": "一個未知數、最高次方是 2", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-1 一元二次方程式與解", "topic": "乘積為零的性質", "desc": "兩數相乘等於 0，必有一個是 0", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-1 一元二次方程式與解", "topic": "用因式分解解方程式", "desc": "先分解，再讓每個因式等於 0", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-2 配方法與公式解", "topic": "平方根解法", "desc": "形如 x² = k 或 (x+m)² = k 直接開根號", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-2 配方法與公式解", "topic": "配方法", "desc": "補一塊正方形，湊成完全平方", "frames": 5}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-2 配方法與公式解", "topic": "公式解", "desc": "把配方法一般化，得到萬用公式", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-2 配方法與公式解", "topic": "判別式", "desc": "不用解也能知道有幾個實數解", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-3 應用問題", "topic": "面積與幾何問題", "desc": "長寬關係列出二次方程式", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "四", "chap": "一元二次方程式", "unit": "4-3 應用問題", "topic": "數與其他應用", "desc": "連續整數、乘積問題", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-1 從資料到表與圖", "topic": "表與圖，哪一個先？", "desc": "順序是：原始資料 → 表 → 圖", "frames": 5}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-1 從資料到表與圖", "topic": "次數分配表的製作", "desc": "全距、組距、組數、畫記", "frames": 5}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-1 從資料到表與圖", "topic": "各種統計圖的功用", "desc": "依目的選圖，選錯會誤導", "frames": 5}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-2 直方圖與次數分配折線圖", "topic": "直方圖", "desc": "與長條圖最大的差別：沒有空隙", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-2 直方圖與次數分配折線圖", "topic": "次數分配折線圖", "desc": "連接各組中點，看出分布形狀", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-3 相對次數與累積次數", "topic": "相對次數", "desc": "用比例呈現，才能公平比較", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-3 相對次數與累積次數", "topic": "累積次數分配表", "desc": "由上往下逐組累加", "frames": 4}, {"grade": "八年級", "sem": 1, "vol": 3, "cn": "五", "chap": "統計資料處理", "unit": "5-3 相對次數與累積次數", "topic": "累積次數分配折線圖", "desc": "永遠遞增，用組上界描點", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-1 數列與等差數列", "topic": "認識數列", "desc": "排成一列的數，並從中找規律", "frames": 9}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-1 數列與等差數列", "topic": "等差數列與公差", "desc": "公差 ＝ 後項 − 前項", "frames": 6}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-1 數列與等差數列", "topic": "等差數列的一般項", "desc": "aₙ = a₁ + (n−1)d", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-2 等差級數", "topic": "高斯求和法", "desc": "首尾配對，每一對的和都相同", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-2 等差級數", "topic": "等差級數求和公式", "desc": "Sₙ = n(a₁ + aₙ) / 2", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-2 等差級數", "topic": "求和的三種算法", "desc": "中位數、等差中項、首末配對，其實都一樣", "frames": 9}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-2 等差級數", "topic": "求和公式的應用", "desc": "末項未知時先求 aₙ", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-3 等比數列", "topic": "等比數列與公比", "desc": "每次乘固定的數", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-3 等比數列", "topic": "等差與等比的比較", "desc": "一張表看懂兩者的對應關係", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "一", "chap": "數列與級數", "unit": "1-3 等比數列", "topic": "公比的各種情況", "desc": "r 的大小決定數列的走向", "frames": 6}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-1 函數的意義", "topic": "什麼是函數", "desc": "一個 x 只對到一個 y", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-1 函數的意義", "topic": "函數值與 f(x) 記法", "desc": "把 x 代進去算出的結果", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-2 一次函數與其圖形", "topic": "一次函數的圖形是直線", "desc": "y = ax + b（a ≠ 0）", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-2 一次函數與其圖形", "topic": "斜率 a 的意義", "desc": "x 每增加 1，y 變化多少", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-2 一次函數與其圖形", "topic": "截距 b 的意義", "desc": "直線與 y 軸的交點", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-3 一次函數的應用", "topic": "由圖形求函數式", "desc": "先看截距，再算斜率", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "二", "chap": "一次函數", "unit": "2-3 一次函數的應用", "topic": "生活中的一次函數", "desc": "固定費用 + 每單位費用", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-1 內角與外角", "topic": "三角形的內角和", "desc": "三個內角相加一定是 180°", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-1 內角與外角", "topic": "外角與外角定理", "desc": "一個外角等於不相鄰兩內角的和", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-1 內角與外角", "topic": "三角形的外角和", "desc": "三個外角相加是 360°", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-2 邊與角的關係", "topic": "大角對大邊", "desc": "角越大，它對面的邊越長", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-2 邊與角的關係", "topic": "三角形的三邊關係", "desc": "任兩邊和必大於第三邊", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-3 三角形的全等", "topic": "什麼是全等三角形", "desc": "形狀與大小完全相同", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "三", "chap": "三角形的基本性質", "unit": "3-3 三角形的全等", "topic": "全等的判別方法", "desc": "SSS、SAS、ASA、AAS、RHS", "frames": 6}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-1 平行線與截角", "topic": "截線與八個角", "desc": "一條截線穿過兩直線，產生八個角", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-1 平行線與截角", "topic": "三種重要的截角", "desc": "同位角、內錯角、同側內角", "frames": 6}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-1 平行線與截角", "topic": "平行線的性質", "desc": "兩線平行時，截角有固定關係", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-2 四邊形與平行四邊形", "topic": "四邊形的內角和", "desc": "切成兩個三角形就知道了", "frames": 4}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-2 四邊形與平行四邊形", "topic": "平行四邊形的性質", "desc": "兩組對邊分別平行", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-3 特殊四邊形", "topic": "矩形、菱形與正方形", "desc": "平行四邊形加上額外條件", "frames": 5}, {"grade": "八年級", "sem": 2, "vol": 4, "cn": "四", "chap": "平行與四邊形", "unit": "4-3 特殊四邊形", "topic": "梯形", "desc": "只有一組對邊平行", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-1 相似形的意義", "topic": "什麼是相似形", "desc": "形狀相同、大小可以不同", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-1 相似形的意義", "topic": "相似的兩個條件", "desc": "對應角相等、對應邊成比例", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-2 三角形的相似判別", "topic": "AA 相似", "desc": "兩角對應相等就相似", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-2 三角形的相似判別", "topic": "SAS 與 SSS 相似", "desc": "用邊的比例來判斷", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-3 相似的性質與應用", "topic": "面積比是邊長比的平方", "desc": "最容易錯的一個性質", "frames": 5}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-3 相似的性質與應用", "topic": "平行線截比例線段", "desc": "平行於一邊的直線會截出比例", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "一", "chap": "相似形", "unit": "1-3 相似的性質與應用", "topic": "相似的實際應用", "desc": "用影子量出高度", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-1 圓的基本元素", "topic": "圓上的名詞", "desc": "半徑、直徑、弦、弧", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-1 圓的基本元素", "topic": "圓心角與弧", "desc": "圓心角越大，對應的弧越長", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-2 圓周角定理", "topic": "圓周角是圓心角的一半", "desc": "這章最重要的定理", "frames": 5}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-2 圓周角定理", "topic": "直徑所對的圓周角", "desc": "永遠是直角", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-3 弧長與扇形面積", "topic": "弧長的計算", "desc": "整個圓周的一部分", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "二", "chap": "圓", "unit": "2-3 弧長與扇形面積", "topic": "扇形面積", "desc": "圓面積的一部分", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-1 二次函數與拋物線", "topic": "最簡單的二次函數 y = x²", "desc": "圖形是一條拋物線", "frames": 5}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-1 二次函數與拋物線", "topic": "a 決定開口方向與寬窄", "desc": "正開口向上、負開口向下", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-2 拋物線的平移", "topic": "上下平移：y = ax² + k", "desc": "k 決定上下移動", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-2 拋物線的平移", "topic": "左右平移：y = a(x − h)²", "desc": "h 決定左右移動（方向與直覺相反）", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-2 拋物線的平移", "topic": "頂點式 y = a(x − h)² + k", "desc": "一眼看出頂點與對稱軸", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-3 一般式與最大最小值", "topic": "用配方法求頂點", "desc": "把一般式化成頂點式", "frames": 4}, {"grade": "九年級", "sem": 1, "vol": 5, "cn": "三", "chap": "二次函數", "unit": "3-3 一般式與最大最小值", "topic": "最大值與最小值", "desc": "頂點的 y 值就是極值", "frames": 4}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-1 資料的中心位置", "topic": "平均數、中位數與眾數", "desc": "三種描述「中心」的方式", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-1 資料的中心位置", "topic": "四分位數", "desc": "把資料切成四等份", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-1 資料的中心位置", "topic": "盒狀圖", "desc": "用五個數字畫出資料的全貌", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-2 機率的意義", "topic": "什麼是機率", "desc": "事件發生的可能性大小", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-2 機率的意義", "topic": "機率的範圍與互補", "desc": "不發生的機率 = 1 − 發生的機率", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-3 兩階段事件", "topic": "用樹狀圖列出所有可能", "desc": "把每一階段的選擇畫成分枝", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "一", "chap": "統計與機率", "unit": "1-3 兩階段事件", "topic": "兩顆骰子的機率", "desc": "用表格列出 36 種組合", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-1 認識立體圖形", "topic": "柱體、錐體與球", "desc": "三大類立體圖形", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-1 認識立體圖形", "topic": "頂點、稜與面", "desc": "歐拉公式 V − E + F = 2", "frames": 4}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-1 認識立體圖形", "topic": "展開圖", "desc": "把立體圖形攤平", "frames": 4}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-2 表面積與體積", "topic": "柱體的表面積與體積", "desc": "體積 = 底面積 × 高", "frames": 4}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-2 表面積與體積", "topic": "錐體的體積", "desc": "恰好是同底同高柱體的 1/3", "frames": 5}, {"grade": "九年級", "sem": 2, "vol": 6, "cn": "二", "chap": "立體圖形", "unit": "2-2 表面積與體積", "topic": "球的表面積與體積", "desc": "用 r 就能算出一切", "frames": 4}];
+const checked=new Set();
+let filter='全部';
+const key=r=>`${r.grade}|${r.cn}|${r.unit}|${r.topic}`;
+
+function render(){
+  const box=document.getElementById('list');box.innerHTML='';
+  const shown=ROWS.filter(r=>filter==='全部'||r.grade===filter);
+  let curChap=null,chapEl=null,curUnit=null;
+  shown.forEach(r=>{
+    const cid=r.grade+r.cn;
+    if(cid!==curChap){
+      curChap=cid;curUnit=null;
+      chapEl=document.createElement('div');chapEl.className='chap';
+      const n=ROWS.filter(x=>x.grade===r.grade&&x.cn===r.cn).length;
+      chapEl.innerHTML=`<div class="chap-h"><span class="g">第 ${r.vol} 冊　${r.grade}${r.sem===1?'上':'下'}</span>
+        <h2>第 ${r.cn} 章　${r.chap}</h2><span class="n">${n} 個主題</span></div>`;
+      box.appendChild(chapEl);
+    }
+    if(r.unit!==curUnit){
+      curUnit=r.unit;
+      const u=document.createElement('div');u.className='unit-h';u.textContent='單元 '+r.unit;
+      chapEl.appendChild(u);
+    }
+    const k=key(r);
+    const row=document.createElement('label');
+    row.className='row'+(checked.has(k)?' on':'');
+    row.innerHTML=`<input type="checkbox" ${checked.has(k)?'checked':''}>
+      <span><span class="t">${r.topic}</span><br><span class="d">${r.desc}</span></span>
+      <span class="f">${r.frames} 步</span>`;
+    row.querySelector('input').addEventListener('change',e=>{
+      if(e.target.checked){checked.add(k);row.classList.add('on');}
+      else{checked.delete(k);row.classList.remove('on');}
+      updateCount();
+    });
+    chapEl.appendChild(row);
+  });
+}
+function updateCount(){document.getElementById('cnt').textContent='已勾選 '+checked.size;}
+['全部','七年級','八年級','九年級'].forEach(g=>{
+  const b=document.createElement('button');
+  b.className='tab'+(g==='全部'?' on':'');b.textContent=g;
+  b.addEventListener('click',()=>{filter=g;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    b.classList.add('on');render();});
+  document.getElementById('tabs').appendChild(b);
+});
+render();
+document.getElementById('gen').addEventListener('click',()=>{
+  const out=document.getElementById('out');
+  if(!checked.size){out.style.display='block';out.value='（尚未勾選任何主題）';return;}
+  const lines=['要修改的主題：',''];
+  let last='';
+  ROWS.forEach(r=>{
+    if(!checked.has(key(r)))return;
+    const head=`第${r.vol}冊 ${r.grade}${r.sem===1?'上':'下'} 第${r.cn}章 ${r.chap}`;
+    if(head!==last){lines.push(head);last=head;}
+    lines.push(`  □ [${r.unit}] ${r.topic} ── 想修改：`);
+  });
+  out.style.display='block';out.value=lines.join('\n');out.focus();out.select();
+});
+document.getElementById('clr').addEventListener('click',()=>{
+  checked.clear();updateCount();render();
+  document.getElementById('out').style.display='none';
+});
+</script><script id="uiscale-js">
+/* ===== 顯示大小切換 ===== */
+(function(){
+  const KEY=(window.__LB_KEY__||'app')+'_uiz';
+  const STEPS=[{z:0.88,n:'小'},{z:1,n:'中'},{z:1.16,n:'大'},{z:1.34,n:'特大'}];
+  let idx=1;
+
+  const btn=document.createElement('button');
+  btn.id='uiBtn';btn.type='button';
+  btn.innerHTML='<span>Aa</span><span class="z"></span>';
+  btn.title='調整顯示大小';
+
+  const bar=document.querySelector('.topbar .wrap');
+  if(bar){
+    const lb=document.getElementById('lbBtn');
+    if(lb) bar.insertBefore(btn,lb.nextSibling); else bar.appendChild(btn);
+  }
+
+  function apply(save){
+    const s=STEPS[idx];
+    document.documentElement.style.setProperty('--ui-z',s.z);
+    btn.querySelector('.z').textContent=s.n;
+    if(save){
+      try{ if(window.storage) window.storage.set(KEY,String(idx),false); }catch(e){}
+    }
+  }
+  btn.addEventListener('click',()=>{ idx=(idx+1)%STEPS.length; apply(true); });
+
+  (async()=>{
+    try{
+      if(window.storage){
+        const r=await window.storage.get(KEY,false);
+        if(r){const v=parseInt(r.value,10); if(v>=0&&v<STEPS.length)idx=v;}
+      }
+    }catch(e){}
+    apply(false);
+  })();
+
+  window.__uiScale={get:()=>STEPS[idx],set:i=>{idx=i;apply(true);}};
+})();
+
+</script>
+</body></html>

@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7d99a"/>
+      <stop offset="1" stop-color="#dba66b"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#72c9e8"/>
+      <stop offset="1" stop-color="#ffe0a0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- warm classroom shell -->
+  <rect width="1600" height="1000" fill="#342538"/>
+  <rect x="24" y="24" width="1552" height="952" fill="#171421"/>
+  <rect x="40" y="40" width="1520" height="596" fill="url(#wall)"/>
+  <rect x="40" y="606" width="1520" height="30" fill="#593742"/>
+  <rect x="40" y="636" width="1520" height="324" fill="#a75e3d"/>
+
+  <!-- wood floor planks -->
+  <g fill="#84442f">
+    <rect x="40" y="700" width="1520" height="12"/><rect x="40" y="784" width="1520" height="12"/><rect x="40" y="868" width="1520" height="12"/>
+  </g>
+  <g fill="#c9794b">
+    <rect x="180" y="636" width="10" height="64"/><rect x="510" y="636" width="10" height="64"/><rect x="850" y="636" width="10" height="64"/><rect x="1210" y="636" width="10" height="64"/>
+    <rect x="80" y="712" width="10" height="72"/><rect x="410" y="712" width="10" height="72"/><rect x="750" y="712" width="10" height="72"/><rect x="1110" y="712" width="10" height="72"/><rect x="1450" y="712" width="10" height="72"/>
+    <rect x="240" y="796" width="10" height="72"/><rect x="580" y="796" width="10" height="72"/><rect x="930" y="796" width="10" height="72"/><rect x="1300" y="796" width="10" height="72"/>
+    <rect x="100" y="880" width="10" height="80"/><rect x="470" y="880" width="10" height="80"/><rect x="820" y="880" width="10" height="80"/><rect x="1180" y="880" width="10" height="80"/><rect x="1500" y="880" width="10" height="80"/>
+  </g>
+
+  <!-- left window -->
+  <g>
+    <rect x="92" y="96" width="286" height="326" fill="#3c2a3e"/>
+    <rect x="108" y="112" width="254" height="294" fill="#e9f7df"/>
+    <rect x="124" y="128" width="222" height="262" fill="url(#sky)"/>
+    <rect x="226" y="128" width="18" height="262" fill="#fff0bd"/>
+    <rect x="124" y="250" width="222" height="18" fill="#fff0bd"/>
+    <rect x="90" y="422" width="290" height="22" fill="#6c3e3e"/>
+    <rect x="70" y="444" width="330" height="18" fill="#8d5344"/>
+    <rect x="132" y="322" width="54" height="68" fill="#75a85b"/>
+    <rect x="148" y="300" width="22" height="34" fill="#49814e"/>
+    <rect x="266" y="340" width="64" height="50" fill="#c98a52"/>
+  </g>
+
+  <!-- right window -->
+  <g>
+    <rect x="1222" y="96" width="286" height="326" fill="#3c2a3e"/>
+    <rect x="1238" y="112" width="254" height="294" fill="#e9f7df"/>
+    <rect x="1254" y="128" width="222" height="262" fill="url(#sky)"/>
+    <rect x="1356" y="128" width="18" height="262" fill="#fff0bd"/>
+    <rect x="1254" y="250" width="222" height="18" fill="#fff0bd"/>
+    <rect x="1220" y="422" width="290" height="22" fill="#6c3e3e"/>
+    <rect x="1200" y="444" width="330" height="18" fill="#8d5344"/>
+    <rect x="1280" y="336" width="62" height="54" fill="#c98a52"/>
+    <rect x="1410" y="320" width="46" height="70" fill="#75a85b"/>
+    <rect x="1422" y="296" width="22" height="36" fill="#49814e"/>
+  </g>
+
+  <!-- central chalkboard -->
+  <rect x="432" y="92" width="736" height="354" fill="#3d2937"/>
+  <rect x="448" y="108" width="704" height="322" fill="#d48b4d"/>
+  <rect x="464" y="124" width="672" height="286" fill="#275a4c"/>
+  <rect x="480" y="140" width="640" height="254" fill="#2f6a55"/>
+  <g fill="#cfe5c1" opacity=".78">
+    <rect x="548" y="192" width="112" height="10"/><rect x="532" y="208" width="150" height="10"/>
+    <rect x="914" y="184" width="126" height="10"/><rect x="938" y="200" width="84" height="10"/>
+    <rect x="568" y="300" width="88" height="8"/><rect x="946" y="294" width="104" height="8"/>
+  </g>
+  <!-- chalk pixel crest: book + star -->
+  <g fill="#ffe184">
+    <rect x="760" y="174" width="80" height="12"/><rect x="738" y="186" width="124" height="12"/>
+    <rect x="728" y="198" width="144" height="58"/><rect x="744" y="214" width="112" height="66"/>
+  </g>
+  <g fill="#2f6a55">
+    <rect x="792" y="198" width="16" height="82"/><rect x="752" y="218" width="40" height="8"/><rect x="808" y="218" width="40" height="8"/>
+  </g>
+  <g fill="#fff3b0">
+    <rect x="792" y="292" width="16" height="36"/><rect x="782" y="302" width="36" height="16"/><rect x="786" y="286" width="28" height="28"/>
+  </g>
+  <rect x="432" y="446" width="736" height="22" fill="#6c3e3e"/>
+  <rect x="520" y="448" width="92" height="16" fill="#f2e1b9"/>
+  <rect x="624" y="448" width="38" height="16" fill="#e9b34a"/>
+
+  <!-- classroom banners -->
+  <g>
+    <rect x="396" y="52" width="64" height="102" fill="#51364d"/>
+    <rect x="408" y="64" width="40" height="76" fill="#9f3349"/>
+    <rect x="420" y="78" width="16" height="16" fill="#f8d35d"/><rect x="414" y="84" width="28" height="4" fill="#f8d35d"/>
+    <polygon points="408,140 428,158 448,140" fill="#9f3349"/>
+    <rect x="1140" y="52" width="64" height="102" fill="#51364d"/>
+    <rect x="1152" y="64" width="40" height="76" fill="#365f94"/>
+    <rect x="1164" y="78" width="16" height="16" fill="#f8d35d"/><rect x="1158" y="84" width="28" height="4" fill="#f8d35d"/>
+    <polygon points="1152,140 1172,158 1192,140" fill="#365f94"/>
+  </g>
+
+  <!-- bookcases -->
+  <g>
+    <rect x="68" y="480" width="238" height="148" fill="#4b3037"/>
+    <rect x="82" y="494" width="210" height="120" fill="#9b5b3f"/>
+    <rect x="82" y="548" width="210" height="12" fill="#4b3037"/>
+    <g fill="#e5b84f"><rect x="96" y="510" width="20" height="38"/><rect x="174" y="504" width="18" height="44"/><rect x="226" y="514" width="22" height="34"/></g>
+    <g fill="#4b789d"><rect x="118" y="500" width="28" height="48"/><rect x="194" y="512" width="30" height="36"/><rect x="250" y="498" width="24" height="50"/></g>
+    <g fill="#8d3b4c"><rect x="96" y="572" width="30" height="42"/><rect x="160" y="568" width="22" height="46"/><rect x="212" y="576" width="34" height="38"/></g>
+    <rect x="1294" y="480" width="238" height="148" fill="#4b3037"/>
+    <rect x="1308" y="494" width="210" height="120" fill="#9b5b3f"/>
+    <rect x="1308" y="548" width="210" height="12" fill="#4b3037"/>
+    <g fill="#e5b84f"><rect x="1322" y="504" width="24" height="44"/><rect x="1394" y="512" width="28" height="36"/><rect x="1470" y="500" width="26" height="48"/></g>
+    <g fill="#4b789d"><rect x="1348" y="512" width="28" height="36"/><rect x="1424" y="500" width="22" height="48"/><rect x="1324" y="574" width="32" height="40"/></g>
+    <g fill="#8d3b4c"><rect x="1374" y="568" width="24" height="46"/><rect x="1444" y="576" width="30" height="38"/><rect x="1490" y="570" width="20" height="44"/></g>
+  </g>
+
+  <!-- teacher desk, intentionally low contrast in center -->
+  <rect x="622" y="492" width="356" height="34" fill="#4b3037"/>
+  <rect x="642" y="526" width="316" height="92" fill="#8b513b"/>
+  <rect x="666" y="548" width="268" height="50" fill="#a86542"/>
+  <rect x="700" y="464" width="86" height="28" fill="#ece1b7"/>
+  <rect x="714" y="448" width="58" height="16" fill="#fff4d0"/>
+  <rect x="846" y="454" width="46" height="38" fill="#d4a94f"/>
+  <rect x="858" y="438" width="22" height="20" fill="#f1d975"/>
+
+  <!-- foreground student desks -->
+  <g>
+    <rect x="110" y="742" width="340" height="42" fill="#4a2c34"/>
+    <rect x="130" y="718" width="300" height="52" fill="#c27a49"/>
+    <rect x="154" y="784" width="24" height="116" fill="#553139"/><rect x="400" y="784" width="24" height="116" fill="#553139"/>
+    <rect x="1150" y="742" width="340" height="42" fill="#4a2c34"/>
+    <rect x="1170" y="718" width="300" height="52" fill="#c27a49"/>
+    <rect x="1194" y="784" width="24" height="116" fill="#553139"/><rect x="1440" y="784" width="24" height="116" fill="#553139"/>
+    <rect x="500" y="846" width="600" height="44" fill="#4a2c34"/>
+    <rect x="524" y="814" width="552" height="58" fill="#c27a49"/>
+    <rect x="550" y="890" width="28" height="70" fill="#553139"/><rect x="1022" y="890" width="28" height="70" fill="#553139"/>
+  </g>
+
+  <!-- sunlight pixels -->
+  <g fill="#fff2a9" opacity=".22">
+    <polygon points="124,390 346,390 650,960 448,960"/>
+    <polygon points="1254,390 1476,390 1152,960 950,960"/>
+  </g>
+</svg>

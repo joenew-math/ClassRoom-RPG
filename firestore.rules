@@ -1,0 +1,202 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function email() { return signedIn() && request.auth.token.email != null ? request.auth.token.email : ""; }
+    function classDoc(cid) { return get(/databases/$(database)/documents/classes/$(cid)); }
+    function isTeacher(cid) {
+      return signedIn() && email() != "" && email() in classDoc(cid).data.teacherEmails;
+    }
+    function account() {
+      return get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid));
+    }
+    function belongs(cid) {
+      return signedIn() && exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid))
+        && account().data.cid == cid;
+    }
+    function ownSid(cid, sid) { return belongs(cid) && account().data.sid == sid; }
+    function ownStudent(cid) {
+      return get(/databases/$(database)/documents/classes/$(cid)/students/$(account().data.sid));
+    }
+
+    match /classes/{cid} {
+      allow create: if signedIn() && email() != ""
+        && request.resource.data.ownerUid == request.auth.uid
+        && email() in request.resource.data.teacherEmails;
+      allow get: if isTeacher(cid);
+      /* 教師首頁用 array-contains(email) 查詢自己的班級；list 必須直接以
+       * resource.data 證明查詢結果中的每一班都含目前登入信箱。 */
+      allow list: if signedIn() && email() != ""
+        && email() in resource.data.teacherEmails;
+      allow update, delete: if isTeacher(cid);
+
+      match /data/{docId} {
+        allow read, write: if isTeacher(cid);
+      }
+      match /public/{docId} {
+        allow read: if isTeacher(cid) || belongs(cid);
+        allow write: if isTeacher(cid);
+      }
+      match /private/{docId} {
+        allow read, write: if isTeacher(cid);
+      }
+
+      match /enrollments/{enrollmentId} {
+        allow get: if signedIn();
+        allow list: if isTeacher(cid);
+        allow create, delete: if isTeacher(cid);
+        allow update: if isTeacher(cid) || (signedIn()
+          && (!('claimedUid' in resource.data) || resource.data.claimedUid == "" || resource.data.claimedUid == request.auth.uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["claimedUid", "claimedEmail", "claimedAt"])
+          && request.resource.data.claimedUid == request.auth.uid
+          && request.resource.data.claimedEmail == email()
+          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.cid == cid
+          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.sid == resource.data.sid);
+      }
+
+      match /publicRoster/{sid} {
+        allow read: if isTeacher(cid) || belongs(cid);
+        allow write: if isTeacher(cid);
+      }
+
+      match /students/{sid} {
+        allow get: if isTeacher(cid) || ownSid(cid, sid);
+        allow list: if isTeacher(cid);
+        allow create: if isTeacher(cid) || (ownSid(cid, sid)
+          && request.resource.data.id == sid
+          && request.resource.data.email == email());
+        allow update: if isTeacher(cid) || (ownSid(cid, sid)
+          && request.resource.data.id == resource.data.id
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.level == resource.data.level
+          && request.resource.data.xp == resource.data.xp
+          && request.resource.data.totalXp == resource.data.totalXp
+          && request.resource.data.gold == resource.data.gold
+          && request.resource.data.diamonds == resource.data.diamonds
+          && request.resource.data.get("spinDate", null) == resource.data.get("spinDate", null)
+          && request.resource.data.get("spinCount", 0) == resource.data.get("spinCount", 0)
+          && request.resource.data.get("gachaPityRare", 0) == resource.data.get("gachaPityRare", 0)
+          && request.resource.data.get("gachaPityLegend", 0) == resource.data.get("gachaPityLegend", 0)
+          && request.resource.data.get("gachaMonth", "") == resource.data.get("gachaMonth", "")
+          && request.resource.data.get("gachaMonthCount", 0) == resource.data.get("gachaMonthCount", 0)
+          && request.resource.data.get("gachaMonthLegends", 0) == resource.data.get("gachaMonthLegends", 0)
+          && request.resource.data.get("dungeonStats", {}) == resource.data.get("dungeonStats", {})
+          && request.resource.data.spPoints == resource.data.spPoints
+          && request.resource.data.statPoints == resource.data.statPoints
+          && request.resource.data.consumables == resource.data.consumables
+          && request.resource.data.blueprints == resource.data.blueprints
+          && request.resource.data.legendSets == resource.data.legendSets
+          && request.resource.data.get("legendSetId", null) == resource.data.get("legendSetId", null)
+          && request.resource.data.realItems == resource.data.realItems
+          && request.resource.data.achievements == resource.data.achievements
+          && request.resource.data.customTitles == resource.data.customTitles
+          && request.resource.data.bagItems == resource.data.bagItems
+          && request.resource.data.hatId == resource.data.hatId
+          && request.resource.data.clothesId == resource.data.clothesId
+          && request.resource.data.pantsId == resource.data.pantsId
+          && request.resource.data.weaponId == resource.data.weaponId
+          && request.resource.data.backId == resource.data.backId
+          && request.resource.data.shoesId == resource.data.shoesId);
+        allow delete: if isTeacher(cid);
+      }
+
+      match /thanks/{thanksId} {
+        allow read: if isTeacher(cid) || (belongs(cid)
+          && (resource.data.from == account().data.sid || resource.data.to == account().data.sid));
+        allow create: if belongs(cid)
+          && request.resource.data.from == account().data.sid
+          && request.resource.data.to != account().data.sid
+          && request.resource.data.date is string
+          && request.resource.data.slot is int
+          && request.resource.data.slot >= 1 && request.resource.data.slot <= 3
+          && ((request.resource.data.slot == 1 && thanksId == request.resource.data.date + "_" + account().data.sid + "_1")
+            || (request.resource.data.slot == 2 && thanksId == request.resource.data.date + "_" + account().data.sid + "_2")
+            || (request.resource.data.slot == 3 && thanksId == request.resource.data.date + "_" + account().data.sid + "_3"))
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.msg is string
+          && request.resource.data.msg.size() >= 2 && request.resource.data.msg.size() <= 40
+          && request.resource.data.status == "pending";
+        allow update, delete: if isTeacher(cid);
+      }
+
+      match /items/{itemId} {
+        allow read: if isTeacher(cid) || (belongs(cid)
+          && (resource.data.status == "approved" || resource.data.creatorId == account().data.sid));
+        /* 學生送審須由免費 Worker 同時扣圖紙與鑽石；前端不可直接新增或修改作品。 */
+        allow create: if isTeacher(cid);
+        allow update: if isTeacher(cid);
+        allow delete: if isTeacher(cid);
+      }
+
+      match /submissions/{submissionId} {
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
+        allow create: if belongs(cid)
+          && request.resource.data.sid == account().data.sid
+          && request.resource.data.status == "pending";
+        allow update: if isTeacher(cid) || (belongs(cid)
+          && resource.data.sid == account().data.sid
+          && request.resource.data.sid == resource.data.sid
+          && request.resource.data.taskId == resource.data.taskId
+          && request.resource.data.status == "pending");
+        allow delete: if isTeacher(cid);
+      }
+
+      match /parentViews/{viewId} {
+        allow get: if signedIn();
+        allow list: if isTeacher(cid);
+        allow write: if isTeacher(cid);
+      }
+
+      match /rewardCards/{code} {
+        /* 避免學生列出全班尚未使用的兌換碼；兌換由免費 Worker 以管理權限驗證。 */
+        allow read: if isTeacher(cid);
+        allow create, delete: if isTeacher(cid);
+        allow update: if isTeacher(cid);
+      }
+
+      match /transactions/{transactionId} {
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
+        allow write: if false;
+      }
+
+      match /garena/{docId} {
+        allow read: if isTeacher(cid) || belongs(cid);
+        allow write: if isTeacher(cid);
+      }
+      match /garenaPrivate/{docId} {
+        allow read, write: if isTeacher(cid);
+      }
+      match /garenaCmd/{sid} {
+        allow read: if isTeacher(cid);
+        allow create, update: if ownSid(cid, sid);
+        allow delete: if isTeacher(cid) || ownSid(cid, sid);
+      }
+    }
+
+    match /studentAccounts/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.email == email()
+        && exists(/databases/$(database)/documents/classes/$(request.resource.data.cid)/enrollments/$(request.resource.data.enrollmentKey))
+        && getAfter(/databases/$(database)/documents/classes/$(request.resource.data.cid)/enrollments/$(request.resource.data.enrollmentKey)).data.sid == request.resource.data.sid
+        && getAfter(/databases/$(database)/documents/classes/$(request.resource.data.cid)/enrollments/$(request.resource.data.enrollmentKey)).data.claimedUid == uid;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.cid == resource.data.cid
+        && request.resource.data.sid == resource.data.sid
+        && request.resource.data.email == resource.data.email;
+      allow delete: if signedIn() && (request.auth.uid == uid || isTeacher(resource.data.cid));
+    }
+
+    match /leaderboard/{cid} {
+      allow read: if true;
+      allow write: if isTeacher(cid);
+    }
+    match /world/peak {
+      allow read: if true;
+      allow create, update: if request.resource.data.owner.cid is string
+        && isTeacher(request.resource.data.owner.cid);
+      allow delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
