@@ -14411,7 +14411,11 @@ function renderStudent(){
     .concat(isCastleLord ? [["castle","🏰 城堡商店"]] : []);
   const tabs = studentTabDefs.map(([k,n])=>{ const open=classFeatureUnlocked(k); return '<button class="tab '+(view.tab===k?"on ":"")+(open?'':'feature-locked')+'" '+(open?'data-tab="'+k+'"':'data-locked-feature="'+k+'"')+'>'+(open?'':'🔒 ')+n+'</button>'; }).join("");
   const currentStudentTab=studentTabDefs.find(([k])=>k===view.tab)||studentTabDefs[0];
-  const studentMenu='<div class="board-launcher feature-launcher student-launcher"><button class="btn gold board-launcher-main" id="studentMenuToggle">☰ '+currentStudentTab[1]+(view.studentMenu?"　收合 ▲":"　功能選單 ▼")+'</button>'+(view.studentMenu?'<div class="board-launcher-panel">'+tabs+'</div>':'')+'</div>';
+  const currentEntryToken=String(new URLSearchParams(location.search).get("session")||"");
+  const canShareClassQr=view.role==="student"&&!!CLOUD.cid&&classSessionIsLive(state.classSession,currentEntryToken);
+  const studentMenu='<div class="board-launcher feature-launcher student-launcher"><button class="btn gold board-launcher-main" id="studentMenuToggle">☰ '+currentStudentTab[1]+(view.studentMenu?"　收合 ▲":"　功能選單 ▼")+'</button>'
+    +(canShareClassQr?'<button class="btn" id="studentShareClassQr" title="讓同學掃描同一節課的登入 QR；不會分享你的帳號或角色資料">📱 分享本節課 QR</button>':'')
+    +(view.studentMenu?'<div class="board-launcher-panel">'+tabs+'</div>':'')+'</div>';
 
   let body = "";
   if(view.tab==="lesson"){
@@ -15050,6 +15054,8 @@ function renderStudent(){
   const autoToggle = document.getElementById("autoToggle");
   const studentMenuToggle=document.getElementById("studentMenuToggle");
   if(studentMenuToggle) studentMenuToggle.onclick=()=>{view.studentMenu=!view.studentMenu;render();};
+  const studentShareClassQr=document.getElementById("studentShareClassQr");
+  if(studentShareClassQr)studentShareClassQr.onclick=()=>openClassQr(CLOUD.cid,state.className||state.lbName||"本班",currentEntryToken);
   const baseTuneBtn = document.getElementById("baseTuneBtn");
   if(baseTuneBtn) baseTuneBtn.onclick = ()=>openBaseTuneEditor(s);
   if(autoToggle) autoToggle.onclick = ()=>{
