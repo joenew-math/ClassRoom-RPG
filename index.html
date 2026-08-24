@@ -3644,17 +3644,9 @@ const CLOUD = {
   },
   async beginEnrollment(user,cid,sno,seat,email){
     if(!user||!user.uid)throw new Error("請先完成 Google 登入");
-    const key=await this.enrollmentKey(cid,sno,seat),c=FB.db.collection("classes").doc(cid);
-    const er=c.collection("enrollments").doc(key),ar=FB.db.collection("studentAccounts").doc(user.uid);
-    return FB.db.runTransaction(async tx=>{
-      const es=await tx.get(er);if(!es.exists)throw new Error("名冊中找不到這組學號與座號");
-      const d=es.data()||{};
-      if(d.claimedUid&&d.claimedUid!==user.uid)throw new Error("此名冊資料已綁定其他帳號，請洽老師解綁");
-      const account={cid:String(cid),sid:String(d.sid||""),email:String(email||"").toLowerCase(),enrollmentKey:key,updatedAt:Date.now()};
-      tx.set(ar,account,{merge:true});
-      tx.set(er,{claimedUid:user.uid,claimedEmail:account.email,claimedAt:Date.now()},{merge:true});
-      return Object.assign({enrollmentKey:key},d,account);
-    });
+    this.cid=cid;
+    const sessionToken=String(new URLSearchParams(location.search).get("session")||"");
+    return this.callServer("claimStudent",{sno:String(sno||"").trim(),seat:String(seat||"").trim(),sessionToken});
   },
   async unbindStudent(s){
     if(!this.on()||this.role!=="teacher"||!s)return;
@@ -8530,23 +8522,9 @@ function renderJobPick(st, email){
 }
 /* 完成認領:寫入信箱+職業,重算該職業成長 */
 async function finishClaim(st, email, job, appearance){
-  st.email = email;
-  if(appearance&&BASE_VARIANTS[appearance.baseVariant]){
-    st.baseVariant=appearance.baseVariant;
-    st.gender=appearance.gender==='female'?'female':'male';
-    st.baseTune=Object.assign({x:0,y:0,s:1},appearance.baseTune||{});
-  }
-  if(job && job!==st.job){                                   // 換職業→以新職重算基礎屬性與成長
-    st.job = job;
-    st.baseAtk=10; st.baseDef=10; st.baseAgi=10; st.baseInt=10; st.maxHp=100;
-    const gr = JOB_INFO[job].growth;
-    for(let L=2; L<=st.level; L++){ st.baseAtk+=gr.atk; st.baseDef+=gr.def; st.baseAgi+=gr.agi; st.baseInt+=gr.int; st.maxHp+=10; }
-    st.currentHp = st.maxHp;
-  }
   try{
-    await FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id)
-      .set(JSON.parse(JSON.stringify(st)));
-    await CLOUD.saveStudentAccount(FB.user,CLOUD.cid,st.id,email);
+    const packet=await CLOUD.callServer("finishStudentClaim",{job,appearance});
+    if(packet&&packet.student)Object.assign(st,packet.student);
     addLog(st.id, "🎉 完成綁定,成為"+JOB_INFO[st.job].name+"!冒險開始!");
     save();
     // 📊 認領當下才知道「我是誰」,補上 myId/myGroup 並重掛監聽(改成只監聽自己+同組)
@@ -8555,8 +8533,7 @@ async function finishClaim(st, email, job, appearance){
     toast("歡迎加入,"+st.name+"("+JOB_INFO[st.job].name+")!");
     view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"}; render();
   }catch(e){
-    st.email = "";
-    toast("綁定失敗:"+(e.message||e)+"(可能是安全規則未更新)", true);
+    toast("綁定失敗:"+(e.message||e), true);
   }
 }
 /* 教師:班級選擇頁 */
