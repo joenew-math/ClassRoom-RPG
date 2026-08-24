@@ -88,6 +88,14 @@ body{background:var(--bg);color:var(--ink);font-family:var(--han);line-height:1.
 .mi:active{transform:translate(3px,3px);box-shadow:0 0 0}
 .mi .cn{font-family:var(--mono);font-size:12.5px;color:#7A7466;flex:none;min-width:40px}
 .mi .arw{margin-left:auto;color:#E8453C;font-weight:900}
+.mi-block{display:flex;flex-direction:column;gap:7px}
+.chapter-games{display:flex;flex-wrap:wrap;gap:7px;padding:1px 0 2px 14px}
+.chapter-game{display:inline-flex;align-items:center;gap:6px;color:#14161C;background:#EAF7FF;
+  border:2.5px solid #14161C;padding:7px 11px;font-size:13px;font-weight:900;text-decoration:none;
+  box-shadow:3px 3px 0 #14161C;transition:transform .08s,box-shadow .08s,background .12s}
+.chapter-game:hover{background:#BFE9FF;transform:translate(-2px,-2px);box-shadow:5px 5px 0 #14161C}
+.chapter-game:focus-visible{outline:3px solid #E8453C;outline-offset:3px}
+.chapter-game .game-tag{color:#006A8D;font-size:11.5px;white-space:nowrap}
 @media(max-width:640px){.portal{padding:22px 0 6px}.mi{font-size:14.5px;padding:13px}}
 /* 閱讀模式：隱藏標題，只留返回鈕 */
 body.reading .topbar{height:auto}
@@ -456,12 +464,46 @@ const VOLS=[
 const volOf=m=>VOLS.find(v=>v.n===m.vol);
 let cur='全部';
 
+/* 原有數學遊戲保留為獨立頁面，並依課綱章節放入課程目錄。 */
+const GAMES_BY_CHAPTER={
+  c7:[
+    {href:'../inequality-quest.html',title:'認識一元一次不等式'},
+    {href:'../inequal.html',title:'數線挑戰：不等式大師'}
+  ],
+  c8:[{href:'../stats-quest.html',title:'認識統計圖表'}],
+  c13:[{href:'../detective_math_game.html',title:'數據偵探：真相只有一個'}],
+  c17:[
+    {href:'../parallel_lines_v11.html',title:'截角探險：平行線與截角'},
+    {href:'../Symmetry.html',title:'對稱圖形大挑戰'}
+  ],
+  c22:[{href:'../three-views-quest.html',title:'太空站建築師：三視圖'}]
+};
+
 function menuItem(m){
+  const wrap=document.createElement('div');
+  wrap.className='mi-block';
   const b=document.createElement('button');
   b.className='mi';
   b.innerHTML=`<span class="cn">第${m.cn}章</span><span>${m.title}</span><span class="arw">→</span>`;
   b.addEventListener('click',()=>open_(m));
-  return b;
+  wrap.appendChild(b);
+  const games=GAMES_BY_CHAPTER[m.key]||[];
+  if(games.length){
+    const row=document.createElement('div');
+    row.className='chapter-games';
+    row.setAttribute('aria-label',`${m.title}互動遊戲`);
+    games.forEach(game=>{
+      const a=document.createElement('a');
+      a.className='chapter-game';
+      a.href=game.href;
+      a.target='_blank';
+      a.rel='noopener';
+      a.innerHTML=`<span class="game-tag">🎮 互動遊戲</span><span>${game.title}</span>`;
+      row.appendChild(a);
+    });
+    wrap.appendChild(row);
+  }
+  return wrap;
 }
 let openVol=null;                       // 記住目前展開的冊
 function renderList(){

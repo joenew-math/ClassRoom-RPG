@@ -1077,7 +1077,9 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 /* ── Firebase 初始化(階段1:僅登入;資料仍在本機)── */
 var FB = { ready:false, auth:null, user:null, db:null };
 /* 正式部署後填入 Cloudflare Workers 免費後端網址；教師離線時交易仍可運作。 */
-var CLASS_RPG_API_URL = window.CLASS_RPG_API_URL || (/\.workers\.dev$/i.test(location.hostname) ? location.origin + "/api" : "");
+var CLASS_RPG_API_URL = window.CLASS_RPG_API_URL || (/\.workers\.dev$/i.test(location.hostname)
+  ? location.origin + "/api"
+  : (location.hostname==="joenew-math.github.io" ? "https://classroom-rpg-guild.joenew.workers.dev/api" : ""));
 try{
   if(typeof firebase !== "undefined"){
     firebase.initializeApp({
@@ -8052,19 +8054,59 @@ function fitHomePane(){
   const sw=Math.max(1,inner.scrollWidth),sh=Math.max(1,inner.scrollHeight),scale=Math.max(.38,Math.min(1,(vp.clientWidth-4)/sw,(vp.clientHeight-4)/sh));
   inner.style.transform="translateX(-50%) scale("+scale+")";
 }
+function teacherPairCode(){
+  const a=new Uint8Array(20);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function teacherPairRequest(name,payload,user){
+  if(!CLASS_RPG_API_URL)throw new Error("跨裝置登入服務尚未連線");
+  const headers={"content-type":"application/json"};
+  if(user)headers.authorization="Bearer "+await user.getIdToken(false);
+  const requestId=(crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now()+"-"+Math.random().toString(36).slice(2));
+  const res=await fetch(String(CLASS_RPG_API_URL).replace(/\/$/,"")+"/"+name,{method:"POST",headers,body:JSON.stringify(Object.assign({requestId},payload||{}))});
+  let packet={};try{packet=await res.json();}catch(_){}
+  if(!res.ok||!packet.ok)throw new Error((packet.error&&packet.error.message)||("配對服務暫時無法使用（"+res.status+"）"));
+  return packet.data||{};
+}
+async function approveTeacherPair(user,pair){
+  await teacherPairRequest("teacherPairApprove",{pair},user);
+  app.innerHTML='<div class="home"><div class="crest">✅</div><h2>教室螢幕登入成功</h2><div class="panel" style="max-width:500px;margin:0 auto"><p>教師身分已安全交接給教室螢幕。</p><div class="mini">請回到教室螢幕選擇班級；選班後，學生登入 QR Code 才會顯示在螢幕上。</div></div><button class="btn" id="pairPhoneClose" style="margin-top:12px">關閉此頁</button></div>';
+  const b=document.getElementById('pairPhoneClose');if(b)b.onclick=()=>{try{window.close();}catch(_){} b.textContent='可以直接關閉瀏覽器';};
+}
 function openTeacherLoginQr(){
-  const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("teacher","1");
+  if(!CLASS_RPG_API_URL){googleLogin("teacher");return;}
+  const pair=teacherPairCode(),u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("teacher","1");u.searchParams.set("pair",pair);
   const link=u.toString();
   modalHost.innerHTML='<div class="overlay" id="teacherLoginQrOverlay"><div class="modal" style="max-width:440px;text-align:center">'
-    +'<h4>📲 教師 Google 登入</h4><div class="msub">用教師手機掃描後登入 Google，接著會進入「我的班級」選擇頁。</div>'
+    +'<h4>📲 教師 Google 登入</h4><div class="msub">用教師手機掃描並登入 Google；完成後，這個教室螢幕會自動跳到「我的班級」。</div>'
     +'<div id="teacherLoginQrBox" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:12px auto;width:fit-content;min-width:260px;min-height:260px;align-items:center">產生中…</div>'
+    +'<div id="teacherPairStatus" class="mini" style="padding:8px;background:#fff8e0;border:2px solid #d8ad45;border-radius:8px;margin-bottom:10px">等待手機掃碼登入…</div>'
     +'<div class="inline-form" style="justify-content:center"><button class="btn gold" id="teacherLoginHere">在這台裝置登入 Google</button><button class="btn" id="teacherLoginQrClose">關閉</button></div>'
-    +'<div class="mini" style="margin-top:8px">掃碼只會開啟本系統的教師登入頁，不會在 QR Code 中保存帳號或密碼。</div></div></div>';
-  const close=()=>{modalHost.innerHTML="";};
+    +'<div class="mini" style="margin-top:8px">QR 只含 5 分鐘有效的一次性配對碼，不含帳號或密碼。</div></div></div>';
+  let stopped=false,busy=false;
+  const close=()=>{stopped=true;modalHost.innerHTML="";};
   document.getElementById("teacherLoginQrOverlay").onclick=e=>{if(e.target.id==="teacherLoginQrOverlay")close();};
   document.getElementById("teacherLoginQrClose").onclick=close;
   document.getElementById("teacherLoginHere").onclick=()=>{close();googleLogin("teacher");};
   loadQrLib(ok=>{const box=document.getElementById("teacherLoginQrBox");if(!box)return;if(ok&&window.QRCode){box.innerHTML="";new QRCode(box,{text:link,width:260,height:260,correctLevel:QRCode.CorrectLevel.M});}else box.innerHTML='<div class="mini">QR 產生器載入失敗。<br>請使用「在這台裝置登入 Google」。</div>';});
+  const poll=async()=>{
+    if(stopped||busy)return;busy=true;
+    try{
+      const data=await teacherPairRequest("teacherPairPoll",{pair});
+      const status=document.getElementById("teacherPairStatus");
+      if(data.customToken){
+        if(status)status.textContent="✅ 手機驗證完成，正在登入教室螢幕…";
+        stopped=true;
+        const res=await FB.auth.signInWithCustomToken(data.customToken);
+        modalHost.innerHTML="";
+        await loginSuccess(res.user,"teacher");
+        return;
+      }
+      if(status)status.textContent="等待手機掃碼登入…";
+    }catch(e){const status=document.getElementById("teacherPairStatus");if(status)status.textContent="配對等待中："+(e.message||e);}
+    finally{busy=false;}
+    if(!stopped)setTimeout(poll,1600);
+  };
+  setTimeout(poll,700);
 }
 function renderHome(){
   const fbOk=FB.ready, q=new URLSearchParams(location.search);
@@ -8134,6 +8176,12 @@ async function loginSuccess(user, role){
   try{ localStorage.setItem("rpg-last-role", role); }catch(_){}
   if(role==="teacher"){
     CLOUD.role = "teacher";
+    const pair=String(new URLSearchParams(location.search).get("pair")||"");
+    if(pair){
+      try{await approveTeacherPair(user,pair);}
+      catch(e){toast("教室螢幕配對失敗："+(e.message||e),true);view={page:"classes",role:"teacher"};renderClasses(email);}
+      return;
+    }
     view = {page:"classes", role:"teacher"}; renderClasses(email);
   }else{
     CLOUD.role = "student";
@@ -8270,7 +8318,8 @@ function renderClaim(email,prefill){
       const enrollment=await CLOUD.beginEnrollment(FB.user,CLOUD.cid,sno,seat,email);
       if(String(enrollment.sid)!==String(st.id))throw new Error("名冊核對資料不一致，請重新整理後再試");
       try{sessionStorage.removeItem("rpg-student-join");sessionStorage.removeItem("rpg-student-mode");}catch(_){}
-      if(state.allowJobPick)renderJobPick(st,email);else await finishClaim(st,email,st.job);
+      // 正式名冊認領也必須先選擇已由教師校正的素體；即使班級鎖定職業，仍保留外型選擇。
+      renderJobPick(st,email);
     }catch(e){btn.disabled=false;btn.textContent="核對名冊並加入班級";toast("註冊失敗："+(e.message||e),true);}
   };
   document.getElementById("claimGo").onclick=claim;["claimSno","claimSeat"].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==="Enter")claim();});
@@ -8376,15 +8425,17 @@ async function finishEnroll(draft, job){
 /* 職業選擇頁(認領時) */
 function renderJobPick(st, email){
   const jobs = JOB_LIST();
+  let selectedBase = (st.baseVariant&&BASE_VARIANTS[st.baseVariant])
+    ? st.baseVariant : ((st.gender||"male")==="female"?"female1":BASE_TUNE_REFERENCE);
+  let selectedTune = Object.assign({x:0,y:0,s:1},(state.baseTunePresets||{})[selectedBase]||{});
   const radar = (j)=>{
     const S = JOB_INFO[j].stats, keys=[["atk","攻"],["def","防"],["agi","敏"],["int","智"]];
     return '<div style="display:flex;gap:8px;justify-content:center;margin:6px 0">'
       + keys.map(k=>'<span class="mini">'+k[1]+'<div style="width:10px;height:'+(S[k[0]]*7+6)+'px;background:'+JOB_INFO[j].color+';border:1.5px solid #141414;border-radius:2px;margin:2px auto 0"></div></span>').join("")
       + '</div>';
   };
-  const cards = jobs.map(j=>{
+  const cards = (state.allowJobPick?jobs:[st.job||"Warrior"]).map(j=>{
     const J = JOB_INFO[j];
-    const preview = Object.assign({}, st, {job:j});
     return '<button class="job-card" data-job="'+j+'" style="border-color:'+J.color+'">'
       + '<div>'+tierPreviewSVG(j, 1, 84)+'</div>'
       + '<div style="font-weight:900;font-size:18px">'+J.emoji+' '+J.name+'</div>'
@@ -8395,18 +8446,46 @@ function renderJobPick(st, email){
       + '<div class="mini" style="background:#fff8e0;border-radius:6px;padding:4px;margin-top:6px;text-align:left">💡 '+esc(J.tip)+'</div>'
       + '</button>';
   }).join("");
-  app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+',選擇你的職業</h2>'
-    + '<p>四種職業各有特色,選好之後就是你這學期的冒險身分!<br>(不確定選哪個?<b>戰士</b>最好上手)</p>'
+  const baseChoices=Object.entries(BASE_VARIANTS).map(([k,src])=>'<button type="button" class="base-choice'+(k===selectedBase?' on':'')+'" data-claimbase="'+k+'" style="background:#fff;border:3px solid '+(k===selectedBase?'var(--gold)':'#141414')+';border-radius:9px;padding:3px;cursor:pointer"><img src="'+src+'" alt="'+esc(BASE_VARIANT_SPEC[k].label)+'" style="width:100%;height:82px;object-fit:contain;image-rendering:pixelated"><span class="mini" style="display:block">'+esc(BASE_VARIANT_SPEC[k].label)+'</span></button>').join('');
+  app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+',建立你的冒險角色</h2>'
+    + '<p>先選擇素體，再確認職業。八款素體都會套用老師預先校正的位置與比例。</p>'
+    + '<div class="panel" style="width:100%;max-width:720px;margin:0 auto 16px;text-align:left"><h3 style="margin-top:0">🧍 選擇生理類型與素體</h3>'
+    + '<div class="enroll-base-grid">'+baseChoices+'</div>'
+    + '<div style="margin-top:10px;padding:8px;background:#fff8e8;border:2px dashed var(--gold);border-radius:10px;text-align:center"><b class="mini">裝備對位即時預覽</b><div id="claimBaseTryOn" style="height:180px;display:flex;align-items:flex-end;justify-content:center"></div><div class="mini">帽子、衣服、褲子、鞋子、背飾與武器固定在正式裝備座標</div></div></div>'
+    + '<h3>'+(state.allowJobPick?'選擇你的職業':'確認班級指定職業')+'</h3>'
     + '<div class="job-grid">'+cards+'</div>'
     + '<div style="margin-top:12px"><button class="btn" id="cbk">← 返回</button></div></div>';
   document.getElementById("cbk").onclick=()=>{ renderClaim(email); };
+  const drawBaseTryOn=()=>{
+    const gender=selectedBase.indexOf('female')===0?'female':'male';
+    const sample={roStyle:true,gender,baseVariant:selectedBase,job:st.job||'Warrior',level:1,
+      hatId:1,clothesId:4,pantsId:40,shoesId:15,backId:17,weaponId:9,
+      hairId:null,eyesId:null,browsId:null,noseId:null,blueprints:{},baseTune:Object.assign({},selectedTune)};
+    const box=document.getElementById('claimBaseTryOn');if(box)box.innerHTML=dollSVG(sample,168);
+  };
+  app.querySelectorAll('[data-claimbase]').forEach(b=>b.onclick=()=>{
+    selectedBase=b.dataset.claimbase;
+    selectedTune=Object.assign({x:0,y:0,s:1},(state.baseTunePresets||{})[selectedBase]||{});
+    app.querySelectorAll('[data-claimbase]').forEach(x=>{x.classList.toggle('on',x===b);x.style.borderColor=x===b?'var(--gold)':'#141414';});
+    drawBaseTryOn();
+  });
+  drawBaseTryOn();
   app.querySelectorAll("[data-job]").forEach(b=>{
-    b.onclick = ()=>{ finishClaim(st, email, b.dataset.job); };
+    b.onclick = ()=>{ finishClaim(st, email, b.dataset.job, {
+      baseVariant:selectedBase,
+      gender:selectedBase.indexOf('female')===0?'female':'male',
+      baseTune:Object.assign({},selectedTune)
+    }); };
   });
 }
 /* 完成認領:寫入信箱+職業,重算該職業成長 */
-async function finishClaim(st, email, job){
+async function finishClaim(st, email, job, appearance){
   st.email = email;
+  if(appearance&&BASE_VARIANTS[appearance.baseVariant]){
+    st.baseVariant=appearance.baseVariant;
+    st.gender=appearance.gender==='female'?'female':'male';
+    st.baseTune=Object.assign({x:0,y:0,s:1},appearance.baseTune||{});
+  }
   if(job && job!==st.job){                                   // 換職業→以新職重算基礎屬性與成長
     st.job = job;
     st.baseAtk=10; st.baseDef=10; st.baseAgi=10; st.baseInt=10; st.maxHp=100;
