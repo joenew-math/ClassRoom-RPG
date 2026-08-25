@@ -63,6 +63,12 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.sid == resource.data.sid);
       }
 
+      /* 自動註冊的學號／座號唯一鎖只由免費 Worker 建立；教師刪班時可清除。 */
+      match /rosterLocks/{lockId} {
+        allow read, delete: if isTeacher(cid);
+        allow create, update: if false;
+      }
+
       match /publicRoster/{sid} {
         allow read: if isTeacher(cid) || belongs(cid);
         allow write: if isTeacher(cid);

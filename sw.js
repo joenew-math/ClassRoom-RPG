@@ -1,4 +1,4 @@
-const CACHE = "classroom-rpg-v126-20260824-student-register-v4";
+const CACHE = "classroom-rpg-v126-20260825-auto-enroll-v5";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./assets/app-icon.svg", "./vendor/firebase/firebase-app-compat.js", "./vendor/firebase/firebase-auth-compat.js", "./vendor/firebase/firebase-firestore-compat.js", "./vendor/qrcode/qrcode.min.js", "./Lession/Lessionindex.html", "./Lession/question-bank.html", "./Lession/question-bank-data.js", "./Lession/math-dungeon.html", "./Lession/學生名冊匯入範例.xlsx"];
 const NEVER_CACHE = /(?:firestore|googleapis|gstatic\.com\/firebasejs|identitytoolkit|securetoken)/i;
 
