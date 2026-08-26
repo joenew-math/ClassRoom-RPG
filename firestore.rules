@@ -7,14 +7,19 @@ service cloud.firestore {
     function isTeacher(cid) {
       return signedIn() && email() != "" && email() in classDoc(cid).data.teacherEmails;
     }
-    function account() {
-      return get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid));
+    function account(cid) {
+      return exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)/classes/$(cid))
+        ? get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)/classes/$(cid))
+        : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid));
     }
     function belongs(cid) {
-      return signedIn() && exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid))
-        && account().data.cid == cid;
+      return signedIn() && (
+          exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)/classes/$(cid))
+          || (exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid))
+            && get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.cid == cid)
+        ) && account(cid).data.cid == cid;
     }
-    function ownSid(cid, sid) { return belongs(cid) && account().data.sid == sid; }
+    function ownSid(cid, sid) { return belongs(cid) && account(cid).data.sid == sid; }
     function isInitialStudentClaim(cid, sid) {
       return ownSid(cid, sid)
         && resource.data.get("email", "") == ""
@@ -56,8 +61,8 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["claimedUid", "claimedEmail", "claimedAt"])
           && request.resource.data.claimedUid == request.auth.uid
           && request.resource.data.claimedEmail == email()
-          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.cid == cid
-          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.sid == resource.data.sid);
+          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)/classes/$(cid)).data.cid == cid
+          && getAfter(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)/classes/$(cid)).data.sid == resource.data.sid);
       }
 
       /* 自動註冊的學號／座號唯一鎖只由免費 Worker 建立；教師刪班時可清除。 */
@@ -141,7 +146,7 @@ service cloud.firestore {
 
       match /thanks/{thanksId} {
         allow read: if isTeacher(cid) || (belongs(cid)
-          && (resource.data.from == account().data.sid || resource.data.to == account().data.sid));
+          && (resource.data.from == account(cid).data.sid || resource.data.to == account(cid).data.sid));
         /* 每日上限、七天同人冷卻與固定善意句庫由免費 Worker 原子驗證。 */
         allow create: if false;
         allow update, delete: if isTeacher(cid);
@@ -150,9 +155,9 @@ service cloud.firestore {
       /* 私人求助不放入公開班級文件；學生只能建立自己的固定類型求助，
        * 教師才能查看全班與標記處理，避免同儕窺看或用自由文字互相攻擊。 */
       match /helpRequests/{requestId} {
-        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account(cid).data.sid);
         allow create: if belongs(cid)
-          && request.resource.data.sid == account().data.sid
+          && request.resource.data.sid == account(cid).data.sid
           && request.resource.data.id == requestId
           && request.resource.data.kind in ["private", "group", "learning", "friend"]
           && request.resource.data.status == "pending"
@@ -167,7 +172,7 @@ service cloud.firestore {
 
       match /items/{itemId} {
         allow read: if isTeacher(cid) || (belongs(cid)
-          && (resource.data.status == "approved" || resource.data.creatorId == account().data.sid));
+          && (resource.data.status == "approved" || resource.data.creatorId == account(cid).data.sid));
         /* 學生送審須由免費 Worker 同時扣圖紙與鑽石；前端不可直接新增或修改作品。 */
         allow create: if isTeacher(cid);
         allow update: if isTeacher(cid);
@@ -175,12 +180,12 @@ service cloud.firestore {
       }
 
       match /submissions/{submissionId} {
-        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account(cid).data.sid);
         allow create: if belongs(cid)
-          && request.resource.data.sid == account().data.sid
+          && request.resource.data.sid == account(cid).data.sid
           && request.resource.data.status == "pending";
         allow update: if isTeacher(cid) || (belongs(cid)
-          && resource.data.sid == account().data.sid
+          && resource.data.sid == account(cid).data.sid
           && request.resource.data.sid == resource.data.sid
           && request.resource.data.taskId == resource.data.taskId
           && request.resource.data.status == "pending");
@@ -201,7 +206,7 @@ service cloud.firestore {
       }
 
       match /transactions/{transactionId} {
-        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account(cid).data.sid);
         allow write: if false;
       }
 
@@ -231,6 +236,29 @@ service cloud.firestore {
         && request.resource.data.sid == resource.data.sid
         && request.resource.data.email == resource.data.email;
       allow delete: if signedIn() && (request.auth.uid == uid || isTeacher(resource.data.cid));
+
+      match /classes/{cid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list: if signedIn() && request.auth.uid == uid;
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.cid == cid
+          && request.resource.data.email == email()
+          && exists(/databases/$(database)/documents/classes/$(cid)/enrollments/$(request.resource.data.enrollmentKey))
+          && getAfter(/databases/$(database)/documents/classes/$(cid)/enrollments/$(request.resource.data.enrollmentKey)).data.sid == request.resource.data.sid
+          && getAfter(/databases/$(database)/documents/classes/$(cid)/enrollments/$(request.resource.data.enrollmentKey)).data.claimedUid == uid;
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.cid == cid
+          && request.resource.data.sid == resource.data.sid
+          && request.resource.data.email == resource.data.email;
+        allow delete: if signedIn() && (request.auth.uid == uid || isTeacher(cid));
+      }
+    }
+
+    // Google 帳號共用的角色身份只保存職業、素體與對位；
+    // 等級、貨幣、裝備與學習紀錄仍留在各班 students 文件。
+    match /studentProfiles/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
     }
 
     match /leaderboard/{cid} {
