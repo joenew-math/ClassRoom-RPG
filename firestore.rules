@@ -15,9 +15,6 @@ service cloud.firestore {
         && account().data.cid == cid;
     }
     function ownSid(cid, sid) { return belongs(cid) && account().data.sid == sid; }
-    function ownStudent(cid) {
-      return get(/databases/$(database)/documents/classes/$(cid)/students/$(account().data.sid));
-    }
     function isInitialStudentClaim(cid, sid) {
       return ownSid(cid, sid)
         && resource.data.get("email", "") == ""
