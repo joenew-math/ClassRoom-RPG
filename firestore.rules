@@ -86,8 +86,25 @@ service cloud.firestore {
           && request.resource.data.level == resource.data.level
           && request.resource.data.xp == resource.data.xp
           && request.resource.data.totalXp == resource.data.totalXp
+          && request.resource.data.job == resource.data.job
+          && request.resource.data.baseAtk == resource.data.baseAtk
+          && request.resource.data.baseDef == resource.data.baseDef
+          && request.resource.data.baseAgi == resource.data.baseAgi
+          && request.resource.data.baseInt == resource.data.baseInt
+          && request.resource.data.maxHp == resource.data.maxHp
+          && request.resource.data.currentHp == resource.data.currentHp
+          && request.resource.data.get("lessonAnswers", 0) == resource.data.get("lessonAnswers", 0)
+          && request.resource.data.get("learningStreak", {}) == resource.data.get("learningStreak", {})
           && request.resource.data.gold == resource.data.gold
           && request.resource.data.diamonds == resource.data.diamonds
+          && request.resource.data.get("diamondFlow", {}) == resource.data.get("diamondFlow", {})
+          && request.resource.data.get("goldFlow", {}) == resource.data.get("goldFlow", {})
+          && request.resource.data.get("thanksWall", []) == resource.data.get("thanksWall", [])
+          && request.resource.data.get("thanksToday", {}) == resource.data.get("thanksToday", {})
+          && request.resource.data.get("thanksRecent", {}) == resource.data.get("thanksRecent", {})
+          && request.resource.data.get("thanksTotal", 0) == resource.data.get("thanksTotal", 0)
+          && request.resource.data.get("thanksSentTotal", 0) == resource.data.get("thanksSentTotal", 0)
+          && request.resource.data.get("leaderReviewStats", {}) == resource.data.get("leaderReviewStats", {})
           && request.resource.data.get("spinDate", null) == resource.data.get("spinDate", null)
           && request.resource.data.get("spinCount", 0) == resource.data.get("spinCount", 0)
           && request.resource.data.get("gachaPityRare", 0) == resource.data.get("gachaPityRare", 0)
@@ -102,6 +119,12 @@ service cloud.firestore {
           && request.resource.data.blueprints == resource.data.blueprints
           && request.resource.data.legendSets == resource.data.legendSets
           && request.resource.data.get("legendSetId", null) == resource.data.get("legendSetId", null)
+          && request.resource.data.get("diamondCosmetics", {}) == resource.data.get("diamondCosmetics", {})
+          && request.resource.data.get("diamondCosmeticId", null) == resource.data.get("diamondCosmeticId", null)
+          && request.resource.data.get("petCards", {}) == resource.data.get("petCards", {})
+          && request.resource.data.get("petCardId", null) == resource.data.get("petCardId", null)
+          && request.resource.data.get("petLegendCrafted", {}) == resource.data.get("petLegendCrafted", {})
+          && request.resource.data.get("dungeonPetClaims", []) == resource.data.get("dungeonPetClaims", [])
           && request.resource.data.realItems == resource.data.realItems
           && request.resource.data.achievements == resource.data.achievements
           && request.resource.data.customTitles == resource.data.customTitles
@@ -118,19 +141,26 @@ service cloud.firestore {
       match /thanks/{thanksId} {
         allow read: if isTeacher(cid) || (belongs(cid)
           && (resource.data.from == account().data.sid || resource.data.to == account().data.sid));
+        /* 每日上限、七天同人冷卻與固定善意句庫由免費 Worker 原子驗證。 */
+        allow create: if false;
+        allow update, delete: if isTeacher(cid);
+      }
+
+      /* 私人求助不放入公開班級文件；學生只能建立自己的固定類型求助，
+       * 教師才能查看全班與標記處理，避免同儕窺看或用自由文字互相攻擊。 */
+      match /helpRequests/{requestId} {
+        allow read: if isTeacher(cid) || (belongs(cid) && resource.data.sid == account().data.sid);
         allow create: if belongs(cid)
-          && request.resource.data.from == account().data.sid
-          && request.resource.data.to != account().data.sid
-          && request.resource.data.date is string
-          && request.resource.data.slot is int
-          && request.resource.data.slot >= 1 && request.resource.data.slot <= 3
-          && ((request.resource.data.slot == 1 && thanksId == request.resource.data.date + "_" + account().data.sid + "_1")
-            || (request.resource.data.slot == 2 && thanksId == request.resource.data.date + "_" + account().data.sid + "_2")
-            || (request.resource.data.slot == 3 && thanksId == request.resource.data.date + "_" + account().data.sid + "_3"))
+          && request.resource.data.sid == account().data.sid
+          && request.resource.data.id == requestId
+          && request.resource.data.kind in ["private", "group", "learning", "friend"]
+          && request.resource.data.status == "pending"
           && request.resource.data.createdAt == request.time
-          && request.resource.data.msg is string
-          && request.resource.data.msg.size() >= 2 && request.resource.data.msg.size() <= 40
-          && request.resource.data.status == "pending";
+          && request.resource.data.createdAtMs is int
+          && request.resource.data.studentName is string
+          && request.resource.data.studentName.size() <= 40
+          && request.resource.data.group is string
+          && request.resource.data.group.size() <= 20;
         allow update, delete: if isTeacher(cid);
       }
 
