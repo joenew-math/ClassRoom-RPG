@@ -83,6 +83,10 @@ service cloud.firestore {
         allow update: if isTeacher(cid) || isInitialStudentClaim(cid, sid) || (ownSid(cid, sid)
           && request.resource.data.id == resource.data.id
           && request.resource.data.email == resource.data.email
+          && request.resource.data.get("birth", "") == resource.data.get("birth", "")
+          && request.resource.data.get("sno", "") == resource.data.get("sno", "")
+          && request.resource.data.get("seat", "") == resource.data.get("seat", "")
+          && request.resource.data.get("registrationComplete", false) == resource.data.get("registrationComplete", false)
           && request.resource.data.level == resource.data.level
           && request.resource.data.xp == resource.data.xp
           && request.resource.data.totalXp == resource.data.totalXp

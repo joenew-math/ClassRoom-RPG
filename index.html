@@ -114,6 +114,7 @@ header .sp{flex:1}
   @media(max-width:520px){.home-guide-index{grid-template-columns:1fr}.home-guide-cards{grid-template-columns:1fr}.student-join-grid{grid-template-columns:1fr 1fr}.student-join-grid label:first-child{grid-column:1/-1}}
   .enroll-base-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:5px}
   @media(max-width:520px){.enroll-base-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @keyframes registrationSpin{to{transform:rotate(360deg)}}
   .job-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;width:100%;max-width:900px;margin:0 auto}
   .job-card{background:#fff;border:3px solid #141414;border-radius:12px;padding:12px 10px;color:#141414;cursor:pointer;text-align:center;box-shadow:4px 4px 0 rgba(20,20,20,.75);transition:transform .12s}
   .job-card:hover{transform:translateY(-4px)}
@@ -3182,6 +3183,7 @@ function dollSVG(s, size, override){
 /* ── 狀態 ─────────────────────────────────────────── */
 function newStudent(id, name, job, group){
   return { id, name, job, group,
+    registrationComplete:false,                            // 新生完成素體／職業選擇後才改為 true
     roStyle:true,                                          // 全職業 RO 風正式美術(v106 起預設)
     level:1, xp:0, totalXp:0, gold:100, spPoints:0,
     statPoints:0, alloc:{atk:0, agi:0, int:0, def:0},
@@ -3577,7 +3579,7 @@ const CLOUD = {
     const requestId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now()+"-"+Math.random().toString(36).slice(2));
     const res=await fetch(base+"/"+encodeURIComponent(name),{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+token},body:JSON.stringify(Object.assign({cid:String(this.cid||""),requestId},payload||{}))});
     let packet={};try{packet=await res.json();}catch(e){}
-    if(!res.ok||!packet.ok)throw new Error((packet.error&&packet.error.message)||("交易服務暫時無法使用（"+res.status+"）"));
+    if(!res.ok||!packet.ok){const err=new Error((packet.error&&packet.error.message)||("交易服務暫時無法使用（"+res.status+"）"));err.status=res.status;err.code=packet.error&&packet.error.code||"";throw err;}
     return packet.data;
   },
 
@@ -3670,11 +3672,11 @@ const CLOUD = {
     if(data.claimedUid&&data.claimedUid!==FB.user.uid)throw new Error("此名冊資料已綁定其他帳號，請洽老師解綁");
     return Object.assign({enrollmentKey:key},data);
   },
-  async beginEnrollment(user,cid,sno,seat,email){
+  async beginEnrollment(user,cid,sno,seat,email,birth){
     if(!user||!user.uid)throw new Error("請先完成 Google 登入");
     this.cid=cid;
     const sessionToken=String(new URLSearchParams(location.search).get("session")||"");
-    return this.callServer("claimStudent",{sno:String(sno||"").trim(),seat:String(seat||"").trim(),sessionToken});
+    return this.callServer("claimStudent",{sno:String(sno||"").trim(),seat:String(seat||"").trim(),birth:String(birth||"").trim(),sessionToken});
   },
   async unbindStudent(s){
     if(!this.on()||this.role!=="teacher"||!s)return;
@@ -3902,7 +3904,8 @@ const CLOUD = {
     if(this.role==="teacher")await Promise.all([this.syncParentViews(true),this.syncPublicRoster(true),this.syncEnrollments(true)]);
   },
   /* 教師讀完整資料；學生只讀公開角色摘要、自己的完整角色與已上架作品。 */
-  async loadClass(cid, myEmail){
+  async loadClass(cid, myEmail, options){
+    options=options||{};
     const c = FB.db.collection("classes").doc(cid);
     let account=null;
     if(this.role==="student"&&FB.user&&FB.user.uid){
@@ -3943,7 +3946,7 @@ const CLOUD = {
     this._snapAll();
     this._lastRosterFetch = Date.now();                    // 剛拿過安全名冊摘要,節流計時器歸零
     localStorage.setItem(LS_KEY, JSON.stringify(state));   // 雲端資料也落一份本機
-    this.listen();
+    if(options.listen!==false)this.listen();
     if(this.role==="teacher")await Promise.all([this.syncPublicRoster(true),this.syncEnrollments(true),this.syncParentViews(true)]);
     try{ PEAK.refresh(); if(this.role==="teacher")this.pushLeaderboard(); }catch(_){}   // 🌏 學生端不寫排行榜
   },
@@ -8241,6 +8244,18 @@ function renderLegacyHome(){
   });
 }
 /* Google 登入:role=teacher|student */
+async function studentRegistrationComplete(st){
+  if(!st)return false;
+  if(st.registrationComplete===true)return true;
+  if(st.registrationComplete===false||!(st.email||"").trim())return false;
+  /* 舊版沒有 registrationComplete：由 Worker 查詢完成選角的交易紀錄。
+   * 這能區分「真正完成註冊」與「教師只手動填入信箱」的卡住資料。 */
+  try{
+    const packet=await CLOUD.callServer("registrationStatus",{});
+    if(packet&&packet.student)Object.assign(st,packet.student);
+    return !!(packet&&packet.complete);
+  }catch(e){console.warn("registration status",e);return true;}
+}
 async function loginSuccess(user, role){
   FB.user = user;
   const email = (user.email||"").toLowerCase();
@@ -8271,8 +8286,8 @@ async function loginSuccess(user, role){
     try{
       let enrollment=null;
       if(studentMode==="register"){
-        if(!join||normalizeClassCode(join.cid)!==normalizeClassCode(cid)){renderClaim(email,join);return;}
-        enrollment=await CLOUD.beginEnrollment(user,cid,join.sno,join.seat,email);
+        if(!join||normalizeClassCode(join.cid)!==normalizeClassCode(cid)||!rosterBirthValid(String(join.birth||""))){renderClaim(email,join);return;}
+        enrollment=await CLOUD.beginEnrollment(user,cid,join.sno,join.seat,email,join.birth);
       }
       if(studentMode==="qr-register"){
         const accountDoc=await FB.db.collection("studentAccounts").doc(user.uid).get();
@@ -8297,7 +8312,9 @@ async function loginSuccess(user, role){
         }
         sessionStorage.setItem("rpg-student-mode","login");
       }
-      await CLOUD.loadClass(cid, email);
+      /* 登入判定與角色選擇完成前不啟動即時監聽，避免手機慢網路的
+       * 首批 snapshot 把選角頁重新繪製成首頁。 */
+      await CLOUD.loadClass(cid, email,{listen:false});
       if((studentMode==="login"||studentMode==="qr-register"||studentMode==="auto") && !wantsMoba && !wantsReward){
         const live=state.classSession||{};
         if(!sessionToken || !classSessionIsLive(live,sessionToken)){
@@ -8311,13 +8328,13 @@ async function loginSuccess(user, role){
           renderClaim(email,join); toast("此名冊資料已綁定其他帳號，請洽老師解綁",true); return;
         }
         sessionStorage.removeItem("rpg-student-join");
-        if(!(matched.email||"").trim()){
+        if(!(await studentRegistrationComplete(matched))){
           renderJobPick(matched,email);
           return;
         }
       }
       const ownStudent=state.students.find(x=>String(x.id)===String(CLOUD.myId||""));
-      if(ownStudent&&!(ownStudent.email||"").trim()){
+      if(ownStudent&&!(await studentRegistrationComplete(ownStudent))){
         renderJobPick(ownStudent,email);
         return;
       }
@@ -8327,7 +8344,7 @@ async function loginSuccess(user, role){
         sessionStorage.removeItem("rpg-student-mode");
         sessionStorage.removeItem("rpg-student-join");
         const hasReward=!!new URLSearchParams(location.search).get("reward");
-        view={page:"student", sid:s.id, tab:hasReward?"redeem":"stats", shopFilter:"all", role:"student"}; render();
+        view={page:"student", sid:s.id, tab:hasReward?"redeem":"stats", shopFilter:"all", role:"student"};CLOUD.listen();render();
         if(dotaEntry==="signup")setTimeout(()=>mobaStudentEnrollFromLink(s.id),250);
         else if(wantsMoba) setTimeout(()=>toast("🏰 已進入 Dota 參戰模式；若你在本場名單內，開戰後控制器會自動出現"),250);
       }
@@ -8403,6 +8420,21 @@ function prepareScrollableAuthPage(){
   app.style.removeProperty("height");app.style.removeProperty("overflow");
   window.scrollTo(0,0);
 }
+function registrationLoading(title,detail){
+  const old=document.getElementById("registrationLoading");
+  if(old){const h=old.querySelector("h3"),p=old.querySelector("p");if(h)h.textContent=title||"正在處理註冊";if(p)p.textContent=detail||"請保持此頁開啟";return;}
+  modalHost.innerHTML='<div class="overlay" id="registrationLoading" style="z-index:9999"><div class="modal" style="width:min(88vw,390px);text-align:center"><div aria-hidden="true" style="width:58px;height:58px;margin:2px auto 13px;border:8px solid #eadfbe;border-top-color:#efad19;border-radius:50%;animation:registrationSpin .85s linear infinite"></div><h3 style="margin:0 0 8px">'+esc(title||"正在處理註冊")+'</h3><p class="mini" style="line-height:1.8;margin:0">'+esc(detail||"請保持此頁開啟")+'</p><div class="mini" style="margin-top:10px;color:#826300">請勿返回或重複按下按鈕</div></div></div>';
+}
+function registrationLoadingDone(){const el=document.getElementById("registrationLoading");if(el)el.remove();}
+async function registrationQueuedCall(name,payload,onStage){
+  const wait=300+Math.floor(Math.random()*1200);if(onStage)onStage("正在排隊，準備安全寫入…");await new Promise(r=>setTimeout(r,wait));
+  let last=null;
+  for(let attempt=0;attempt<3;attempt++){
+    try{if(onStage)onStage(attempt?"連線繁忙，正在重新嘗試…":"正在核對班級與名冊…");return await CLOUD.callServer(name,payload);}
+    catch(e){last=e;const transient=[429,500,502,503,504].includes(Number(e&&e.status))||/暫時|繁忙|逾時|timeout|network|fetch/i.test(String(e&&e.message||e));if(!transient||attempt===2)throw e;await new Promise(r=>setTimeout(r,700*(attempt+1)+Math.floor(Math.random()*500)));}
+  }
+  throw last||new Error("註冊服務暫時無法使用");
+}
 function renderStudentAccountBound(email,account,scannedCid){
   prepareScrollableAuthPage();
   const originalCid=normalizeClassCode(account&&account.cid||""),targetCid=normalizeClassCode(scannedCid||"");
@@ -8424,26 +8456,31 @@ function renderAutoEnroll(email,prefill){
     +'<div style="padding:9px;background:#eef8ff;border:2px solid #79bddd;border-radius:10px;margin-bottom:12px"><b>🏫 班級 '+esc(cid)+'</b><div class="mini">掃碼驗證完成。填寫一次資料後，系統會自動加入名冊並平均編組。</div></div>'
     +'<label class="mini" for="autoName">學生姓名</label><input id="autoName" maxlength="30" autocomplete="name" value="'+esc(displayName)+'" placeholder="例：王小明" style="width:100%;margin:3px 0 9px">'
     +'<label class="mini" for="autoSno">學生學號</label><input id="autoSno" maxlength="80" autocomplete="off" value="'+esc(prefill.sno||'')+'" placeholder="例：1120345" style="width:100%;margin:3px 0 9px">'
-    +'<label class="mini" for="autoSeat">班級座號</label><input id="autoSeat" maxlength="80" inputmode="numeric" autocomplete="off" value="'+esc(prefill.seat||'')+'" placeholder="例：15" style="width:100%;margin:3px 0 10px">'
+    +'<label class="mini" for="autoSeat">班級座號</label><input id="autoSeat" maxlength="80" inputmode="numeric" autocomplete="off" value="'+esc(prefill.seat||'')+'" placeholder="例：15" style="width:100%;margin:3px 0 9px">'
+    +'<label class="mini" for="autoBirth">學生生日（西元 YYYYMMDD）</label><input id="autoBirth" maxlength="8" inputmode="numeric" autocomplete="bday" value="'+esc(prefill.birth||'')+'" placeholder="例：20130215" aria-describedby="autoBirthHelp" style="width:100%;margin:3px 0 4px"><div class="mini" id="autoBirthHelp" style="margin-bottom:10px;color:#6a5530">請連續輸入 8 碼：西元年 4 碼＋月份 2 碼＋日期 2 碼，不要輸入斜線。</div>'
     +'<div class="mini" style="line-height:1.7;margin-bottom:10px">登入帳號：<b>'+esc(email)+'</b><br>若老師已匯入相同學號與座號，會認領原名冊；否則自動建立新名冊角色。</div>'
     +'<button class="btn gold" id="autoEnrollGo" style="width:100%;font-size:18px">建立名冊並選擇角色</button><div id="autoEnrollResult" class="mini" style="margin-top:8px"></div></div>'
     +'<button class="btn" id="autoEnrollCancel" style="margin-top:12px">取消並登出</button></div>';
   document.getElementById('autoEnrollCancel').onclick=()=>{try{FB.auth.signOut();}catch(_){}FB.user=null;sessionStorage.removeItem('rpg-student-mode');view={page:'home'};render();};
   const submit=async()=>{
-    const name=document.getElementById('autoName').value.trim(),sno=document.getElementById('autoSno').value.trim(),seat=document.getElementById('autoSeat').value.trim(),btn=document.getElementById('autoEnrollGo'),result=document.getElementById('autoEnrollResult');
+    const name=document.getElementById('autoName').value.trim(),sno=document.getElementById('autoSno').value.trim(),seat=document.getElementById('autoSeat').value.trim(),birth=document.getElementById('autoBirth').value.trim(),btn=document.getElementById('autoEnrollGo'),result=document.getElementById('autoEnrollResult');
     if(name.length<2){toast('請輸入學生姓名（至少 2 個字）',true);return;}
     if(!sno||!seat){toast('請輸入學號與座號',true);return;}
+    if(!rosterBirthValid(birth)){toast('生日格式錯誤，請輸入西元 8 碼，例如 20130215',true);document.getElementById('autoBirth').focus();return;}
     btn.disabled=true;btn.textContent='正在安全建立名冊…';result.style.color='#6a5530';result.textContent='正在確認學號、座號與班級資料，請稍候…';
     try{
-      const sessionToken=String(new URLSearchParams(location.search).get('session')||''),packet=await CLOUD.callServer('autoEnrollStudent',{name,sno,seat,sessionToken});
+      registrationLoading('正在加入班級','正在排隊，請保持此頁開啟…');
+      const sessionToken=String(new URLSearchParams(location.search).get('session')||''),stage=msg=>registrationLoading('正在加入班級',msg),packet=await registrationQueuedCall('autoEnrollStudent',{name,sno,seat,birth,sessionToken},stage);
       result.style.color='#16794b';result.textContent='✅ 已加入 '+String(packet.group||'A')+' 組，正在開啟選角頁…';
-      await CLOUD.loadClass(cid,email);
+      registrationLoading('正在載入角色','名冊已建立，正在準備素體與職業選擇…');
+      await CLOUD.loadClass(cid,email,{listen:false});
       const st=state.students.find(x=>String(x.id)===String(packet.sid));if(!st)throw new Error('角色已建立，但暫時讀取不到，請重新整理頁面');
       try{sessionStorage.removeItem('rpg-student-join');sessionStorage.removeItem('rpg-student-mode');}catch(_){}
+      registrationLoadingDone();
       renderJobPick(st,email);
-    }catch(e){const msg=e.message||e;btn.disabled=false;btn.textContent='建立名冊並選擇角色';result.style.color='#b42318';result.textContent='❌ 註冊失敗：'+msg;toast('註冊失敗：'+msg,true);}
+    }catch(e){registrationLoadingDone();const msg=e.message||e;btn.disabled=false;btn.textContent='建立名冊並選擇角色';result.style.color='#b42318';result.textContent='❌ 註冊失敗：'+msg;toast('註冊失敗：'+msg,true);}
   };
-  document.getElementById('autoEnrollGo').onclick=submit;['autoName','autoSno','autoSeat'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')submit();});
+  document.getElementById('autoEnrollGo').onclick=submit;['autoName','autoSno','autoSeat','autoBirth'].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==='Enter')submit();});
   setTimeout(()=>{const el=document.getElementById(displayName?'autoSno':'autoName');if(el)el.focus();},50);
 }
 /* 新生註冊:以班級代碼+學號+座號精準核對，避免公開未認領姓名名單。 */
@@ -8466,7 +8503,8 @@ function renderClaim(email,prefill){
     + '<div class="panel" style="width:100%;max-width:430px;margin:0 auto;text-align:left">'
     + '<div class="mini">🏫 班級代碼</div><div class="num" style="font-size:20px;font-weight:900;letter-spacing:2px;margin-bottom:10px">'+esc(CLOUD.cid||prefill.cid||"")+'</div>'
     + '<label class="mini">學生學號</label><input id="claimSno" value="'+esc(prefill.sno||"")+'" placeholder="例：1120345" style="width:100%;margin:3px 0 9px">'
-    + '<label class="mini">班級座號</label><input id="claimSeat" value="'+esc(prefill.seat||"")+'" inputmode="numeric" placeholder="例：15" style="width:100%;margin:3px 0 10px">'
+    + '<label class="mini">班級座號</label><input id="claimSeat" value="'+esc(prefill.seat||"")+'" inputmode="numeric" placeholder="例：15" style="width:100%;margin:3px 0 9px">'
+    + '<label class="mini">學生生日（西元 YYYYMMDD）</label><input id="claimBirth" value="'+esc(prefill.birth||"")+'" maxlength="8" inputmode="numeric" autocomplete="bday" placeholder="例：20130215" style="width:100%;margin:3px 0 4px"><div class="mini" style="margin-bottom:10px;color:#6a5530">請輸入西元年、月、日共 8 碼，不要輸入「／」或「-」。</div>'
     + '<button class="btn gold" id="claimGo" style="width:100%">核對名冊並加入班級</button><div id="claimResult" class="mini" style="margin-top:7px"></div></div>'
     + (state.allowSelfEnroll&&!CLOUD.on() ? '<div style="margin-top:14px"><button class="btn gold" id="goEnroll">🆕 名單上沒有我 → 自行加入</button></div>' : '')
     + '<div style="margin-top:12px"><button class="btn" id="cbk">← 取消</button></div></div>';
@@ -8474,8 +8512,9 @@ function renderClaim(email,prefill){
   const ge = document.getElementById("goEnroll");
   if(ge) ge.onclick = ()=> renderEnroll(email);
   const claim=async()=>{
-    const sno=document.getElementById("claimSno").value.trim(),seat=document.getElementById("claimSeat").value.trim();
+    const sno=document.getElementById("claimSno").value.trim(),seat=document.getElementById("claimSeat").value.trim(),birth=document.getElementById("claimBirth").value.trim();
     if(!sno||!seat){toast("請輸入學號與座號",true);return;}
+    if(!rosterBirthValid(birth)){toast("生日格式錯誤，請輸入西元 8 碼，例如 20130215",true);document.getElementById("claimBirth").focus();return;}
     const btn=document.getElementById("claimGo"),result=document.getElementById("claimResult");btn.disabled=true;btn.textContent="正在核對名冊…";if(result){result.style.color="#6a5530";result.textContent="正在核對學號與座號，請稍候…";}
     try{
       let st=null;
@@ -8486,15 +8525,17 @@ function renderClaim(email,prefill){
       if(result){result.style.color="#16794b";result.innerHTML="✅ 名冊核對成功：<b>"+esc(seat)+" 號「"+esc(st.name)+"」</b>";}
       if(!confirm("名冊核對成功："+seat+" 號「"+st.name+"」\n確定綁定目前的登入帳號？")){btn.disabled=false;btn.textContent="核對名冊並加入班級";if(result)result.innerHTML="已取消綁定，可重新核對。";return;}
       btn.textContent="正在建立角色資料…";
-      const enrollment=await CLOUD.beginEnrollment(FB.user,pendingCid||CLOUD.cid,sno,seat,email);
+      registrationLoading("正在認領名冊","正在排隊並驗證學號、座號、生日與 Google 帳號…");
+      const enrollment=await registrationQueuedCall("claimStudent",{sno,seat,birth,sessionToken:String(new URLSearchParams(location.search).get("session")||"")},msg=>registrationLoading("正在認領名冊",msg));
       if(String(enrollment.sid)!==String(st.id))throw new Error("名冊核對資料不一致，請重新整理後再試");
-      if(onlinePending){await CLOUD.loadClass(pendingCid,email);st=state.students.find(x=>String(x.id)===String(enrollment.sid))||st;}
+      if(onlinePending){registrationLoading("正在載入角色","名冊核對完成，正在開啟素體與職業選擇…");await CLOUD.loadClass(pendingCid,email,{listen:false});st=state.students.find(x=>String(x.id)===String(enrollment.sid))||st;}
       try{sessionStorage.removeItem("rpg-student-join");sessionStorage.removeItem("rpg-student-mode");}catch(_){}
       // 正式名冊認領也必須先選擇已由教師校正的素體；即使班級鎖定職業，仍保留外型選擇。
+      registrationLoadingDone();
       renderJobPick(st,email);
-    }catch(e){const msg=e.message||e;btn.disabled=false;btn.textContent="核對名冊並加入班級";if(result){result.style.color="#b42318";result.textContent="❌ 註冊失敗："+msg;}toast("註冊失敗："+msg,true);}
+    }catch(e){registrationLoadingDone();const msg=e.message||e;btn.disabled=false;btn.textContent="核對名冊並加入班級";if(result){result.style.color="#b42318";result.textContent="❌ 註冊失敗："+msg;}toast("註冊失敗："+msg,true);}
   };
-  document.getElementById("claimGo").onclick=claim;["claimSno","claimSeat"].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==="Enter")claim();});
+  document.getElementById("claimGo").onclick=claim;["claimSno","claimSeat","claimBirth"].forEach(id=>document.getElementById(id).onkeydown=e=>{if(e.key==="Enter")claim();});
 }
 /* 新生自助註冊:填姓名+座號→(可選職業)→自動加入名冊 */
 function renderEnroll(email){
@@ -8620,8 +8661,10 @@ function renderJobPick(st, email){
       + '</button>';
   }).join("");
   const baseChoices=Object.entries(BASE_VARIANTS).map(([k,src])=>'<button type="button" class="base-choice'+(k===selectedBase?' on':'')+'" data-claimbase="'+k+'" style="background:#fff;border:3px solid '+(k===selectedBase?'var(--gold)':'#141414')+';border-radius:9px;padding:3px;cursor:pointer"><img src="'+src+'" alt="'+esc(BASE_VARIANT_SPEC[k].label)+'" style="width:100%;height:82px;object-fit:contain;image-rendering:pixelated"><span class="mini" style="display:block">'+esc(BASE_VARIANT_SPEC[k].label)+'</span></button>').join('');
+  const birthFix=!rosterBirthValid(String(st.birth||""))?'<div class="panel" style="width:100%;max-width:520px;margin:0 auto 14px;text-align:left;background:#eef8ff"><label for="claimFinishBirth"><b>補填學生生日</b>（西元 YYYYMMDD）</label><input id="claimFinishBirth" maxlength="8" inputmode="numeric" autocomplete="bday" placeholder="例：20130215" style="width:100%;margin-top:6px"><div class="mini" style="margin-top:5px">舊版尚未保存生日；請輸入西元年 4 碼＋月 2 碼＋日 2 碼。</div></div>':'';
   app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+',建立你的冒險角色</h2>'
     + '<p>先選擇素體，再微調裝備對位，最後確認職業。</p>'
+    + birthFix
     + '<div class="panel" style="width:100%;max-width:720px;margin:0 auto 16px;text-align:left"><h3 style="margin-top:0">🧍 選擇生理類型與素體</h3>'
     + '<div class="enroll-base-grid">'+baseChoices+'</div>'
     + '<div style="margin-top:10px;padding:8px;background:#fff8e8;border:2px dashed var(--gold);border-radius:10px;text-align:center"><b class="mini">裝備對位即時預覽</b><div class="mini" style="margin-top:3px">可拖曳人物移動；拖曳右上角 ↗ 或使用按鈕調整大小。</div><div id="claimBaseTryOn" style="height:210px;display:flex;align-items:flex-end;justify-content:center;position:relative;touch-action:none;user-select:none;overflow:visible"></div>'
@@ -8630,7 +8673,7 @@ function renderJobPick(st, email){
     + '<h3>'+(state.allowJobPick?'選擇你的職業':'確認班級指定職業')+'</h3>'
     + '<div class="job-grid">'+cards+'</div>'
     + '<div style="margin-top:12px"><button class="btn" id="cbk">← 返回</button></div></div>';
-  document.getElementById("cbk").onclick=()=>{ renderAutoEnroll(email,{cid:CLOUD.cid,name:st.name,sno:st.sno,seat:st.seat}); };
+  document.getElementById("cbk").onclick=()=>{ renderAutoEnroll(email,{cid:CLOUD.cid,name:st.name,sno:st.sno,seat:st.seat,birth:st.birth}); };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const drawBaseTryOn=()=>{
     const gender=selectedBase.indexOf('female')===0?'female':'male';
@@ -8663,26 +8706,29 @@ function renderJobPick(st, email){
   app.querySelectorAll('[data-claimscale]').forEach(b=>b.onclick=()=>{selectedTune.s=clamp(selectedTune.s+(b.dataset.claimscale==='up'?.05:-.05),.55,2.2);drawBaseTryOn();});
   document.getElementById('claimTuneReset').onclick=()=>{selectedTune=Object.assign({x:0,y:0,s:1},(state.baseTunePresets||{})[selectedBase]||{});drawBaseTryOn();};
   app.querySelectorAll("[data-job]").forEach(b=>{
-    b.onclick = ()=>{ finishClaim(st, email, b.dataset.job, {
+    b.onclick = ()=>{const birthInput=document.getElementById("claimFinishBirth"),birth=birthInput?birthInput.value.trim():String(st.birth||"").trim();if(!rosterBirthValid(birth)){toast("生日格式錯誤，請輸入西元 8 碼，例如 20130215",true);if(birthInput)birthInput.focus();return;}finishClaim(st, email, b.dataset.job, {
       baseVariant:selectedBase,
       gender:selectedBase.indexOf('female')===0?'female':'male',
       baseTune:Object.assign({},selectedTune)
-    }); };
+    },birth); };
   });
 }
 /* 完成認領:寫入信箱+職業,重算該職業成長 */
-async function finishClaim(st, email, job, appearance){
+async function finishClaim(st, email, job, appearance, birth){
   try{
-    const packet=await CLOUD.callServer("finishStudentClaim",{job,appearance});
+    registrationLoading("正在完成角色註冊","正在儲存素體、位置與職業，請勿關閉頁面…");
+    const packet=await registrationQueuedCall("finishStudentClaim",{job,appearance,birth},msg=>registrationLoading("正在完成角色註冊",msg));
     if(packet&&packet.student)Object.assign(st,packet.student);
     addLog(st.id, "🎉 完成綁定,成為"+JOB_INFO[st.job].name+"!冒險開始!");
     save();
     // 📊 認領當下才知道「我是誰」,補上 myId/myGroup 並重掛監聽(改成只監聽自己+同組)
     CLOUD.myId = st.id; CLOUD.myGroup = st.group;
-    if(CLOUD.on()) CLOUD.listen();
     toast("歡迎加入,"+st.name+"("+JOB_INFO[st.job].name+")!");
-    view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"}; render();
+    view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"};
+    if(CLOUD.on()) CLOUD.listen();
+    registrationLoadingDone();render();
   }catch(e){
+    registrationLoadingDone();
     toast("綁定失敗:"+(e.message||e), true);
   }
 }
@@ -12657,7 +12703,7 @@ function teacherRoster(){
       + '生日<input type="text" data-birth="'+s.id+'" value="'+esc(String(s.birth||""))+'" placeholder="20130215" style="width:90px;padding:2px 4px"></div>'
       + '<div class="mini">📧<input type="text" data-email="'+s.id+'" value="'+esc(s.email||"")+'" placeholder="學生Google信箱" style="width:150px;padding:2px 4px">'
       + ((s.email||"").trim()
-          ? ' <span class="tag" style="background:#3a7;font-size:10px">已綁定</span> <button class="btn danger" data-unbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="清空信箱,讓學生重新認領">解綁</button>'
+          ? (s.registrationComplete===true?' <span class="tag" style="background:#3a7;font-size:10px">已完成註冊</span>':' <span class="tag" style="background:#d58a16;font-size:10px">待完成選角</span>')+' <button class="btn danger" data-unbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="清空信箱,讓學生重新認領">解綁</button>'
           : ' <span class="tag" style="background:#999;font-size:10px">待認領</span>')
       + '</div></td>'
       + '<td class="num">Lv.'+s.level+'<div class="mini num">'+s.gold+' 金・SP '+s.spPoints+'</div></td>'
@@ -13440,7 +13486,7 @@ function bindTeacher(){
     b.onclick = async()=>{
       const st = stu(b.dataset.unbind); if(!st) return;
       if(!confirm("解除「"+st.name+"」的帳號綁定?\n該生下次登入需重新認領角色(角色資料不會遺失)。")) return;
-      st.email = "";
+      st.email = "";st.registrationComplete=false;
       if(CLOUD.on()){ FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(st.id).set(JSON.parse(JSON.stringify(st))).catch(()=>{}); }
       if(CLOUD.on())await CLOUD.unbindStudent(st).catch(e=>toast("帳號索引解除失敗："+(e.message||e),true));
       save(); render(); toast("已解除 "+st.name+" 的綁定");
@@ -13686,8 +13732,8 @@ function bindTeacher(){
   // 名冊:座號/生日/信箱編輯
   app.querySelectorAll("[data-seat]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.seat); if(s){ s.seat=inp.value.trim(); save(); if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊索引同步失敗："+(e.message||e),true)); } }; });
   app.querySelectorAll("[data-sno]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.sno); if(!s) return; const v=inp.value.trim(); if(v && state.students.some(x=>x.id!==s.id && String(x.sno||"")===v)){ toast("學號 "+v+" 已被其他學生使用", true); inp.value=s.sno||""; return; } s.sno=v; save(); if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊索引同步失敗："+(e.message||e),true)); } });
-  app.querySelectorAll("[data-birth]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.birth); if(s){ const v=inp.value.trim(); if(v && !/^\d{8}$/.test(v)){ toast("生日請填 8 碼,例 20130215", true); inp.value=s.birth||""; return; } s.birth=v; save(); } }; });
-  app.querySelectorAll("[data-email]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.email); if(s){ s.email=inp.value.trim().toLowerCase(); save(); } }; });
+  app.querySelectorAll("[data-birth]").forEach(inp=>{inp.onchange=()=>{const s=stu(inp.dataset.birth);if(!s)return;const v=inp.value.trim();if(v&&!rosterBirthValid(v)){toast("生日請填有效的西元 8 碼，例如 20130215",true);inp.value=s.birth||"";return;}s.birth=v;save();};});
+  app.querySelectorAll("[data-email]").forEach(inp=>{inp.onchange=()=>{const s=stu(inp.dataset.email);if(!s)return;const v=inp.value.trim().toLowerCase();if(v&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){toast("學生信箱格式不正確",true);inp.value=s.email||"";return;}if(v!==String(s.email||"").toLowerCase())s.registrationComplete=false;s.email=v;save();if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊同步失敗："+(e.message||e),true));toast(v?"信箱已存入名冊；學生仍需掃描本節課 QR 並完成 Google 驗證與選角":"信箱已清空");};});
   // 教師白名單
   const twBtn = document.getElementById("twAddBtn");
   if(twBtn) twBtn.onclick = ()=>{
