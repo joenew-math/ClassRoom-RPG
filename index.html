@@ -190,6 +190,11 @@ header .sp{flex:1}
   /* 加分彈窗(觸控大按鈕) */
   .overlay{position:fixed;inset:0;background:rgba(10,13,22,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
   .modal{background:var(--panel);border:1px solid var(--gold-dim);border-radius:16px;padding:20px;width:100%;max-width:440px;text-align:center;animation:pop .18s}
+  /* 教師／學生登入 QR 固定在視窗座標，不繼承首頁或大屏的縮放；桌機不超過 260px，窄螢幕只等比例縮小。 */
+  .qr-login-overlay{z-index:10010!important;transform:none!important;zoom:1!important;font-size:16px}
+  .qr-login-modal{width:min(440px,calc(100vw - 24px))!important;max-width:440px!important;max-height:calc(100dvh - 24px);overflow:auto;transform:none!important;zoom:1!important;box-sizing:border-box}
+  .qr-login-box{--qr-visual:min(260px,calc(100vw - 88px));width:calc(var(--qr-visual) + 28px)!important;height:calc(var(--qr-visual) + 28px)!important;min-width:0!important;min-height:0!important;max-width:288px;max-height:288px;box-sizing:border-box;flex:0 0 auto;aspect-ratio:1/1;overflow:hidden}
+  .qr-login-box canvas,.qr-login-box img{display:block;width:var(--qr-visual)!important;height:var(--qr-visual)!important;max-width:var(--qr-visual)!important;max-height:var(--qr-visual)!important;object-fit:contain;aspect-ratio:1/1}
   .modal h4{color:var(--parch);font-size:18px;margin-bottom:4px}
   .modal .msub{color:var(--dim);font-size:12px;margin-bottom:14px}
   .big-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -1007,6 +1012,8 @@ table td{ border-bottom:2px solid #e0d8c4 !important; }
 .teacher-task-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}.teacher-task-summary>div{background:#fff;border:3px solid #141414;border-radius:11px;padding:9px 12px;box-shadow:3px 3px 0 rgba(0,0,0,.65)}.teacher-task-summary b{display:block;font-size:23px;line-height:1.1}.task-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}.task-menu-create,.task-menu-audit{grid-column:1/-1}.task-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.task-form-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:900}.task-form-grid label.wide{grid-column:1/-1}.task-form-grid input,.task-form-grid select{width:100%}.task-review-config{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:9px;border:2px dashed #725b20;border-radius:9px;background:#fff8df}.task-review-config .mini{grid-column:1/-1}.task-section-title{font-size:15px;font-weight:900;margin:13px 0 7px}.task-reward-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:9px}.task-tier-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.task-tier-card{border:3px solid #141414;border-radius:11px;padding:9px;background:#e8f7df;box-shadow:3px 3px 0 rgba(0,0,0,.48)}.task-tier-card.advanced{background:#fff0b8}.task-tier-card.challenge{background:#ffd9d3}.task-tier-inputs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.task-tier-inputs label{font-size:11px;font-weight:900}.task-draft-preview{margin-top:11px;padding:9px 11px;border:2px dashed #8a6a16;border-radius:9px;background:#fffaf0;font-size:12px;line-height:1.65}.task-draft-preview span{display:block}.task-picker{margin-top:10px;padding:10px;border:2px dashed #6f5a22;border-radius:10px;background:#f9f3df}.task-picker-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}.task-picker-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:6px}.task-picker-person{display:flex;align-items:center;gap:5px;background:#fff;border:2px solid #141414;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;font-weight:800}.task-batch-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px;padding:7px 9px;background:#fff8df;border:2px solid #141414;border-radius:9px}.task-batch-toolbar .spacer{flex:1}.task-review-check{width:20px;height:20px;accent-color:#d99b00;flex:0 0 auto}.task-review-list,.task-manage-list,.leader-review-list{display:grid;gap:8px}.task-review-item,.task-manage-item,.leader-review-item{background:#fff;border:2px solid #141414;border-radius:10px;padding:9px;display:flex;align-items:center;gap:9px}.task-review-item:has(.task-review-check:checked){background:#fff2b8;box-shadow:inset 0 0 0 2px #d99b00}.task-review-main,.task-manage-main,.leader-review-main{flex:1;min-width:0}.task-review-actions,.task-manage-actions,.leader-review-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.task-manage-item.off{opacity:.55;filter:grayscale(.35)}.task-reward-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.task-reward-tags span{font-size:11px;font-weight:900;padding:3px 6px;border:1px solid #141414;border-radius:999px;background:#fff7d8}.review-mode-tag{display:inline-block;font-size:10px;font-weight:900;padding:2px 6px;border:1px solid #141414;border-radius:999px;background:#eaf4ff}.task-audit-table{overflow:auto}.task-audit-table table{min-width:650px}
 .leader-review-rubric{display:grid;gap:4px;margin-top:7px;padding:7px;border:2px dashed #57708a;border-radius:8px;background:#f2f8ff}.leader-review-rubric label{display:flex;align-items:flex-start;gap:6px;font-size:11px;font-weight:800}.leader-review-rubric input{width:18px;height:18px;flex:0 0 auto;accent-color:#2e8b57}
 .class-progress{width:min(100%,780px);margin:14px auto;padding:14px 16px;border:4px solid #141414;border-radius:16px;background:linear-gradient(135deg,#fff8d7,#e9f7ff);box-shadow:5px 5px 0 rgba(20,20,20,.55);text-align:left}.class-progress.compact{width:auto;margin:0 0 12px;padding:10px 13px;border-width:3px;box-shadow:3px 3px 0 rgba(20,20,20,.42)}.class-progress-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.class-progress-title{font-size:18px;font-weight:900}.class-progress-track{height:20px;margin:9px 0 6px;border:3px solid #141414;border-radius:999px;background:#fff;overflow:hidden}.class-progress-fill{height:100%;background:linear-gradient(90deg,#42b878,#f0b429,#ff805c);transition:width .5s ease}.class-progress-stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}.class-stage-card{position:relative;padding:10px;border:3px solid #141414;border-radius:12px;background:#fff;box-shadow:3px 3px 0 rgba(20,20,20,.35)}.class-stage-card.open{background:linear-gradient(135deg,#e6ffe9,#fff8ca)}.class-stage-card.current{outline:4px solid #f0b429}.class-stage-card.locked{filter:grayscale(.25);opacity:.72}.class-stage-card .stage-icon{font-size:25px}.class-stage-card .stage-state{position:absolute;right:8px;top:8px;font-weight:900}.tab.feature-locked{opacity:.58;filter:grayscale(.55);border-style:dashed}.unlock-note{padding:12px;border:3px dashed #a56e00;border-radius:12px;background:#fff8df;text-align:center;font-weight:900}
+/* 🏫 全班功能解鎖：至少十秒的全螢幕像素煙火慶典 */
+.class-unlock-celebration{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;overflow:hidden;color:#fff;background:radial-gradient(circle at 50% 45%,rgba(58,75,147,.9),rgba(8,12,35,.97) 62%,#03050f);isolation:isolate}.class-unlock-celebration::before{content:"";position:absolute;inset:0;z-index:-2;background-image:radial-gradient(circle,#fff 0 1px,transparent 1.5px),radial-gradient(circle,#ffe28a 0 1px,transparent 1.6px);background-size:41px 39px,67px 63px;background-position:0 0,17px 23px;opacity:.58;animation:classUnlockStars 4s linear infinite}.class-unlock-rays{position:absolute;width:min(115vmax,1100px);aspect-ratio:1;border-radius:50%;z-index:-1;background:repeating-conic-gradient(from 0deg,rgba(255,224,112,.15) 0 7deg,transparent 7deg 16deg);animation:classUnlockRays 18s linear infinite}.class-unlock-card{position:relative;width:min(680px,94vw);padding:clamp(18px,4vw,34px);text-align:center;color:#17131e;background:linear-gradient(180deg,#fff9d9,#f6d875 62%,#e5aa2e);border:5px solid #141414;border-radius:22px;box-shadow:0 0 0 5px #fff1a3,0 0 60px rgba(255,199,62,.85),10px 12px 0 rgba(0,0,0,.62);animation:classUnlockCardIn .8s cubic-bezier(.15,.85,.2,1.18) both}.class-unlock-ribbon{display:inline-block;padding:5px 18px;border:3px solid #141414;border-radius:999px;background:#7b3fc7;color:#fff7ce;font-weight:1000;letter-spacing:3px;box-shadow:3px 3px 0 #141414}.class-unlock-icon{font-size:clamp(64px,12vw,112px);line-height:1.05;margin:10px 0 3px;filter:drop-shadow(0 8px 0 rgba(75,43,11,.22));animation:classUnlockIcon 1.2s steps(6,end) infinite}.class-unlock-card h2{margin:0;font-size:clamp(27px,6vw,52px);letter-spacing:2px;color:#4f286f;text-shadow:2px 2px #fff}.class-unlock-stage{margin:5px 0 10px;font-size:clamp(15px,2.8vw,22px);font-weight:1000}.class-unlock-desc{max-width:560px;margin:0 auto;padding:9px 12px;border:3px solid #141414;border-radius:11px;background:rgba(255,255,255,.88);font-weight:900;line-height:1.55}.class-unlock-features{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:12px 0}.class-unlock-features span{padding:5px 9px;border:2px solid #141414;border-radius:9px;background:#e8ffe1;font-size:12px;font-weight:1000;box-shadow:2px 2px 0 rgba(20,20,20,.5)}.class-unlock-progress-note{font-size:12px;font-weight:900;color:#654211}.class-unlock-close{min-width:210px;margin-top:12px;padding:9px 16px!important;border:3px solid #141414!important;background:#fff!important;color:#141414!important;font-weight:1000!important;box-shadow:3px 3px 0 #141414!important}.class-unlock-close:disabled{opacity:.72!important;filter:none!important}.class-unlock-firework{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;pointer-events:none;animation:classUnlockBloom 2.15s ease-out var(--delay) infinite}.class-unlock-firework::before{content:"";position:absolute;left:3px;bottom:0;width:2px;height:90px;background:linear-gradient(transparent,#fff4b0);transform-origin:bottom;animation:classUnlockRocket 2.15s ease-in var(--delay) infinite}.class-unlock-firework i{position:absolute;left:3px;top:3px;width:2px;height:2px;transform:rotate(var(--angle))}.class-unlock-firework i::after{content:"";position:absolute;width:7px;height:7px;border-radius:2px;background:var(--fx);box-shadow:0 0 9px var(--fx);animation:classUnlockSpark 2.15s ease-out var(--delay) infinite}.class-unlock-confetti{position:absolute;left:var(--x);top:-30px;width:9px;height:16px;border:2px solid rgba(20,20,20,.45);background:var(--cc);animation:classUnlockConfetti var(--dur) linear var(--delay) infinite}.class-unlock-safety{margin-top:7px;font-size:10px;color:#765a19}.class-unlock-celebration.reduced .class-unlock-safety::after{content:"・已套用低動態效果"}@keyframes classUnlockStars{to{background-position:41px 39px,84px 86px}}@keyframes classUnlockRays{to{transform:rotate(360deg)}}@keyframes classUnlockCardIn{from{opacity:0;transform:scale(.35) rotate(-5deg)}70%{opacity:1;transform:scale(1.06) rotate(1deg)}to{transform:scale(1)}}@keyframes classUnlockIcon{50%{transform:translateY(-8px) scale(1.08)}}@keyframes classUnlockBloom{0%,22%{opacity:0;transform:scale(.2)}30%{opacity:1;transform:scale(1)}88%,100%{opacity:0;transform:scale(1.12)}}@keyframes classUnlockRocket{0%{opacity:0;transform:translateY(120px) scaleY(.2)}22%{opacity:1;transform:translateY(0) scaleY(1)}30%,100%{opacity:0}}@keyframes classUnlockSpark{0%,25%{opacity:0;transform:translateY(0) scale(.25)}32%{opacity:1}82%,100%{opacity:0;transform:translateY(var(--dist)) scale(.7)}}@keyframes classUnlockConfetti{0%{transform:translateY(-20px) rotate(0);opacity:0}8%{opacity:1}100%{transform:translateY(110vh) rotate(760deg);opacity:.7}}@media(max-width:560px){.class-unlock-card{padding:18px 12px}.class-unlock-features span{font-size:10px}.class-unlock-close{min-width:170px}}@media(prefers-reduced-motion:reduce){.class-unlock-celebration::before,.class-unlock-rays,.class-unlock-icon,.class-unlock-firework,.class-unlock-firework::before,.class-unlock-firework i::after,.class-unlock-confetti{animation:none!important}.class-unlock-firework,.class-unlock-confetti{display:none}.class-unlock-card{animation:none}}
 .classroom-home-hero{padding:18px;border:4px solid #141414;border-radius:18px;background:linear-gradient(135deg,#fff2b0,#dff4ff);box-shadow:6px 6px 0 rgba(20,20,20,.62)}.classroom-home-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.classroom-home-icon{font-size:52px;filter:drop-shadow(3px 4px 0 rgba(20,20,20,.22))}.classroom-home-title{flex:1;min-width:220px}.classroom-home-title h2{margin:0 0 4px;font-size:28px}.class-session-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:3px solid #141414;border-radius:999px;background:#fff;font-weight:900}.class-session-badge.live{background:#dcffe2;color:#176a31}.class-session-dot{width:12px;height:12px;border:2px solid #141414;border-radius:50%;background:#999}.class-session-badge.live .class-session-dot{background:#2dcc66;box-shadow:0 0 0 5px rgba(45,204,102,.2)}.classroom-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.classroom-flow-step{padding:14px;border:3px solid #141414;border-radius:13px;background:rgba(255,255,255,.92);box-shadow:3px 3px 0 rgba(20,20,20,.45)}.classroom-flow-step.ready{background:#e6ffe9}.classroom-flow-step .step-no{display:inline-grid;place-items:center;width:29px;height:29px;margin-right:5px;border:2px solid #141414;border-radius:50%;background:#f0b429;font-weight:900}.classroom-home-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.classroom-home-actions .btn{flex:1 1 180px;min-height:52px;font-size:16px}.classroom-home-actions .btn:disabled{opacity:.42;filter:grayscale(.7);cursor:not-allowed}
 .board-course-link{position:fixed;right:14px;top:82px;z-index:35;display:inline-flex;align-items:center;gap:6px;padding:10px 14px!important;background:#fff4bd!important;color:#141414!important;border:3px solid #141414!important;border-radius:12px!important;box-shadow:4px 4px 0 rgba(20,20,20,.78)!important;font-size:14px!important;font-weight:900;text-decoration:none}.board-course-link:hover{transform:translateY(-2px);background:#ffd95a!important}.zone-back-floating{position:fixed;left:14px;top:82px;z-index:36;padding:9px 13px!important;background:#fff!important;color:#141414!important;border:3px solid #141414!important;box-shadow:4px 4px 0 rgba(20,20,20,.7)!important}.lesson-bank-picker{margin:8px 0 12px;padding:12px;border:3px solid #141414;border-radius:12px;background:linear-gradient(135deg,#fff4bd,#e6f5ff);box-shadow:3px 3px 0 rgba(20,20,20,.45)}.lesson-bank-picker h5{margin:0 0 7px;font-size:16px}.lesson-bank-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.lesson-bank-grid label{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:900}.lesson-bank-grid select{width:100%;min-width:0}.lesson-bank-status{margin-top:7px;padding:6px 8px;border:2px dashed #8d711d;border-radius:8px;background:#fff;font-size:11px;font-weight:800}.lesson-manual-title{display:flex;align-items:center;gap:8px;margin:10px 0 4px;font-weight:900}.zone-solution{padding:8px 11px;border:3px solid #141414;border-radius:10px;background:#eaffdf;color:#173b1c;font-size:13px;font-weight:800;line-height:1.55}.zone-solution b{color:#146c2e}.zone-quiz-controls .course-next{background:#b9ebff!important}body.teacher-board-mode .zone-quiz-shell{height:calc(100dvh - 150px);max-height:calc(100dvh - 150px);min-height:0;grid-template-rows:auto minmax(0,1fr) auto auto}body.teacher-board-mode .zone-stage{min-height:0}@media(max-width:700px){.board-course-link{top:auto;right:8px;bottom:68px;padding:7px 9px!important;font-size:12px!important}.zone-back-floating{left:8px;top:68px;padding:6px 8px!important;font-size:11px!important}.lesson-bank-grid{grid-template-columns:1fr}}
 .zone-area{overflow:hidden}.zone-area>small{position:relative;z-index:3;max-width:72%;padding:3px 6px;border:2px solid rgba(20,20,20,.55);border-radius:7px;background:rgba(255,255,255,.78);line-height:1.25}.zone-count{position:absolute;inset:0;z-index:0;display:grid;place-items:center;font-family:Impact,"Arial Black",sans-serif;font-size:clamp(66px,13vw,170px);line-height:1;color:#141414;opacity:.13;pointer-events:none}.zone-timer{position:relative;height:16px;margin-top:7px;border:3px solid #141414;border-radius:999px;background:#ddd;overflow:hidden}.zone-timer>i{display:block;height:100%;width:100%;background:#ffd234;transition:width .09s linear,background-color .18s linear}.zone-timer>span{position:absolute;inset:-1px 0 0;display:grid;place-items:center;color:#141414;font-size:10px;font-weight:1000;text-shadow:0 1px #fff}.zone-object{position:absolute;z-index:4;display:grid;place-items:center;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 3px 2px rgba(0,0,0,.4))}.zone-object.wall{border:3px solid #382c21;border-radius:8px;background:repeating-linear-gradient(135deg,#6d6254 0 9px,#8b7c6a 9px 18px);font-size:20px}.zone-object.bomb,.zone-object.med{width:34px;height:34px;border:3px solid #141414;border-radius:50%;background:#fff;font-size:20px}.zone-object.bomb{background:#30273b;animation:zoneBombPulse .65s ease-in-out infinite alternate}.zone-object.med{background:#eaffdf}.zone-hp{display:block;width:45px;height:5px;margin:1px auto;border:1px solid #141414;border-radius:4px;background:#3d2430;overflow:hidden}.zone-hp i{display:block;height:100%;background:#49cf72}.zone-avatar.zone-ko{filter:grayscale(.8) brightness(.65)}.zone-event{margin-top:5px;text-align:center;color:#b22;font-size:12px;font-weight:900}.zone-battle-actions{display:flex;gap:7px;justify-content:center;margin:8px 0;flex-wrap:wrap}.zone-mode-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.zone-mode-picker label{display:flex;gap:7px;align-items:flex-start;padding:9px;border:3px solid #141414;border-radius:10px;background:#fff;font-weight:900}.zone-mode-picker small{display:block;margin-top:2px;color:#555}@keyframes zoneBombPulse{from{box-shadow:0 0 0 0 rgba(255,73,55,.2)}to{box-shadow:0 0 0 9px rgba(255,73,55,.22)}}
@@ -3554,6 +3561,7 @@ function parentLearningMajor(msg){
 const CLOUD = {
   cid: null,              // 目前班級 id(null=未連雲,純本機)
   role: null,             // teacher|student|parent
+  _cmdSeq: 0,             // Dota 指令同毫秒序號，避免多台裝置指令被誤判為重複
   _timer: null,
   _lastSnap: {},          // 上次寫入的 JSON 快照(dirty-check 用)
   _unsubs: [],
@@ -3773,8 +3781,10 @@ const CLOUD = {
   },
   async garenaCmd(sid, cmd){
     if(!this.on()) return;
+    const now=Date.now();
+    this._cmdSeq=(this._cmdSeq+1)%1000;
     await FB.db.collection("classes").doc(this.cid).collection("garenaCmd").doc(sid)
-      .set(Object.assign({sid, ts:Date.now()}, cmd));
+      .set(Object.assign({sid, ts:now, seq:now*1000+this._cmdSeq}, cmd));
   },
   garenaListenCmds(cb){
     if(!this.on()) return ()=>{};
@@ -4030,13 +4040,14 @@ const CLOUD = {
     const apply = (fn)=>{ this._applying = true; try{ fn(); scheduleRender(); }finally{ this._applying = false; } };
     const applyStuDoc = (d)=>{
       const j = JSON.stringify(d);
-      if(this._lastSnap["stu:"+d.id] === j) return;          // 自己寫的,略過
+      if(this._lastSnap["stu:"+d.id] === j) return false;    // 自己寫的,略過
       apply(()=>{
         const i = state.students.findIndex(x=>x.id===d.id);
         if(i>=0) state.students[i]=d; else state.students.push(d);
         backfill(state);                                     // 遠端精簡學生文件先補齊欄位，避免學生頁渲染中斷
         this._lastSnap["stu:"+d.id]=j;
       });
+      return true;
     };
     const applyItemDoc = (d, removed)=>{
       const j = JSON.stringify(d);
@@ -4050,6 +4061,7 @@ const CLOUD = {
     if(this.role === "teacher"){
       // 👩‍🏫 老師:需要即時看到全班,維持全量監聽
       this._unsubs.push(c.collection("students").onSnapshot(snap=>{
+        let classXpChanged=false;
         snap.docChanges().forEach(ch=>{
           const d = ch.doc.data();
           if(ch.type==="removed"){
@@ -4059,8 +4071,9 @@ const CLOUD = {
             if(i>=0) state.students.splice(i,1);
             delete this._lastSnap["stu:"+d.id];
             render();
-          } else applyStuDoc(d);
+          } else if(applyStuDoc(d))classXpChanged=true;
         });
+        if(classXpChanged)setTimeout(()=>{const before=(state.classUnlocks.celebrated||[]).length;classUnlockSync(false);if((state.classUnlocks.celebrated||[]).length!==before)save();},0);
       }));
       this._unsubs.push(c.collection("items").onSnapshot(snap=>{
         snap.docChanges().forEach(ch=> applyItemDoc(ch.doc.data(), ch.type==="removed"));
@@ -5172,7 +5185,8 @@ function reward(sid, baseXp, baseGold, reason, fxPoint, isQuest, suppressMentorR
   addLog(sid, (reason||"老師獎勵")+",獲得 "+fx+" XP 和 "+fg+" 金幣"+(ups?",升至 Lv."+s.level+"!":"")+extra);
   checkAchievements(s);
   checkClassGoal();
-  classUnlockSync(!!suppressRender);
+  // 批次加分只抑制主畫面重繪，達成班級里程碑仍要播出全螢幕慶典。
+  classUnlockSync(false);
   if(!suppressRender) save();
 
   if(fxPoint){
@@ -5801,6 +5815,7 @@ const CLASS_UNLOCK_STAGES = [
 ];
 const CLASS_FEATURE_GATES={thanks:"social",leaderReview:"review",arena:"pvp",guild:"guild",castle:"guild",moba:"moba",world:"world"};
 const CLASS_GATE_INFO={social:{icon:"💌",name:"學生社交與感謝",note:"確認學生了解固定善意句庫與私密求助入口"},review:{icon:"🛡️",name:"小組互評",note:"代審採量表與教師抽查，不以人氣決定獎勵"},pvp:{icon:"⚔️",name:"競技場",note:"不公開 K/D、落後名次或嘲諷性戰績"},guild:{icon:"🏰",name:"公會與攻城",note:"確認分組輪替且城主不享有課堂權力"},moba:{icon:"🗺️",name:"Dota／知識攻塔",note:"只使用系統指令，不提供自由聊天"},world:{icon:"🌏",name:"跨班世界系統",note:"對外只顯示班級暱稱，不公開學生姓名"}};
+const CLASS_FEATURE_LABELS={stats:"角色成長",announce:"班級公告",redeem:"獎勵兌換",lesson:"課堂挑戰",quests:"學習任務",dungeon:"數學地下城",bag:"裝備背包",shop:"冒險商店",skills:"技能樹",thanks:"友善感謝",wheel:"命運卡包",craft:"設計工坊",board:"小組協作",leaderReview:"同儕代審",boss:"團體試煉",arena:"競技場",guild:"公會戰",castle:"榮耀之城",moba:"知識攻塔",world:"跨班世界"};
 function classProgressStudents(){
   return (state.students||[]).filter(s=>s && !s.archived);
 }
@@ -5834,16 +5849,40 @@ function classFeatureLockText(feature){
   if(classEffectiveStage()<st.id)return st.icon+" 「"+st.name+"」解鎖：全班累積 "+classStageTarget(st).toLocaleString()+" XP";
   const gate=CLASS_FEATURE_GATES[feature],info=gate&&CLASS_GATE_INFO[gate];return info?info.icon+" 已達 XP 門檻，等待教師確認開放「"+info.name+"」":"已達解鎖門檻";
 }
+const CLASS_UNLOCK_CELEBRATION_MIN_MS=10000,CLASS_UNLOCK_CELEBRATION_TOTAL_MS=12500;
+let _classUnlockCelebrationActive=false,_classUnlockCelebrationPending=[],_classUnlockCelebrationTimer=null;
+function scheduleClassUnlockCelebration(stages){
+  (stages||[]).forEach(st=>{if(st&&!_classUnlockCelebrationPending.some(x=>x.id===st.id))_classUnlockCelebrationPending.push(st);});
+  if(_classUnlockCelebrationActive||_classUnlockCelebrationTimer||!_classUnlockCelebrationPending.length)return;
+  _classUnlockCelebrationTimer=setTimeout(()=>{_classUnlockCelebrationTimer=null;const batch=_classUnlockCelebrationPending.splice(0);showClassUnlockCelebration(batch);},140);
+}
+function showClassUnlockCelebration(stages){
+  stages=(stages||[]).filter(Boolean);if(!stages.length)return;if(_classUnlockCelebrationActive){scheduleClassUnlockCelebration(stages);return;}
+  _classUnlockCelebrationActive=true;const latest=stages[stages.length-1],xp=classEarnedXp(),target=classStageTarget(latest),reduced=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const colors=["#ff5577","#ffd84d","#55d7ff","#9b74ff","#62e18e","#ff8b3d"],positions=[[9,17],[23,10],[40,18],[59,9],[76,18],[91,12],[13,57],[88,54],[28,73],[72,70],[48,63],[5,38],[95,36],[50,5]];
+  const fireworks=reduced?"":positions.map((p,i)=>'<div class="class-unlock-firework" style="--x:'+p[0]+'%;--y:'+p[1]+'%;--delay:-'+(i*.31).toFixed(2)+'s;--fx:'+colors[i%colors.length]+'">'+Array.from({length:10},(_,n)=>'<i style="--angle:'+(n*36)+'deg;--dist:-'+(42+(i+n)%5*9)+'px"></i>').join("")+'</div>').join("");
+  const confetti=reduced?"":Array.from({length:34},(_,i)=>'<i class="class-unlock-confetti" style="--x:'+((i*29)%101)+'%;--cc:'+colors[i%colors.length]+';--dur:'+(4.8+(i%7)*.42)+'s;--delay:-'+((i%11)*.47)+'s"></i>').join("");
+  const featureSet=[];stages.forEach(st=>(st.features||[]).forEach(f=>{const name=CLASS_FEATURE_LABELS[f]||f;if(!featureSet.includes(name))featureSet.push(name);}));
+  const gated=stages.some(st=>(st.features||[]).some(f=>CLASS_FEATURE_GATES[f]));
+  const el=document.createElement("div");el.id="classUnlockCelebration";el.className="class-unlock-celebration"+(reduced?" reduced":"");el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","全班功能解鎖慶祝");
+  el.innerHTML='<div class="class-unlock-rays"></div>'+fireworks+confetti+'<div class="class-unlock-card"><div class="class-unlock-ribbon">🎉 全班成就達成 🎉</div><div class="class-unlock-icon">'+latest.icon+'</div><h2>'+esc(latest.name)+' 解鎖！</h2><div class="class-unlock-stage">全班冒險進度・第 '+latest.id+' 階段</div><div class="class-unlock-desc">'+esc(latest.desc)+'</div><div class="class-unlock-features">'+featureSet.map(x=>'<span>✨ '+esc(x)+'</span>').join("")+'</div><div class="class-unlock-progress-note">全班累積 '+xp.toLocaleString()+' XP・達成門檻 '+target.toLocaleString()+' XP</div>'+(gated?'<div class="class-unlock-safety">高互動功能仍需教師在安全閘門個別開啟</div>':'<div class="class-unlock-safety">每位同學的學習成果都推動了這次解鎖</div>')+'<button class="btn class-unlock-close" id="classUnlockClose" disabled>煙火慶祝中・10 秒</button></div>';
+  document.body.appendChild(el);sfx("goal");const btn=document.getElementById("classUnlockClose"),started=Date.now();let ticker=null,autoClose=null,unlockClose=null;
+  const close=()=>{if(Date.now()-started<CLASS_UNLOCK_CELEBRATION_MIN_MS)return;clearInterval(ticker);clearTimeout(autoClose);clearTimeout(unlockClose);el.remove();_classUnlockCelebrationActive=false;if(_classUnlockCelebrationPending.length)setTimeout(()=>scheduleClassUnlockCelebration([]),260);};
+  ticker=setInterval(()=>{const left=Math.max(0,Math.ceil((CLASS_UNLOCK_CELEBRATION_MIN_MS-(Date.now()-started))/1000));if(btn&&left>0)btn.textContent="煙火慶祝中・"+left+" 秒";},250);
+  unlockClose=setTimeout(()=>{if(btn){btn.disabled=false;btn.textContent="繼續全班冒險";btn.onclick=close;}},CLASS_UNLOCK_CELEBRATION_MIN_MS);
+  autoClose=setTimeout(close,CLASS_UNLOCK_CELEBRATION_TOTAL_MS);
+}
 function classUnlockSync(silent){
   const cfg=state.classUnlocks; if(!cfg || cfg.enabled===false) return;
-  const auto=classAutoStage(); let newest=null;
+  if(CLOUD.on()&&CLOUD.role==="student")return; // 由教師端統一寫入解鎖紀錄與播放班級慶典
+  const auto=classAutoStage(),newStages=[]; let newest=null;
   for(let i=1;i<=auto;i++){
     if(!cfg.celebrated.includes(i)){
-      cfg.celebrated.push(i); newest=CLASS_UNLOCK_STAGES[i];
+      cfg.celebrated.push(i); newest=CLASS_UNLOCK_STAGES[i];newStages.push(newest);
       addLog("-","🔓 全班冒險進度解鎖「"+newest.name+"」："+newest.desc);
     }
   }
-  if(newest && !silent){ levelUpFx("🔓 "+newest.name+" 解鎖！"); sfx("goal"); }
+  if(newest && !silent)scheduleClassUnlockCelebration(newStages);
 }
 function classProgressHtml(compact){
   const xp=classEarnedXp(), auto=classAutoStage(), effective=classEffectiveStage();
@@ -8254,9 +8293,9 @@ function openTeacherLoginQr(){
   if(!CLASS_RPG_API_URL){googleLogin("teacher");return;}
   const pair=teacherPairCode(),u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("teacher","1");u.searchParams.set("pair",pair);
   const link=u.toString(),expiresAt=Date.now()+5*60*1000;
-  modalHost.innerHTML='<div class="overlay" id="teacherLoginQrOverlay"><div class="modal" style="max-width:440px;text-align:center">'
+  modalHost.innerHTML='<div class="overlay qr-login-overlay" id="teacherLoginQrOverlay"><div class="modal qr-login-modal" style="max-width:440px;text-align:center">'
     +'<h4>📲 教師 Google 登入</h4><div class="msub">用教師手機掃描並登入 Google；完成後，這個教室螢幕會自動跳到「我的班級」。</div>'
-    +'<div id="teacherLoginQrBox" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:12px auto;width:fit-content;min-width:260px;min-height:260px;align-items:center">產生中…</div>'
+    +'<div id="teacherLoginQrBox" class="qr-login-box" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:12px auto;align-items:center">產生中…</div>'
     +'<div id="teacherPairStatus" class="mini" style="padding:8px;background:#fff8e0;border:2px solid #d8ad45;border-radius:8px;margin-bottom:7px">等待手機掃碼登入…</div>'
     +'<div id="teacherPairCountdown" class="mini" style="margin-bottom:10px">有效時間 05:00</div>'
     +'<div class="inline-form" style="justify-content:center"><button class="btn gold" id="teacherLoginHere">在這台裝置登入 Google</button><button class="btn gold" id="teacherPairRetry" style="display:none">重新產生 QR</button><button class="btn" id="teacherLoginQrClose">關閉</button></div>'
@@ -9282,6 +9321,7 @@ function teacherClassProgress(){
     +'<div class="panel"><h3>⚙️ 全班功能解鎖設定</h3><div class="inline-form">'
     +'<button class="btn '+(cfg.enabled?'gold':'danger')+'" id="classUnlockToggle">'+(cfg.enabled?'✅ 依班級 XP 解鎖':'🔓 全部功能開放中')+'</button>'
     +'<button class="btn" id="classUnlockAuto">↺ 恢復自動進度</button>'
+    +'<button class="btn gold" id="classUnlockPreview">🎆 預覽解鎖慶典</button>'
     +'<label class="stat-chip">門檻倍率 <select id="classUnlockScale"><option value="0.5">0.5× 快速</option><option value="0.75">0.75×</option><option value="1">1× 標準</option><option value="1.25">1.25×</option><option value="1.5">1.5× 挑戰</option><option value="2">2× 長期</option></select></label></div>'
     +'<div class="mini" style="margin-top:8px;line-height:1.8">目前計算 <b>'+classProgressStudents().length+' 名有效學生</b>，全班累積 <b class="num">'+xp.toLocaleString()+' XP</b>。提前開放不會發放個人 XP，也不會降低學生等級。涉及同儕權力、公開比較與對戰的功能，即使 XP 達標仍須教師個別確認。</div></div>'
     +'<div class="panel"><h3>🛡️ 友善課堂安全閘門</h3><div class="mini" style="margin-bottom:9px">每一類可獨立暫停，不會連帶關閉學生的公告、任務與自主學習。學生提出求助不會降低全班進度。</div><div class="class-progress-stages">'+gateCards+'</div></div>'
@@ -9839,7 +9879,7 @@ const BATTLE_MAPS = {
     heat:true,
     event:{ every:14, kind:"sandstorm", text:"🌫 沙塵暴來襲!" } },
 
-  /* 🏰 動態 MOBA：3v3～10v10。開戰時依人數重建雙路、河道與中央山壁。 */
+  /* 🏰 動態 MOBA：3v3～15v15。開戰時依人數重建雙路、河道與中央山壁。 */
   moba: { key:"moba", name:"榮耀峽谷", icon:"🏰", mode:"moba",
     desc:"上下兩條榮耀之路由中央山壁隔開；可穿越中央水路轉線，但進入河道會降低行動速度。拆除兩座外塔後攻破敵方核心。",
     W:18, H:10,
@@ -9876,16 +9916,16 @@ const GARENA = {
   fighters:{},          // sid → {sid,x,y,team,hp,max,ko,ultUsed,cd}
   cmdQueue:{},          // sid → 最新指令 {ts, move|act}
   timer:null, endTimer:null, startTs:0, DURATION:180, elapsed:0, speed:1, paused:false, pausedAt:0,
-  _cmdUnsub:null, _lastTs:{},
+  _cmdUnsub:null, _lastTs:{}, heldMoves:{}, heldMoveUntil:{},
   mapKey:"plain", mode:"battle", structures:[], eventTick:0            // 🗺 戰場地圖 / 事件計時
 };
-const MOBA_TEAM_MAX=10;
+const MOBA_TEAM_MAX=15;
 function gaIsKnowledgeMoba(){return GARENA.mode==="mobaKnowledge";}
 function gaIsMoba(){ return GARENA.mode==="moba" || GARENA.mode==="mobaKnowledge" || (GARENA.active && gaMap().mode==="moba"); }
 function gaStructureAt(x,y){ return (GARENA.structures||[]).find(q=>q.alive!==false&&q.x===x&&q.y===y) || null; }
 function gaMobaConfigureMap(perTeam){
   const n=Math.max(3,Math.min(MOBA_TEAM_MAX,perTeam||3));
-  const W=n<=3?18:(n<=6?20:24),H=n<=3?10:(n<=6?12:14),m=BATTLE_MAPS.moba;
+  const W=n<=3?18:(n<=6?20:(n<=10?24:28)),H=n<=3?10:(n<=6?12:(n<=10?14:16)),m=BATTLE_MAPS.moba;
   const rx=Math.floor(W/2)-1,rx2=rx+1,mid1=Math.floor(H/2)-1,mid2=mid1+1;
   const topY=Math.max(2,Math.round(H*.22)),botY=H-1-topY;
   const walls=[];for(let x=3;x<=W-4;x++)if(x!==rx&&x!==rx2){walls.push([x,mid1],[x,mid2]);}
@@ -10018,8 +10058,11 @@ function gaMobaLaneWaypoint(f){
   return {x:f.team==="red"?Math.min(GARENA.W-3,5):Math.max(2,GARENA.W-6),y:laneY};
 }
 function gaMobaSpawnSpots(team){
-  const x0=team==="red"?2:GARENA.W-3,x1=team==="red"?3:GARENA.W-4,mid=Math.floor(GARENA.H/2),off=[0,-1,1,-2,2];
-  return off.map(d=>[x0,mid+d]).concat(off.map(d=>[x1,mid+d])).filter(p=>p[1]>=1&&p[1]<GARENA.H-1).slice(0,MOBA_TEAM_MAX);
+  const mid=Math.floor(GARENA.H/2),xs=team==="red"?[2,3,1,4]:[GARENA.W-3,GARENA.W-4,GARENA.W-2,GARENA.W-5],off=[0];
+  for(let d=1;d<Math.ceil(GARENA.H/2);d++)off.push(-d,d);
+  const spots=[];
+  off.forEach(d=>xs.forEach(x=>{const y=mid+d;if(y>=1&&y<GARENA.H-1&&!gaIsBlocked(x,y)&&!gaStructureAt(x,y))spots.push([x,y]);}));
+  return spots.slice(0,MOBA_TEAM_MAX);
 }
 function gaMobaOpenSpawn(team,excludeSid){
   // 固定自家基地門口走廊：紅方只由左門、藍方只由右門復活，不跨線、不跳角落。
@@ -10286,7 +10329,7 @@ function gaTickSummons(){
 }
 function garenaStart(redIds, blueIds, aiMode, mode){
   resetSkillCooldowns('ga');
-  GARENA.fighters = {}; GARENA.cmdQueue = {}; GARENA._lastTs = {}; GARENA._els = {}; GARENA._fxTick = 0;
+  GARENA.fighters = {}; GARENA.cmdQueue = {}; GARENA._lastTs = {}; GARENA.heldMoves={}; GARENA.heldMoveUntil={}; GARENA._els = {}; GARENA._fxTick = 0;
   GARENA.traps = []; GARENA.summons = []; GARENA.fields = []; // 地面陷阱、召喚物與三轉領域只存在當前戰場
   GARENA.mobaQuiz=null;GARENA.mobaKnowledgeScore={red:0,blue:0};GARENA.mobaKnowledgeStreak={red:0,blue:0};GARENA.mobaKnowledgeBestStreak={red:0,blue:0};
   GARENA.mode = mode==="mobaKnowledge" ? "mobaKnowledge" : (mode==="moba" ? "moba" : "battle");
@@ -10307,6 +10350,7 @@ function garenaStart(redIds, blueIds, aiMode, mode){
   }
   const place = (ids, team)=>{
     const H = GARENA.H;
+    const mobaSpots=(GARENA.mode==="moba"||GARENA.mode==="mobaKnowledge")?gaMobaSpawnSpots(team):null;
     // 職業對稱站位:戰士第1排(最前)、遊俠第2、法師第3、牧師第4(最後)
     const TIER = { Warrior:0, Rogue:1, Mage:2, Cleric:3 };
     const byTier = [[],[],[],[]];
@@ -10318,7 +10362,7 @@ function garenaStart(redIds, blueIds, aiMode, mode){
       list.forEach((sid,i)=>{
         const st = stu(sid); if(!st) return;
         const max = st.maxHp + skillMaxHpBonus(st);
-        const mobaSpot=(GARENA.mode==="moba"||GARENA.mode==="mobaKnowledge")?gaMobaSpawnSpots(team)[enterIndex%gaMobaSpawnSpots(team).length]:null;
+        const mobaSpot=mobaSpots&&mobaSpots.length?mobaSpots[enterIndex%mobaSpots.length]:null;
         const y = mobaSpot ? mobaSpot[1] : Math.min(H-1, Math.floor((i + 0.5) * H / list.length));
         // 從左右城門入場：人多時每位間隔進來，不會再從左上角重疊跳出。
         const spawnY=mobaSpot?mobaSpot[1]:Math.min(H-1, Math.max(0, Math.floor((enterIndex+.5)*H/Math.max(1,ids.length))));
@@ -10374,8 +10418,21 @@ function garenaStart(redIds, blueIds, aiMode, mode){
   if(GARENA._cmdUnsub) GARENA._cmdUnsub();
   GARENA._cmdUnsub = CLOUD.garenaListenCmds(cmd=>{
     if(!cmd || !cmd.sid) return;
-    if(GARENA._lastTs[cmd.sid] === cmd.ts) return;           // 舊指令略過
-    GARENA._lastTs[cmd.sid] = cmd.ts;
+    const order=Number(cmd.seq||cmd.ts)||0;
+    if(order<=Number(GARENA._lastTs[cmd.sid]||0)) return;    // 重送或延遲抵達的舊指令略過
+    GARENA._lastTs[cmd.sid] = order;
+    if(cmd.moveState==="stop"){
+      delete GARENA.heldMoves[cmd.sid];
+      delete GARENA.heldMoveUntil[cmd.sid];
+      if(GARENA.cmdQueue[cmd.sid]&&GARENA.cmdQueue[cmd.sid].heldMove)delete GARENA.cmdQueue[cmd.sid];
+      return;
+    }
+    if(cmd.moveState==="start"&&["up","down","left","right"].includes(cmd.move)){
+      GARENA.heldMoves[cmd.sid]=cmd.move;
+      GARENA.heldMoveUntil[cmd.sid]=Date.now()+3500;          // 心跳中斷 3.5 秒後自動放開，避免斷線角色持續走
+      GARENA.cmdQueue[cmd.sid]=Object.assign({},cmd,{heldMove:true});
+      return;
+    }
     GARENA.cmdQueue[cmd.sid] = cmd;
   });
   garenaRestartTimer();
@@ -10455,6 +10512,7 @@ function garenaStop(){
   (GARENA._entranceTimers||[]).forEach(clearTimeout); GARENA._entranceTimers=[];
   if(GARENA.timer){ clearInterval(GARENA.timer); GARENA.timer=null; }
   if(GARENA._cmdUnsub){ GARENA._cmdUnsub(); GARENA._cmdUnsub=null; }
+  GARENA.heldMoves={};GARENA.heldMoveUntil={};GARENA.cmdQueue={};
   GARENA.active=false;
   if(GARENA.mode==="moba"||GARENA.mode==="mobaKnowledge"){GARENA.mode="battle";GARENA.mapKey="plain";GARENA.structures=[];GARENA.mobaQuiz=null;GARENA.mobaKnowledgeBank=null;}
   CLOUD.garenaClear && CLOUD.garenaClear();
@@ -10683,6 +10741,20 @@ function garenaTick(){
   fs.forEach(f=>{ const st=stu(f.sid); if(!f.ko&&st) f.atb=Math.min(160,(f.atb||0)+gaActionGain(st,f)); });
   if(GARENA.aiMode) garenaAiStep(fs.filter(f=>(f.atb||0)>=100));
   else if(gaIsMoba()) garenaAiStep(fs.filter(f=>(f.atb||0)>=100&&(((stu(f.sid)||{}).isMobaAI)||f.autoPilot))); // 補位 AI 與學生主動託管角色自動推線
+  // 手機只在按下、低頻心跳及放開時傳輸；教師端依 0.5 秒戰場節拍延續方向，降低全班同時操作的雲端寫入。
+  if(gaIsMoba()){
+    const now=Date.now();
+    fs.forEach(f=>{
+      const dir=GARENA.heldMoves[f.sid];
+      if(!dir)return;
+      if(now>Number(GARENA.heldMoveUntil[f.sid]||0)){
+        delete GARENA.heldMoves[f.sid];delete GARENA.heldMoveUntil[f.sid];
+        if(GARENA.cmdQueue[f.sid]&&GARENA.cmdQueue[f.sid].heldMove)delete GARENA.cmdQueue[f.sid];
+        return;
+      }
+      if(!f.autoPilot&&!GARENA.cmdQueue[f.sid])GARENA.cmdQueue[f.sid]={sid:f.sid,move:dir,heldMove:true};
+    });
+  }
   // 1. 處理指令(每人每拍一動作)
   for(const f of fs){
     if(f.ko) continue;
@@ -11872,10 +11944,10 @@ function garenaSetupHtml(arenaOpen){
     + (offline?'<button class="btn gold" id="gaStartAi">🤖 AI 演練</button>'
       :'<button class="btn gold" id="gaStart">⚔️ 開始團體戰</button> <button class="btn" id="gaStartAi">🤖 AI 演練</button>');
   return '<details class="panel arena-menu-card" id="arenaTeamMenu"'+(view.arenaTeamOpen?' open':'')+'><summary>'+(arenaOpen?'👥':'🔒')+' 團體競技場 <span class="mini">選地圖・分隊・開戰</span></summary><div class="arena-menu-body">'+(arenaOpen?teamBody:'<div class="unlock-note">'+classFeatureLockText("arena")+'</div>')+'</div></details>'
-    + '<details class="panel arena-menu-card" id="arenaMobaMenu"'+(view.arenaMobaOpen?' open':'')+'><summary>'+(classFeatureUnlocked("moba")?'🏰':'🔒')+' Dota 戰場・3v3～10v10 <span class="mini">動態地圖・自由移動・技能・推塔</span></summary><div class="arena-menu-body">'+(classFeatureUnlocked("moba")?mobaSetupHtml(offline):'<div class="unlock-note">'+classFeatureLockText("moba")+'</div>')+'</div></details>'
+    + '<details class="panel arena-menu-card" id="arenaMobaMenu"'+(view.arenaMobaOpen?' open':'')+'><summary>'+(classFeatureUnlocked("moba")?'🏰':'🔒')+' Dota 戰場・3v3～15v15 <span class="mini">動態地圖・自由移動・技能・推塔</span></summary><div class="arena-menu-body">'+(classFeatureUnlocked("moba")?mobaSetupHtml(offline):'<div class="unlock-note">'+classFeatureLockText("moba")+'</div>')+'</div></details>'
     + '<details class="panel arena-menu-card" id="arenaGuildMenu"'+(view.arenaGuildOpen?' open':'')+'><summary>'+(classFeatureUnlocked("guild")?'🏰':'🔒')+' 公會戰與城堡 <span class="mini">攻城・巔峰・回放</span></summary><div class="arena-menu-body">'+(classFeatureUnlocked("guild")?siegeSetupHtml()+castleAdminHtml():'<div class="unlock-note">'+classFeatureLockText("guild")+'</div>')+'</div></details>';
 }
-/* ── Dota 即時報名：報名不限，正式戰場依人數形成 3v3～10v10。 ── */
+/* ── Dota 即時報名：報名不限，正式戰場依人數形成 3v3～15v15。 ── */
 const MOBA_SIGNUP={active:false,room:"",entries:{},assign:{},cmdUnsub:null,stateUnsub:null,manual:false,thresholdShown:false};
 function mobaSignupList(){return Object.values(MOBA_SIGNUP.entries).sort((a,b)=>(a.ts||0)-(b.ts||0));}
 function mobaSignupCounts(){
@@ -11956,7 +12028,7 @@ function openMobaSignupManager(autoOpened){
   const col=(team,title,color)=>'<div class="panel" style="margin:0;border-color:'+color+'"><h3 style="color:'+color+'">'+title+'（'+(team==="red"?n.red:n.blue)+' / '+MOBA_TEAM_MAX+'）</h3>'+list.filter(e=>a[e.sid]===team).map(e=>row(e,team)).join('')+(list.some(e=>a[e.sid]===team)?'':'<div class="mini">尚未選入隊員</div>')+'</div>';
   const waiting=list.filter(e=>!a[e.sid]);
   modalHost.innerHTML='<div class="overlay" id="mobaSignupManager"><div class="modal" style="max-width:900px;width:min(94vw,900px)"><h3 style="margin-top:0">🏰 Dota 報名分隊 '+(autoOpened?'<span class="tag" style="background:#f0b429">報名已超過 5 人</span>':'')+'</h3>'
-    +'<div class="mini" style="margin-bottom:9px">共 <b>'+n.all+'</b> 人報名；戰場會形成 3v3～10v10，超過 20 人時其餘保留候補。兩隊人數不同時，少的一方會補入接近全場平均等級的隨機職業 AI。</div>'
+    +'<div class="mini" style="margin-bottom:9px">共 <b>'+n.all+'</b> 人報名；戰場會形成 3v3～15v15，超過 30 人時其餘保留候補。兩隊人數不同時，少的一方會補入接近全場平均等級的隨機職業 AI。</div>'
     +'<div class="moba-team-grid">'+col("red","🔴 紅隊","#b52d2d")+col("blue","🔵 藍隊","#315dad")+'</div>'
     +'<div class="panel" style="margin:10px 0 0"><h3>🪑 候補區（'+waiting.length+'）</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:4px">'+(waiting.map(e=>row(e,"")).join('')||'<div class="mini">目前沒有候補</div>')+'</div></div>'
     +'<div class="inline-form" style="justify-content:center;margin-top:10px"><button class="btn" id="mobaSignupAuto">⚖️ 自動均衡</button><button class="btn gold" id="mobaSignupStart">▶️ 開始 Dota</button>'+(CLOUD.on()?'<button class="btn" id="mobaSignupBackQr">📲 顯示 QR</button>':'')+'<button class="btn danger" id="mobaSignupEnd">停止報名</button><button class="btn" id="mobaSignupClose">關閉視窗</button></div></div></div>';
@@ -11995,7 +12067,7 @@ function mobaSetupHtml(offline){
   const teamBox=(team,color)=>state.students.map(x=>'<label style="display:inline-flex;align-items:center;gap:3px;background:#fff;border:2px solid '+color+';border-radius:7px;padding:4px 7px;font-size:12px;font-weight:800;cursor:pointer"><input type="checkbox" class="mobaPick" data-team="'+team+'" value="'+x.id+'"> '+esc(x.name)+' <span class="mini">Lv'+x.level+'</span></label>').join('');
   return '<div style="background:linear-gradient(135deg,#183d2a,#315b43);color:#fff;border:3px solid #d9b84a;border-radius:12px;padding:11px">'
     + '<div style="font-weight:900;font-size:16px;color:#ffe486">🗺️ 榮耀峽谷</div>'
-    + '<div class="mini" style="color:#d9eadc;line-height:1.6;margin:5px 0 9px">動態 3v3～10v10；左右完全鏡像的雙路、河道、中央山壁與基地會隨人數放大。箭塔射程 3 格，每擊造成最大生命 15% 真實傷害；核心城堡同樣射程 3 格，每擊造成最大生命 20% 真實傷害，城堡耐久依成功攻擊次數扣除。無敵重生水晶會在每次完成動作後治療自家陣地三列內友軍 30% 最大生命。陣亡 6 秒後從自家門口復活，一局最長 3 分鐘。</div>'
+    + '<div class="mini" style="color:#d9eadc;line-height:1.6;margin:5px 0 9px">動態 3v3～15v15；左右完全鏡像的雙路、河道、中央山壁與基地會隨人數放大。12 人以上自動減少非必要粒子以維持流暢。箭塔射程 3 格，每擊造成最大生命 15% 真實傷害；核心城堡同樣射程 3 格，每擊造成最大生命 20% 真實傷害，城堡耐久依成功攻擊次數扣除。無敵重生水晶會在每次完成動作後治療自家陣地三列內友軍 30% 最大生命。陣亡 6 秒後從自家門口復活，一局最長 3 分鐘。</div>'
     + '<div class="moba-team-grid"><div><b style="color:#ff9898">🔴 紅方（最多 '+MOBA_TEAM_MAX+' 人）</b><div class="moba-pick-list" style="margin-top:5px">'+teamBox('red','#d94c4c')+'</div></div>'
     + '<div><b style="color:#9cbcff">🔵 藍方（最多 '+MOBA_TEAM_MAX+' 人）</b><div class="moba-pick-list" style="margin-top:5px">'+teamBox('blue','#4c79d9')+'</div></div></div>'
     + '<div class="moba-mode-menu">'
@@ -12412,7 +12484,7 @@ function gaTerrainHtml(C){
   if(gaIsKnowledgeMoba()&&GARENA.mobaQuiz){
     const q=GARENA.mobaQuiz,fs=Object.values(GARENA.fighters||{});
     ["red","blue"].forEach(team=>gaMobaQuizZones(team).forEach(z=>{const holder=fs.find(f=>!f.ko&&f.team===team&&f.x===z.x&&f.y===z.y),charge=holder&&holder.quizChargeKey===team+":"+z.answer?Math.min(100,Math.round((holder.quizChargeT||0)/6*100)):0,wrong=(q.wrong[team]||[]).includes(z.answer),answered=q.answeredTeams[team]&&z.answer===q.correct;color=team==="red"?"#e05252":"#5285e0";h+='<div class="ga-answer-domain '+(wrong?'wrong ':'')+(answered?'answered':'')+'" style="left:'+(z.x*C)+'px;top:'+(z.y*C)+'px;width:'+C+'px;height:'+C+'px;--team-color:'+color+';--charge:'+charge+'" title="'+(team==="red"?'紅隊攻城答案':'藍隊攻城答案')+' '+z.answer+'">'+z.answer+'<small>'+charge+'%</small></div>'; }));
-    const tick=GARENA.ticks||0;if((q.freezeUntil.red||0)>tick)h+='<div class="ga-quiz-freeze red">🧊 紅隊凍結 '+Math.ceil((q.freezeUntil.red-tick)*.5)+'s</div>';if((q.freezeUntil.blue||0)>tick)h+='<div class="ga-quiz-freeze blue">🧊 藍隊凍結 '+Math.ceil((q.freezeUntil.blue-tick)*.5)+'s</div>';
+    const tick=GARENA.ticks||0;if((q.freezeUntil.red||0)>tick)h+='<div class="ga-quiz-freeze red" data-ga-freeze="red">🧊 紅隊凍結 <span>'+Math.ceil((q.freezeUntil.red-tick)*.5)+'</span>s</div>';if((q.freezeUntil.blue||0)>tick)h+='<div class="ga-quiz-freeze blue" data-ga-freeze="blue">🧊 藍隊凍結 <span>'+Math.ceil((q.freezeUntil.blue-tick)*.5)+'</span>s</div>';
   }
   // 落石預警
   const evKind = (M.event||{}).kind;
@@ -12435,17 +12507,27 @@ function gaTerrainHtml(C){
 }
 function garenaRenderField(){
   const fs = Object.values(GARENA.fighters);
-  const quizHost=document.getElementById("gaKnowledgeCardHost");if(quizHost&&gaIsKnowledgeMoba())quizHost.innerHTML=gaMobaKnowledgeCardHtml();
+  const quizHost=document.getElementById("gaKnowledgeCardHost");
+  if(quizHost&&gaIsKnowledgeMoba()){
+    const q=GARENA.mobaQuiz||{},quizCardSig=JSON.stringify([q.id||"",q.round||0,q.prompt||"",q.questionImage||"",GARENA.mobaKnowledgeScore||{},GARENA.mobaKnowledgeStreak||{}]);
+    if(quizHost.dataset.sig!==quizCardSig){quizHost.dataset.sig=quizCardSig;quizHost.innerHTML=gaMobaKnowledgeCardHtml();}
+  }
   // 🗺 地形層即時更新(落石預警等動態元素才會出現)
   const terr = document.getElementById("gaTerrain");
   if(terr){
-    const quizSig=gaIsKnowledgeMoba()?JSON.stringify(GARENA.mobaQuiz||{})+"|"+(GARENA.ticks||0)+"|"+fs.map(f=>f.sid+":"+(f.quizChargeKey||"")+":"+(f.quizChargeT||0)).join(","):"";
-    const sig = (GARENA.mapKey||"plain") + "|" + JSON.stringify(GARENA.warnCells||[]) + "|" + JSON.stringify(GARENA.traps||[]) + "|" + JSON.stringify(GARENA.summons||[]) + "|" + JSON.stringify(GARENA.fields||[]) + "|" + JSON.stringify(GARENA.structures||[]) + "|" + quizSig;
+    const quizSig=gaIsKnowledgeMoba()?JSON.stringify(GARENA.mobaQuiz||{})+"|"+fs.map(f=>f.sid+":"+(f.quizChargeKey||"")+":"+(f.quizChargeT||0)).join(","):"";
+    // 冷卻、剩餘回合等不可見欄位不納入簽章，避免 15v15 時每半秒重建整張地圖 DOM。
+    const trapSig=(GARENA.traps||[]).map(t=>[t.id||t.kind,t.x,t.y]);
+    const summonSig=(GARENA.summons||[]).map(u=>[u.id,u.x,u.y,u.guardHp||0]);
+    const fieldSig=(GARENA.fields||[]).map(q=>[q.id,q.x,q.y]);
+    const structureSig=(GARENA.structures||[]).map(q=>[q.id,q.hp,q.alive!==false]);
+    const sig = (GARENA.mapKey||"plain") + "|" + JSON.stringify(GARENA.warnCells||[]) + "|" + JSON.stringify(trapSig) + "|" + JSON.stringify(summonSig) + "|" + JSON.stringify(fieldSig) + "|" + JSON.stringify(structureSig) + "|" + quizSig;
     if(terr.dataset.sig !== sig){
       terr.dataset.sig = sig;
       terr.innerHTML = gaTerrainHtml(GARENA.cell||46);
     }
   }
+  document.querySelectorAll('[data-ga-freeze]').forEach(el=>{const team=el.dataset.gaFreeze,left=Math.max(0,Math.ceil((((GARENA.mobaQuiz||{}).freezeUntil||{})[team]-(GARENA.ticks||0))*.5));el.hidden=left<=0;const n=el.querySelector('span');if(n)n.textContent=left;});
   for(const f of fs){
     // render() 會重建整個教師端戰場；舊快取雖仍是物件，實際上已脫離畫面。
     // 手機讀取 GARENA.fighters 所以仍會移動，但若繼續更新舊節點，大屏角色就會看似站在原地。
@@ -13499,6 +13581,11 @@ function bindTeacher(){
   if(cuAuto) cuAuto.onclick=()=>{
     state.classUnlocks.enabled=true; state.classUnlocks.manualStage=0;
     save(); render(); toast("已恢復依全班累積 XP 自動解鎖");
+  };
+  const cuPreview=document.getElementById("classUnlockPreview");
+  if(cuPreview) cuPreview.onclick=()=>{
+    const previewStage=CLASS_UNLOCK_STAGES[Math.max(1,classEffectiveStage())]||CLASS_UNLOCK_STAGES[1];
+    showClassUnlockCelebration([previewStage]);
   };
   const cuScale=document.getElementById("classUnlockScale");
   if(cuScale){
@@ -14585,11 +14672,11 @@ function openClassQr(cid, cname, sessionToken){
   const entryUrl=new URL(location.href); entryUrl.search=""; entryUrl.hash="";
   entryUrl.searchParams.set("class",cid);entryUrl.searchParams.set("session",sessionToken);entryUrl.searchParams.set("student","1");
   const link=entryUrl.toString();
-  modalHost.innerHTML = '<div class="overlay" id="ovl"><div class="modal" style="max-width:440px;text-align:center">'
+  modalHost.innerHTML = '<div class="overlay qr-login-overlay" id="ovl"><div class="modal qr-login-modal" style="max-width:440px;text-align:center">'
     + '<h4>📱 '+esc(cname)+'・本節課登入</h4>'
     + '<div class="msub">全班掃同一張 QR → 使用自己的 Google 帳號。<br>已註冊會直接進入角色；第一次使用會自動進入學號、座號名冊核對。</div>'
     + '<div class="panel" style="margin:8px 0;padding:8px;background:#fff8df;color:#141414"><span class="mini">班級代碼</span><br><b class="num" style="font-size:22px;letter-spacing:2px">'+esc(cid)+'</b></div>'
-    + '<div id="qrBox" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:10px auto;width:fit-content;min-width:260px;min-height:260px;align-items:center">產生中…</div>'
+    + '<div id="qrBox" class="qr-login-box" style="display:flex;justify-content:center;padding:14px;background:#fff;border:3px solid #141414;border-radius:12px;margin:10px auto;align-items:center">產生中…</div>'
     + '<div class="inline-form" style="justify-content:center"><input type="text" readonly value="'+esc(link)+'" id="qrLink" style="flex:1;font-size:11px;max-width:280px"><button class="btn" id="qrCopy">複製</button></div>'
     + '<div class="mini" style="margin-top:7px;color:#8a5a00">🔐 此 QR Code 只在本節課有效；教師結束上課後立即失效。</div>'
     + '<button class="btn" id="mClose" style="margin-top:8px">關閉</button></div></div>';
@@ -14700,8 +14787,13 @@ function openGroupModal(gname){
 
 /* ── 學生端 ───────────────────────────────────────── */
 /* 學生遙控端狀態 */
-const GPAD = { live:null, unsub:null, sid:null, moveHoldTimer:0, moveDir:"", holdBound:false };
-function garenaPadStopMoveHold(){if(GPAD.moveHoldTimer)clearInterval(GPAD.moveHoldTimer);GPAD.moveHoldTimer=0;GPAD.moveDir="";}
+const GPAD = { live:null, unsub:null, sid:null, moveHoldTimer:0, moveDir:"", holdBound:false, sendMove:null };
+function garenaPadStopMoveHold(){
+  const dir=GPAD.moveDir;
+  if(GPAD.moveHoldTimer)clearInterval(GPAD.moveHoldTimer);
+  GPAD.moveHoldTimer=0;GPAD.moveDir="";
+  if(dir&&GPAD.sendMove)GPAD.sendMove({move:dir,moveState:"stop"});
+}
 function garenaStudentInit(sid){
   if(GPAD.unsub && GPAD.sid===sid) return;                  // 已在監聽
   if(GPAD.unsub) GPAD.unsub();
@@ -14790,9 +14882,10 @@ function garenaPadRender(){
     + '<div style="color:#aaa;font-size:11px;margin-top:10px">移動到敵人射程內再攻擊・攻擊有冷卻</div>'
     + '</div>';
   const send = (cmd)=> CLOUD.garenaCmd(sid, cmd).catch(e=>console.warn(e));
+  GPAD.sendMove=send;
   if(!GPAD.holdBound){GPAD.holdBound=true;window.addEventListener("pointerup",garenaPadStopMoveHold);window.addEventListener("pointercancel",garenaPadStopMoveHold);window.addEventListener("blur",garenaPadStopMoveHold);}
   const autoBtn=ov.querySelector("#gpadAuto");if(autoBtn)autoBtn.onclick=()=>{if(!autoBtn.disabled){garenaPadStopMoveHold();send({act:"autopilot",enabled:!autoOn});}};
-  ov.querySelectorAll("[data-gmove]").forEach(b=>{const go=()=>send({move:b.dataset.gmove});b.onpointerdown=e=>{e.preventDefault();if(autoOn)return;garenaPadStopMoveHold();GPAD.moveDir=b.dataset.gmove;go();GPAD.moveHoldTimer=setInterval(go,260);};b.onclick=e=>e.preventDefault();});
+  ov.querySelectorAll("[data-gmove]").forEach(b=>{const go=()=>send({move:b.dataset.gmove,moveState:"start"});b.onpointerdown=e=>{e.preventDefault();if(autoOn)return;garenaPadStopMoveHold();GPAD.moveDir=b.dataset.gmove;go();GPAD.moveHoldTimer=setInterval(go,1500);};b.onclick=e=>e.preventDefault();});
   ov.querySelectorAll("[data-gact]").forEach(b=> b.onclick = ()=>{ if(!b.disabled) send({act:b.dataset.gact}); });
   ov.querySelectorAll("[data-gskill]").forEach(b=>b.onclick=()=>{if(!b.disabled)send({act:"skill",skillId:b.dataset.gskill});});
 }
