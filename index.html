@@ -8239,7 +8239,7 @@ function openTeacherLoginQr(){
     +'<div id="teacherPairCountdown" class="mini" style="margin-bottom:10px">有效時間 05:00</div>'
     +'<div class="inline-form" style="justify-content:center"><button class="btn gold" id="teacherLoginHere">在這台裝置登入 Google</button><button class="btn gold" id="teacherPairRetry" style="display:none">重新產生 QR</button><button class="btn" id="teacherLoginQrClose">關閉</button></div>'
     +'<div class="mini" style="margin-top:8px">QR 只含 5 分鐘有效的一次性配對碼，不含帳號或密碼。</div></div></div>';
-  let stopped=false,busy=false,tickTimer=0;
+  let stopped=false,busy=false,tickTimer=0,pollFails=0;
   const close=()=>{stopped=true;if(tickTimer)clearInterval(tickTimer);modalHost.innerHTML="";};
   document.getElementById("teacherLoginQrOverlay").onclick=e=>{if(e.target.id==="teacherLoginQrOverlay")close();};
   document.getElementById("teacherLoginQrClose").onclick=close;
@@ -8271,8 +8271,14 @@ function openTeacherLoginQr(){
         await loginSuccess(res.user,"teacher");
         return;
       }
+      pollFails=0;
       if(status)status.textContent="等待手機掃碼登入…";
-    }catch(e){const status=document.getElementById("teacherPairStatus");if(status)status.textContent="配對等待中："+(e.message||e);}
+    }catch(e){
+      pollFails++;
+      const status=document.getElementById("teacherPairStatus"),retry=document.getElementById("teacherPairRetry");
+      if(status)status.textContent=pollFails>=3?"連線不穩，仍在自動重試；也可以重新產生 QR。":"配對等待中："+(e.message||e);
+      if(retry&&pollFails>=3)retry.style.display="";
+    }
     finally{busy=false;}
     if(!stopped)setTimeout(poll,1600);
   };
@@ -8283,18 +8289,21 @@ function renderHome(){
   const cid=normalizeClassCode(q.get("class")||""), sessionToken=String(q.get("session")||"");
   const dotaEntry=q.get("dota"), wantsMoba=dotaEntry==="1"||dotaEntry==="signup", wantsReward=!!q.get("reward");
   const teacherEntry=q.get("teacher")==="1", studentEntry=!!cid&&(!!sessionToken||wantsMoba||wantsReward);
+  const authBrowserWarning=isEmbeddedAuthBrowser()?'<div class="mini" style="padding:9px;margin:9px 0;background:#fff0d5;border:2px solid #d38b24;border-radius:9px;color:#734600">⚠️ 目前是通訊軟體內建瀏覽器。Google 可能拒絕登入，請按右上角選單，改用 Chrome 或 Safari 開啟。</div>':'';
   let pane="";
   if(studentEntry){
     const title=wantsMoba?(dotaEntry==="signup"?"Dota 即時報名":"Dota 戰場參戰"):(wantsReward?"領取教師獎勵":"本節課學生登入");
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>🎒 '+title+'</h3>'
       +'<div class="mini" style="line-height:1.8">班級代碼 <b class="num">'+esc(cid)+'</b><br>請使用自己的 Google 帳號；系統會自動判斷是否為第一次註冊。</div>'
       +'<div class="mini" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:11px 0"><span>① Google 登入</span><span>② 核對班級</span><span>③ 進入／選角</span></div>'
+      +authBrowserWarning
       +'<div style="display:grid;gap:9px;margin-top:14px"><button class="btn gold" id="studentQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:18px;padding:11px 20px">Google 登入／第一次註冊</button>'
       +'<div class="mini" style="padding:8px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px">已有角色會直接進入；第一次使用會自動加入班級名冊並開啟選角。</div></div>'
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
   }else if(teacherEntry){
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>📜 教師登入</h3><div class="mini">完成 Google 登入後，系統會顯示您建立或管理的班級。</div>'
       +'<div class="mini" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:11px 0"><span>① Google 登入</span><span>② 選擇班級</span><span>③ 顯示學生 QR</span></div>'
+      +authBrowserWarning
       +'<button class="btn gold" id="teacherQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:20px;padding:12px 24px;margin-top:14px">使用 Google 登入</button>'
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
   }else{
@@ -8485,9 +8494,22 @@ function renderStudentLoginMissing(email){
   document.getElementById("missingRegister").onclick=()=>renderAutoEnroll(email,{cid:CLOUD.cid});
   document.getElementById("missingBack").onclick=()=>{try{FB.auth.signOut();}catch(_){}FB.user=null;view={page:"home"};render();};
 }
+function isEmbeddedAuthBrowser(){
+  const ua=String(navigator&&navigator.userAgent||"");
+  return /\bLine\b|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+}
+function showExternalBrowserHelp(){
+  const link=location.href;
+  modalHost.innerHTML='<div class="overlay" id="externalBrowserHelp"><div class="modal" style="max-width:470px;text-align:left"><h4>請改用系統瀏覽器登入</h4><p>Google 為保護帳號，常會阻擋 LINE、Facebook、Instagram 等應用程式內的登入視窗。</p><ol class="mini" style="line-height:1.9"><li>按右上角「⋯」或分享選單</li><li>選擇「以瀏覽器開啟」</li><li>使用 Chrome 或 Safari 完成登入</li></ol><div class="inline-form" style="justify-content:center"><button class="btn gold" id="copyExternalLoginLink">複製目前連結</button><button class="btn" id="closeExternalBrowserHelp">我知道了</button></div></div></div>';
+  document.getElementById("closeExternalBrowserHelp").onclick=()=>{modalHost.innerHTML="";};
+  document.getElementById("externalBrowserHelp").onclick=e=>{if(e.target.id==="externalBrowserHelp")modalHost.innerHTML="";};
+  document.getElementById("copyExternalLoginLink").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("已複製登入連結");}catch(_){prompt("請長按複製登入連結",link);}};
+}
 let _googleLoginBusy=false;
 async function googleLogin(role){
-  if(!FB.ready){ toast("登入服務未連線,請用離線模式", true); return; }
+  if(!FB.ready){ toast("登入服務尚未連線，請確認網路後重新整理。", true); return; }
+  if(isEmbeddedAuthBrowser()){showExternalBrowserHelp();return;}
+  if(navigator.onLine===false){toast("目前沒有網路連線，請連上網路後再登入。",true);return;}
   if(_googleLoginBusy)return;
   _googleLoginBusy=true;loginLoading("開啟 Google 登入","請選擇自己的 Google 帳號；完成前不要重複點擊。",1);
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -8511,6 +8533,21 @@ async function googleLogin(role){
     if(code==="auth/operation-not-allowed"){
       toast("Firebase 尚未開啟 Google 登入方式；請在 Authentication → Sign-in method 啟用 Google。", true);
       return;
+    }
+    if(code==="auth/network-request-failed"){
+      toast("網路連線中斷，請確認 Wi-Fi 後再按一次登入。",true);return;
+    }
+    if(code==="auth/too-many-requests"){
+      toast("短時間登入次數過多，請等待幾分鐘後再試。",true);return;
+    }
+    if(code==="auth/user-disabled"){
+      toast("這個 Google 帳號目前已停用，請洽系統管理教師。",true);return;
+    }
+    if(code==="auth/account-exists-with-different-credential"){
+      toast("這個信箱已使用其他登入方式建立帳號，請使用原本的登入方式或洽教師協助。",true);return;
+    }
+    if(code==="auth/web-storage-unsupported"){
+      toast("瀏覽器禁止登入所需的網站儲存空間；請關閉無痕模式或改用 Chrome／Safari。",true);return;
     }
     toast("登入失敗:"+(err&&err.message||err), true);
   }finally{_googleLoginBusy=false;loginLoadingDone();}
@@ -16075,18 +16112,18 @@ if(FB.ready&&!_mobaPhonePage){
       _loginResumed = true;
       let role = null;
       try{ role = sessionStorage.getItem("rpg-login-role"); sessionStorage.removeItem("rpg-login-role"); }catch(_){}
-      loginSuccess(res.user, role || localStorage.getItem("rpg-last-role") || "student");
+      const entry=new URLSearchParams(location.search),urlRole=entry.get("teacher")==="1"?"teacher":(entry.get("class")?"student":null);
+      loginSuccess(res.user, role || urlRole || localStorage.getItem("rpg-last-role") || "student");
     }
   }).catch(err=>{
     try{sessionStorage.removeItem("rpg-login-role");}catch(_){}
     const code=String(err&&err.code||"");
     if(code!=="auth/popup-closed-by-user")toast("Google 登入回復失敗："+(err&&err.message||err),true);
   });
-  // B. 重新整理/隔天再開：課堂 QR 入口先讓本人確認帳號；其他頁才依上次身分恢復。
+  // B. 重新整理/隔天再開：只有課堂／教師 QR 入口顯示帳號確認；一般首頁不沿用舊角色。
   FB.auth.onAuthStateChanged(user=>{
     if(_loginResumed || !user || FB.user) return;             // 已處理過/未登入/已在使用中
     if(view.page!=="home") return;                            // 使用者已在別的頁面,不干擾
-    let role = null;
     const entry=new URLSearchParams(location.search),entryCid=normalizeClassCode(entry.get("class")||"");
     if(entry.get("teacher")==="1"){
       // 教室與手機都可能是共用裝置；即使 Firebase 記得帳號，也必須由老師確認本人身分。
@@ -16096,12 +16133,8 @@ if(FB.ready&&!_mobaPhonePage){
       // 共用平板不可自動沿用上一位學生；顯示可辨識的快速登入，讓本人明確確認。
       FB.user=user;offerStudentQuickLogin(user);return;
     }
-    else try{ role = localStorage.getItem("rpg-last-role"); }catch(_){}
-    if(!role) return;                                          // 沒有上次身分紀錄→停留登入頁
-    if(role==="teacher")return;                               // 一般首頁的教師一律重新掃碼／明確登入，避免共用電腦沿用舊帳號
-    _loginResumed = true;
-    toast("🔑 歡迎回來,自動登入中…");
-    loginSuccess(user, role);
+    // 一般首頁只保留教師 QR 與家長入口，不自動帶入上次的學生或教師帳號。
+    return;
   });
 }
 </script>
