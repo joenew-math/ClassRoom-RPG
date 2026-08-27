@@ -3667,6 +3667,22 @@ const CLOUD = {
     if(force){const old=await col.get();old.docs.forEach(d=>{if(!current.has(d.id))ops.push(d.ref.delete());});}
     for(let i=0;i<ops.length;i+=25)await Promise.all(ops.slice(i,i+25));
   },
+  async teacherCreateRosterStudent(student){
+    if(!this.on()||this.role!=="teacher"||!FB.user)throw new Error("只有已登入並獲授權的班級教師可以建立名冊");
+    const s=JSON.parse(JSON.stringify(student||{})),sno=String(s.sno||"").trim(),seat=String(s.seat||"").trim(),email=String(s.email||"").trim().toLowerCase();
+    if(!s.id||!s.name||!sno||!seat||!email)throw new Error("姓名、學號、座號與 Google 信箱都必須填寫");
+    const key=await this.enrollmentKey(this.cid,sno,seat),c=FB.db.collection("classes").doc(this.cid),batch=FB.db.batch(),now=Date.now();
+    batch.set(c.collection("students").doc(String(s.id)),s);
+    batch.set(c.collection("publicRoster").doc(String(s.id)),this._publicStudent(s));
+    /* merge 保留已由學生本人驗證完成的 claimedUid／claimedAt；教師同步名冊時不會誤解除既有帳號。 */
+    /* 信箱只留在教師可讀的 students 文件，不放進任何已登入者都能核對的 enrollment。 */
+    batch.set(c.collection("enrollments").doc(key),{sid:String(s.id),className:state.className||"班級 RPG",student:this._enrollmentStudent(s),updatedAt:now},{merge:true});
+    await batch.commit();
+    this._lastSnap["stu:"+s.id]=JSON.stringify(s);
+    this._lastSnap["pub:"+s.id]=JSON.stringify(this._publicStudent(s));
+    this._lastSnap["enroll:"+key]=JSON.stringify({sid:String(s.id),className:state.className||"班級 RPG",student:this._enrollmentStudent(s)});
+    return {sid:String(s.id),enrollmentKey:key};
+  },
   async lookupEnrollment(cid,sno,seat){
     if(!FB.user||!FB.user.uid)throw new Error("請先完成 Google 登入");
     const key=await this.enrollmentKey(cid,sno,seat),snap=await FB.db.collection("classes").doc(cid).collection("enrollments").doc(key).get();
@@ -8363,7 +8379,7 @@ async function studentRegistrationComplete(st){
     const packet=await CLOUD.callServer("registrationStatus",{});
     if(packet&&packet.student)Object.assign(st,packet.student);
     return !!(packet&&packet.complete);
-  }catch(e){console.warn("registration status",e);return true;}
+  }catch(e){console.warn("registration status",e);return false;}
 }
 function loginLoading(title,detail,step){
   const old=document.getElementById("loginFlowLoading"),at=Math.max(1,Math.min(3,Number(step)||1));
@@ -12936,7 +12952,7 @@ function teacherRoster(){
       + '生日<input type="text" data-birth="'+s.id+'" value="'+esc(String(s.birth||""))+'" placeholder="20130215" style="width:90px;padding:2px 4px"></div>'
       + '<div class="mini">📧<input type="text" data-email="'+s.id+'" value="'+esc(s.email||"")+'" placeholder="學生Google信箱" style="width:150px;padding:2px 4px">'
       + ((s.email||"").trim()
-          ? (s.registrationComplete===true?' <span class="tag" style="background:#3a7;font-size:10px">已完成註冊</span>':' <span class="tag" style="background:#d58a16;font-size:10px">待完成選角</span>')+' <button class="btn danger" data-unbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="清空信箱,讓學生重新認領">解綁</button>'
+          ? (s.registrationComplete===true?' <span class="tag" style="background:#3a7;font-size:10px">已完成註冊</span>':' <span class="tag" style="background:#d58a16;font-size:10px">待完成選角</span>')+' <button class="btn" data-rosterbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="將姓名、學號、座號與信箱同步到註冊索引">同步綁定</button> <button class="btn danger" data-unbind="'+s.id+'" style="padding:0 8px;font-size:11px" title="清空信箱,讓學生重新認領">解綁</button>'
           : ' <span class="tag" style="background:#999;font-size:10px">待認領</span>')
       + '</div></td>'
       + '<td class="num">Lv.'+s.level+'<div class="mini num">'+s.gold+' 金・SP '+s.spPoints+'</div></td>'
@@ -13000,10 +13016,12 @@ function teacherRoster(){
     + '<input type="text" id="nsName" placeholder="新學生姓名" style="width:130px">'
     + '<input type="text" id="nsSno" placeholder="學號" style="width:90px">'
     + '<input type="text" id="nsSeat" placeholder="座號" style="width:65px">'
-    + '<input type="email" id="nsEmail" placeholder="學生信箱" style="width:180px">'
+    + '<input type="email" id="nsEmail" placeholder="Google 信箱（必填）" style="width:190px">'
+    + '<input type="text" id="nsBirth" maxlength="8" inputmode="numeric" placeholder="生日 20130215（選填）" style="width:155px">'
     + '<select id="nsJob">'+jOpts+'</select>'
     + '<select id="nsGroup">'+gOpts+'</select>'
-    + '<button class="btn gold" id="nsAdd">加入學生</button></div>'
+    + '<button class="btn gold" id="nsAdd">建立名冊並預先綁定</button></div>'
+    + '<div class="mini" style="margin-top:7px;line-height:1.7">教師輸入的 Google 信箱會成為這筆名冊唯一可認領的帳號。學生仍須掃描本節課 QR、使用同一信箱登入，並在最後確認畫面完成素體與職業選擇。</div>'
     + '</div>'
     + '<div style="'+showSection('grades')+'">'+gradePanelHtml()+'</div>'
     + '<div class="panel" style="'+showSection('groups')+'"><h3>分組</h3>'
@@ -13694,28 +13712,50 @@ function bindTeacher(){
   if(copyCode) copyCode.onclick=async()=>{try{await navigator.clipboard.writeText(CLOUD.cid);toast("班級代碼已複製："+CLOUD.cid);}catch(_){prompt("請複製班級代碼",CLOUD.cid);}};
   const classQrBtn=document.getElementById("openClassQrBtn"); if(classQrBtn) classQrBtn.onclick=openQrModal;
   const nsAdd = document.getElementById("nsAdd");
-  if(nsAdd) nsAdd.onclick = ()=>{
+  if(nsAdd) nsAdd.onclick = async()=>{
     const name = document.getElementById("nsName").value.trim();
     const sno = (document.getElementById("nsSno")?document.getElementById("nsSno").value:"").trim();
     const seat = (document.getElementById("nsSeat")?document.getElementById("nsSeat").value:"").trim();
     const email = (document.getElementById("nsEmail")?document.getElementById("nsEmail").value:"").trim().toLowerCase();
+    const birth = (document.getElementById("nsBirth")?document.getElementById("nsBirth").value:"").trim();
     if(!name){ toast("請輸入姓名", true); return; }
     if(!sno){ toast("請輸入學號(家長查看與識別用,不可重複)", true); return; }
     if(!seat){ toast("請輸入班級座號", true); return; }
     if(state.students.some(x=>String(x.sno||"")===sno)){ toast("學號 "+sno+" 已存在,請確認", true); return; }
     if(state.students.some(x=>String(x.seat||x.sno||"")===seat)){ toast("座號 "+seat+" 已存在,請確認", true); return; }
-    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("學生信箱格式不正確",true);return;}
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("請輸入學生實際使用的 Google 信箱",true);return;}
+    if(state.students.some(x=>String(x.email||"").trim().toLowerCase()===email)){toast("這個 Google 信箱已綁定其他名冊角色",true);return;}
+    if(birth&&!rosterBirthValid(birth)){toast("生日請填有效的西元 8 碼，例如 20130215",true);return;}
     const id = "S" + String(state.nextIdNum++).padStart(2,"0");
     const ns = newStudent(id, name, document.getElementById("nsJob").value, document.getElementById("nsGroup").value);
-    ns.sno = sno; ns.seat=seat; ns.email=email;
-    state.students.push(ns);
-    addLog(id, "加入公會,冒險開始!");
-    save(); render(); toast(name+"(學號 "+sno+"／座號 "+seat+")已加入");
+    ns.sno=sno;ns.seat=seat;ns.email=email;ns.birth=birth;ns.registrationComplete=false;ns.jobPending=true;ns.createdAt=Date.now();
+    nsAdd.disabled=true;nsAdd.textContent="正在建立並同步…";
+    try{
+      if(CLOUD.on())await CLOUD.teacherCreateRosterStudent(ns);
+      state.students.push(ns);
+      addLog(id,"👩‍🏫 教師建立名冊並預先綁定 Google 信箱，等待學生完成選角");
+      save();render();toast(name+" 已加入名冊；請使用 "+email+" 掃 QR 完成註冊");
+    }catch(e){
+      state.nextIdNum=Math.max(1,state.nextIdNum-1);nsAdd.disabled=false;nsAdd.textContent="建立名冊並預先綁定";
+      toast("名冊建立失敗："+(e.message||e),true);
+    }
   };
   const ase = document.getElementById("allowSelfEnroll");
   if(ase) ase.onchange = ()=>{ state.allowSelfEnroll = ase.checked; save(); toast(ase.checked?"學生可自行加入名冊":"僅限老師建立的名冊"); };
   const ajp = document.getElementById("allowJobPick");
   if(ajp) ajp.onchange = ()=>{ state.allowJobPick = ajp.checked; save(); toast(ajp.checked?"學生可自選職業":"學生沿用名冊職業"); };
+  app.querySelectorAll("[data-rosterbind]").forEach(b=>{
+    b.onclick=async()=>{
+      const st=stu(b.dataset.rosterbind);if(!st)return;
+      const email=String(st.email||"").trim().toLowerCase(),sno=String(st.sno||"").trim(),seat=String(st.seat||"").trim();
+      if(!sno||!seat||!email){toast("請先填完整學號、座號與 Google 信箱",true);return;}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("學生 Google 信箱格式不正確",true);return;}
+      if(state.students.some(x=>x.id!==st.id&&String(x.email||"").trim().toLowerCase()===email)){toast("這個 Google 信箱已綁定其他名冊角色",true);return;}
+      b.disabled=true;b.textContent="同步中…";
+      try{await CLOUD.teacherCreateRosterStudent(st);toast("已同步 "+st.name+" 的註冊名冊；請學生使用 "+email+" 掃 QR 登入");}
+      catch(e){b.disabled=false;b.textContent="同步綁定";toast("同步綁定失敗："+(e.message||e),true);}
+    };
+  });
   app.querySelectorAll("[data-unbind]").forEach(b=>{
     b.onclick = async()=>{
       const st = stu(b.dataset.unbind); if(!st) return;
@@ -13967,7 +14007,7 @@ function bindTeacher(){
   app.querySelectorAll("[data-seat]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.seat); if(s){ s.seat=inp.value.trim(); save(); if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊索引同步失敗："+(e.message||e),true)); } }; });
   app.querySelectorAll("[data-sno]").forEach(inp=>{ inp.onchange = ()=>{ const s=stu(inp.dataset.sno); if(!s) return; const v=inp.value.trim(); if(v && state.students.some(x=>x.id!==s.id && String(x.sno||"")===v)){ toast("學號 "+v+" 已被其他學生使用", true); inp.value=s.sno||""; return; } s.sno=v; save(); if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊索引同步失敗："+(e.message||e),true)); } });
   app.querySelectorAll("[data-birth]").forEach(inp=>{inp.onchange=()=>{const s=stu(inp.dataset.birth);if(!s)return;const v=inp.value.trim();if(v&&!rosterBirthValid(v)){toast("生日請填有效的西元 8 碼，例如 20130215",true);inp.value=s.birth||"";return;}s.birth=v;save();};});
-  app.querySelectorAll("[data-email]").forEach(inp=>{inp.onchange=()=>{const s=stu(inp.dataset.email);if(!s)return;const v=inp.value.trim().toLowerCase();if(v&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){toast("學生信箱格式不正確",true);inp.value=s.email||"";return;}if(v!==String(s.email||"").toLowerCase())s.registrationComplete=false;s.email=v;save();if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊同步失敗："+(e.message||e),true));toast(v?"信箱已存入名冊；學生仍需掃描本節課 QR 並完成 Google 驗證與選角":"信箱已清空");};});
+  app.querySelectorAll("[data-email]").forEach(inp=>{inp.onchange=()=>{const s=stu(inp.dataset.email);if(!s)return;const v=inp.value.trim().toLowerCase();if(v&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){toast("學生信箱格式不正確",true);inp.value=s.email||"";return;}if(v&&state.students.some(x=>x.id!==s.id&&String(x.email||"").trim().toLowerCase()===v)){toast("這個 Google 信箱已綁定其他名冊角色",true);inp.value=s.email||"";return;}if(v!==String(s.email||"").toLowerCase())s.registrationComplete=false;s.email=v;save();if(CLOUD.on()&&CLOUD.role==="teacher")CLOUD.syncEnrollments(true).catch(e=>toast("註冊名冊同步失敗："+(e.message||e),true));toast(v?"信箱已存入名冊；請按『同步綁定』後再讓學生掃 QR 完成 Google 驗證與選角":"信箱已清空");};});
   // 教師白名單
   const twBtn = document.getElementById("twAddBtn");
   if(twBtn) twBtn.onclick = ()=>{
