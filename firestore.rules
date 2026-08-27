@@ -88,6 +88,7 @@ service cloud.firestore {
           && request.resource.data.get("birth", "") == resource.data.get("birth", "")
           && request.resource.data.get("sno", "") == resource.data.get("sno", "")
           && request.resource.data.get("seat", "") == resource.data.get("seat", "")
+          && request.resource.data.get("registrationEmail", "") == resource.data.get("registrationEmail", "")
           && request.resource.data.get("registrationComplete", false) == resource.data.get("registrationComplete", false)
           && request.resource.data.level == resource.data.level
           && request.resource.data.xp == resource.data.xp
