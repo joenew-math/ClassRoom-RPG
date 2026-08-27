@@ -3326,6 +3326,9 @@ function backfill(p){
   removeLegacyTestData(p);
   p.groups=Array.isArray(p.groups)?p.groups.map(x=>String(x||"").trim()).filter(Boolean):["A"];
   p.students=Array.isArray(p.students)?p.students:[];
+  /* 學生只會下載去識別化 public/main，學習日誌刻意不會公開。
+   * 因此學生端必須把缺少的 log 視為空陣列，不能讓首頁渲染失敗。 */
+  p.log=Array.isArray(p.log)?p.log:[];
   p.teacherQuestions = Array.isArray(p.teacherQuestions) ? p.teacherQuestions : [];
   p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
   p.submissions = Array.isArray(p.submissions) ? p.submissions : [];
@@ -9238,7 +9241,7 @@ function renderParent(){
     state.students.forEach(x=>{ if(x.id!==s.id && x.name && x.name.length>1) m = m.split(x.name).join(maskName(x.name)); });
     return m;
   };
-  const parentLearningLogs = state.log.filter(l=>l.sid===s.id && parentLearningMajor(l.msg));
+  const parentLearningLogs = (state.log||[]).filter(l=>l.sid===s.id && parentLearningMajor(l.msg));
   const logs = parentLearningLogs.slice(0,30).map(l=>
     '<li><span class="num">['+esc(l.t)+']</span> '+esc(maskMsg(l.msg))+'</li>').join("") || '<li class="mini">尚無重大學習紀錄</li>';
   const learnRows = parentLearningLogs.slice(0,8).map(l=>
@@ -9250,7 +9253,7 @@ function renderParent(){
   const toMs=(v)=>{ const n=Date.parse(String(v||"")); return isNaN(n)?0:n; };
   const weeklyAwards=(state.awardLog||[]).filter(a=>a.sid===s.id&&toMs(a.t)>=sevenDaysAgo&&!a.reverted);
   const weeklyXp=weeklyAwards.reduce((a,x)=>a+(x.xp||0),0);
-  const weeklyLessons=state.log.filter(l=>l.sid===s.id&&l.msg.indexOf("回答知識挑戰")>=0&&toMs(l.t)>=sevenDaysAgo).length;
+  const weeklyLessons=(state.log||[]).filter(l=>l.sid===s.id&&l.msg.indexOf("回答知識挑戰")>=0&&toMs(l.t)>=sevenDaysAgo).length;
   const weeklyTasks=state.submissions.filter(x=>x.sid===s.id&&x.status==="approved"&&toMs(x.t)>=sevenDaysAgo).length;
   const learningNote = taskDone===activeTasks.length && activeTasks.length
     ? '本期任務皆已完成，請繼續保持！'
@@ -15031,7 +15034,7 @@ function renderStudent(){
   else if(view.tab==="lesson"){
     const l=state.lesson||{}, st=s.learningStreak||{days:0,total:0};
     const answered=!!(l.answered&&l.answered[s.id]);
-    const hist=state.log.filter(x=>x.sid===s.id&&x.msg.indexOf("回答知識挑戰")>=0).slice(0,5).map(x=>'<li><span class="num">['+esc(x.t)+']</span> '+esc(x.msg)+'</li>').join("")||'<li class="mini">勇敢舉手、說出你的想法，第一筆冒險紀錄正在等你！</li>';
+    const hist=(state.log||[]).filter(x=>x.sid===s.id&&x.msg.indexOf("回答知識挑戰")>=0).slice(0,5).map(x=>'<li><span class="num">['+esc(x.t)+']</span> '+esc(x.msg)+'</li>').join("")||'<li class="mini">勇敢舉手、說出你的想法，第一筆冒險紀錄正在等你！</li>';
     body=l.active&&l.mode==="zone"?zoneStudentHtml(s,l):'<div class="panel" style="background:linear-gradient(135deg,#edf7ff,#fff8df)"><h3>📣 我的課堂冒險</h3><div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0"><span class="stat-chip">🔥 學習連勝 <b class="num">'+(st.days||0)+' 天</b></span><span class="stat-chip">💡 總回答 <b class="num">'+(s.lessonAnswers||0)+' 次</b></span><span class="stat-chip">🏅 今日狀態 <b>'+(st.date===todayStr()?"已累積連勝":"等待第一題")+'</b></span></div>'
       +(l.active?'<div class="panel" style="margin:10px 0;border-color:#e2a500"><h3 style="margin:0">⚡ 進行中：'+esc(l.title||"知識挑戰")+'</h3><div style="margin:8px 0;white-space:pre-wrap">'+esc(l.prompt||"請留意老師的題目！")+'</div><div class="mini">回答成功可獲得 +'+(l.xp||0)+' XP'+(l.gold?"、+"+l.gold+" 金":"")+'。'+(answered?'<b style="color:#398b59">你已完成本題，太棒了！</b>':'請舉手回答，由老師判定後發放獎勵。')+'</div></div>':'<div class="panel" style="margin:10px 0"><b>🗺 等待老師開啟下一個知識挑戰</b><div class="mini" style="margin-top:5px">課堂中勇敢回答、說明思考過程、協助同學，都有機會增加經驗與連勝。</div></div>')
       +'<h3>📖 我的知識戰績</h3><ul class="log-list">'+hist+'</ul></div>';
@@ -15598,7 +15601,7 @@ function renderStudent(){
       + (CLOUD.on() && state.lbOptIn ? '<div class="panel"><h3>🌍 班級合作榜</h3><div class="mini" style="margin-bottom:8px">只顯示班級暱稱與全班摘要，不公開任何學生姓名。</div><button class="btn gold" id="stuLbView">查看班級合作榜</button></div>' : "");
   }
 
-  const myLogs = state.log.filter(l=>l.sid===s.id).slice(0,15)
+  const myLogs = (state.log||[]).filter(l=>l.sid===s.id).slice(0,15)
     .map(l=>'<li><span class="num">['+l.t+']</span> '+esc(l.msg)+'</li>').join("")
     || '<li>還沒有冒險紀錄。</li>';
 
