@@ -8459,6 +8459,11 @@ async function completeLoginSuccess(user, role){
         renderJobPick(ownStudent,email);
         return;
       }
+      if(ownStudent&&needsLegacyClaimReview(ownStudent)){
+        renderJobPick(ownStudent,email,{selectedJob:ownStudent.job});
+        toast("偵測到舊版素體代碼，請重新確認一次角色外型；不會重建名冊或清除進度。",true);
+        return;
+      }
       const s = ownStudent||state.students.find(x=>(x.email||"").toLowerCase()===email);
       if(s){
         CLOUD.saveStudentAccount(user,cid,s.id,email);          // 舊帳號登入成功後自動補建索引
@@ -8797,9 +8802,14 @@ async function finishEnroll(draft, job){
   }
 }
 /* 職業選擇頁(認領時) */
+function needsLegacyClaimReview(s){
+  const created=Number(s&&s.createdAt||0),recent=created>0&&Date.now()-created<30*86400000,base=String(s&&s.baseVariant||"");
+  return !!(s&&s.registrationComplete===true&&Number(s.registrationClaimVersion||0)<2&&recent&&(base==="male1"||base==="female1"));
+}
 function renderJobPick(st, email, draft){
   prepareScrollableAuthPage();
   draft=draft||{};
+  const repairMode=st.registrationComplete===true&&Number(st.registrationClaimVersion||0)<2;
   const jobs = JOB_LIST();
   let selectedBase = (draft.selectedBase&&BASE_VARIANTS[draft.selectedBase])?draft.selectedBase:((st.baseVariant&&BASE_VARIANTS[st.baseVariant])
     ? st.baseVariant : ((st.gender||"male")==="female"?"female1":BASE_TUNE_REFERENCE));
@@ -8824,8 +8834,8 @@ function renderJobPick(st, email, draft){
   }).join("");
   const baseChoices=Object.entries(BASE_VARIANTS).map(([k,src])=>'<button type="button" class="base-choice'+(k===selectedBase?' on':'')+'" data-claimbase="'+k+'" style="background:#fff;border:3px solid '+(k===selectedBase?'var(--gold)':'#141414')+';border-radius:9px;padding:3px;cursor:pointer"><img src="'+src+'" alt="'+esc(BASE_VARIANT_SPEC[k].label)+'" style="width:100%;height:82px;object-fit:contain;image-rendering:pixelated"><span class="mini" style="display:block">'+esc(BASE_VARIANT_SPEC[k].label)+'</span></button>').join('');
   const birthFix=!rosterBirthValid(String(st.birth||""))?'<div class="panel" style="width:100%;max-width:520px;margin:0 auto 14px;text-align:left;background:#eef8ff"><label for="claimFinishBirth"><b>補填學生生日</b>（西元 YYYYMMDD）</label><input id="claimFinishBirth" value="'+esc(draft.birth||'')+'" maxlength="8" inputmode="numeric" autocomplete="bday" placeholder="例：20130215" style="width:100%;margin-top:6px"><div class="mini" style="margin-top:5px">舊版尚未保存生日；請輸入西元年 4 碼＋月 2 碼＋日 2 碼。</div></div>':'';
-  app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+',建立你的冒險角色</h2>'
-    + '<p>先選擇素體並調整位置，再點選職業。點職業只會預選，不會立即建立角色。</p>'
+  app.innerHTML = '<div class="home"><div class="crest">⚔️</div><h2>'+esc(st.name)+','+(repairMode?'重新確認角色素體':'建立你的冒險角色')+'</h2>'
+    + '<p>'+(repairMode?'舊版曾把原始素體代碼誤判為其他款式。請重新選擇、調整並確認；班級進度與名冊都會保留。':'先選擇素體並調整位置，再點選職業。點職業只會預選，不會立即建立角色。')+'</p>'
     + birthFix
     + '<div class="panel" style="width:100%;max-width:720px;margin:0 auto 16px;text-align:left"><h3 style="margin-top:0">🧍 選擇生理類型與素體</h3>'
     + '<div class="enroll-base-grid">'+baseChoices+'</div>'
@@ -8881,32 +8891,52 @@ function renderJobPick(st, email, draft){
 }
 function renderClaimReview(st,email,draft){
   prepareScrollableAuthPage();
-  const J=JOB_INFO[draft.selectedJob],appearance={baseVariant:draft.selectedBase,gender:draft.selectedBase.indexOf('female')===0?'female':'male',baseTune:Object.assign({},draft.selectedTune)},sample=Object.assign({},st,{job:draft.selectedJob,roStyle:true,baseVariant:draft.selectedBase,gender:appearance.gender,baseTune:appearance.baseTune});
-  app.innerHTML='<div class="home" style="min-height:100vh;padding-bottom:max(36px,env(safe-area-inset-bottom))"><div class="crest">📋</div><h2>建立角色前最後確認</h2><p>確認無誤後才會正式送出職業與角色外型。</p>'
+  const repairMode=st.registrationComplete===true&&Number(st.registrationClaimVersion||0)<2,J=JOB_INFO[draft.selectedJob],appearance={baseVariant:draft.selectedBase,gender:draft.selectedBase.indexOf('female')===0?'female':'male',baseTune:Object.assign({},draft.selectedTune)},sample=Object.assign({},st,{job:draft.selectedJob,roStyle:true,baseVariant:draft.selectedBase,gender:appearance.gender,baseTune:appearance.baseTune});
+  app.innerHTML='<div class="home" style="min-height:100vh;padding-bottom:max(36px,env(safe-area-inset-bottom))"><div class="crest">📋</div><h2>'+(repairMode?'修正角色前最後確認':'建立角色前最後確認')+'</h2><p>確認無誤後才會正式送出職業與角色外型。</p>'
     +'<div class="panel" style="width:100%;max-width:620px;margin:0 auto"><div style="display:grid;grid-template-columns:minmax(150px,210px) 1fr;gap:16px;align-items:center"><div>'+dollSVG(sample,190)+'</div><div style="text-align:left;line-height:1.85">'
     +'<h3 style="margin:0 0 8px">'+esc(st.name)+'｜'+esc(J.name)+'</h3><div><b>班級：</b>'+esc(CLOUD.cid||'')+'</div><div><b>學號／座號：</b>'+esc(st.sno||'')+'／'+esc(st.seat||st.sno||'')+'</div><div><b>登入信箱：</b>'+esc(email)+'</div><div><b>生日格式：</b>'+esc(String(draft.birth).slice(0,4)+'／'+String(draft.birth).slice(4,6)+'／'+String(draft.birth).slice(6,8))+'</div><hr style="margin:10px 0"><div><b>職業定位：</b>'+esc(J.role)+'</div><div><b>職業特色：</b>'+esc(J.tagline)+'</div><div><b>戰鬥方式：</b>'+esc(J.skill)+'</div></div></div></div>'
-    +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn" id="claimReviewBack">← 返回修改</button><button class="btn gold" id="claimReviewSubmit" style="font-size:18px">確認並正式建立角色</button></div></div>';
+    +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn" id="claimReviewBack">← 返回修改</button><button class="btn gold" id="claimReviewSubmit" style="font-size:18px">'+(repairMode?'確認並修正角色':'確認並正式建立角色')+'</button></div></div>';
   document.getElementById('claimReviewBack').onclick=()=>renderJobPick(st,email,draft);
   document.getElementById('claimReviewSubmit').onclick=()=>{const b=document.getElementById('claimReviewSubmit');b.disabled=true;b.textContent='正在建立角色…';finishClaim(st,email,draft.selectedJob,appearance,draft.birth);};
 }
-/* 完成認領:寫入信箱+職業,重算該職業成長 */
-async function finishClaim(st, email, job, appearance, birth){
+function claimAppearanceMatches(student,job,appearance){
+  const a=appearance||{},t=a.baseTune||{},s=student||{},st=s.baseTune||{},near=(x,y)=>Math.abs(Number(x||0)-Number(y||0))<.011;
+  return String(s.job||"")===String(job||"")&&String(s.baseVariant||"")===String(a.baseVariant||"")&&near(st.x,t.x)&&near(st.y,t.y)&&near(st.s,t.s);
+}
+function enterClaimedStudent(st,packet,recovered){
+  if(packet&&packet.student)Object.assign(st,packet.student);
+  try{addLog(st.id,"🎉 完成綁定,成為"+((JOB_INFO[st.job]||{}).name||"冒險者")+"!冒險開始!");save();}catch(e){console.warn("local claim finish",e);}
+  // 認領當下才知道「我是誰」：補上本人索引並改掛學生範圍監聽。
+  CLOUD.myId=st.id;CLOUD.myGroup=st.group;
+  view={page:"student",sid:st.id,tab:"stats",shopFilter:"all",role:"student"};
+  if(CLOUD.on())CLOUD.listen();
+  registrationLoadingDone();render();
+  toast((recovered?"已確認雲端角色資料，":"歡迎加入，")+st.name+"（"+((JOB_INFO[st.job]||{}).name||"冒險者")+"）！");
+}
+/* 完成認領：伺服器交易與本機畫面分開處理，避免雲端成功卻誤報綁定失敗。 */
+async function finishClaim(st,email,job,appearance,birth){
+  registrationLoading("正在完成角色註冊","正在儲存素體、位置與職業，請勿關閉頁面…");
   try{
-    registrationLoading("正在完成角色註冊","正在儲存素體、位置與職業，請勿關閉頁面…");
-    const packet=await registrationQueuedCall("finishStudentClaim",{job,appearance,birth},msg=>registrationLoading("正在完成角色註冊",msg));
-    if(packet&&packet.student)Object.assign(st,packet.student);
-    addLog(st.id, "🎉 完成綁定,成為"+JOB_INFO[st.job].name+"!冒險開始!");
-    save();
-    // 📊 認領當下才知道「我是誰」,補上 myId/myGroup 並重掛監聽(改成只監聽自己+同組)
-    CLOUD.myId = st.id; CLOUD.myGroup = st.group;
-    toast("歡迎加入,"+st.name+"("+JOB_INFO[st.job].name+")!");
-    view={page:"student", sid:st.id, tab:"stats", shopFilter:"all", role:"student"};
-    if(CLOUD.on()) CLOUD.listen();
-    registrationLoadingDone();render();
-  }catch(e){
+    const repair=st.registrationComplete===true&&Number(st.registrationClaimVersion||0)<2,packet=await registrationQueuedCall("finishStudentClaim",{job,appearance,birth,repair},msg=>registrationLoading(repair?"正在修正角色外型":"正在完成角色註冊",msg));
+    enterClaimedStudent(st,packet,false);return;
+  }catch(originalError){
+    /* 回應中斷不等於交易失敗：重新讀取完成狀態，避免學生重複建立角色。
+     * 2026-08 素體代碼修正前的完成紀錄可執行一次 repair，救回 male0/female0 與調整座標。 */
+    try{
+      registrationLoading("正在確認建立結果","網路回應中斷，正在核對角色是否已安全建立…");
+      let status=await CLOUD.callServer("registrationStatus",{}),packet=status;
+      if(status&&status.complete){
+        if(!claimAppearanceMatches(status.student,job,appearance)&&Number(status.student&&status.student.registrationClaimVersion||0)<2){
+          registrationLoading("正在修正角色外型","已找到角色，正在套用剛才確認的素體與位置…");
+          packet=await CLOUD.callServer("finishStudentClaim",{job,appearance,birth,repair:true});
+        }
+        enterClaimedStudent(st,packet,true);return;
+      }
+    }catch(verifyError){console.warn("claim result verification",verifyError);}
     registrationLoadingDone();
-    const b=document.getElementById("claimReviewSubmit");if(b){b.disabled=false;b.textContent="確認並正式建立角色";}
-    toast("綁定失敗:"+(e.message||e), true);
+    const b=document.getElementById("claimReviewSubmit");if(b){b.disabled=false;b.textContent="重新確認並建立角色";}
+    const msg=String(originalError&&originalError.message||originalError||"未知錯誤");
+    toast("角色尚未完成建立："+msg+"。資料仍保留，可直接重新確認，不必重新填寫名冊。",true);
   }
 }
 /* 教師:班級選擇頁 */
