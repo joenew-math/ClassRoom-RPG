@@ -40,9 +40,7 @@
   header h1{font-size:16px;letter-spacing:2px;color:var(--parch)}
   header .tag{font-size:11px;color:var(--gold);border:1px solid var(--gold-dim);padding:2px 8px;border-radius:3px}
 header .sp{flex:1}
-#syncStatus{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1.5px solid #141414;border-radius:999px;background:#f3ead4;color:#514936;font-weight:900;white-space:nowrap}
-#syncStatus[data-state="synced"]{background:#ddf5df;color:#246b34}#syncStatus[data-state="syncing"],#syncStatus[data-state="queued"]{background:#fff2ba;color:#765100}#syncStatus[data-state="error"]{background:#ffe0dc;color:#a3261c}#syncStatus[data-state="offline"]{background:#e7e7e7;color:#555}
-@media(max-width:760px){#syncStatus{max-width:105px;overflow:hidden;text-overflow:ellipsis}header .tag{display:none}}
+@media(max-width:760px){header .tag{display:none}}
   button{font-family:inherit;cursor:pointer;border:none;border-radius:6px;font-size:13px}
   .btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);padding:7px 14px;transition:background .15s}
   .btn:hover{background:#343f63}
@@ -1108,7 +1106,6 @@ try{
   <h1>⚔ 班級 RPG</h1><span class="tag">班級經營公會 v1.0</span>
   <span class="sp"></span>
   <span id="who" class="mini"></span>
-  <span id="syncStatus" class="mini" role="status" aria-live="polite" title="資料同步狀態"></span>
   <button class="btn" id="btnSound" title="音效開關">🔊</button>
   <button class="btn" id="btnHome" style="display:none">切換身分</button>
   <button class="btn" id="btnLogout" style="display:none">🚪 登出</button>
@@ -8589,14 +8586,6 @@ function offerStudentQuickLogin(user){
     try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","auto");sessionStorage.removeItem("rpg-student-join");}catch(_){}
     loginSuccess(user,"student");
   };
-}
-function offerTeacherQuickLogin(user){
-  if(!user||!document.getElementById("teacherQrGoogle")||document.getElementById("teacherQuickLogin"))return;
-  const button=document.getElementById("teacherQrGoogle"),email=String(user.email||""),parts=email.split("@"),masked=parts.length>1?(parts[0].slice(0,2)+"•••@"+parts[1]):"目前的 Google 帳號",box=document.createElement("div");
-  box.id="teacherQuickLogin";box.style.marginTop="12px";box.innerHTML='<div class="mini" style="padding:8px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px">目前帳號：<b>'+esc(user.displayName||masked)+'</b>（'+esc(masked)+'）</div><button class="btn gold" id="teacherQuickContinue" style="width:100%;margin-top:8px">確認使用目前帳號</button><div class="mini" style="margin-top:5px">共用裝置請先確認這是老師本人的帳號。</div>';
-  button.parentElement.insertBefore(box,button);button.textContent="使用其他 Google 帳號";button.classList.remove("gold");
-  requestAnimationFrame(fitHomePane);setTimeout(fitHomePane,80);
-  document.getElementById("teacherQuickContinue").onclick=()=>loginSuccess(user,"teacher");
 }
 /* 掃描本節課 QR 的第一次登入：後端自動建立／認領名冊，再進入選角。 */
 function prepareScrollableAuthPage(){
@@ -16216,10 +16205,12 @@ window.addEventListener("online",revalidateStudentClassSession);
 
 /* ── 線上登入優化:整頁跳轉登入回跳接手 + 重新整理自動恢復 ── */
 if(FB.ready&&!_mobaPhonePage){
-  let _loginResumed = false;
+  let _loginResumed=false,_entryLoginStarted=false;
   // A. 手機整頁跳轉登入回來:接手完成登入
   FB.auth.getRedirectResult().then(res=>{
     if(res && res.user){
+      if(_entryLoginStarted)return;
+      _entryLoginStarted=true;
       _loginResumed = true;
       let role = null;
       try{ role = sessionStorage.getItem("rpg-login-role"); sessionStorage.removeItem("rpg-login-role"); }catch(_){}
@@ -16231,14 +16222,14 @@ if(FB.ready&&!_mobaPhonePage){
     const code=String(err&&err.code||"");
     if(code!=="auth/popup-closed-by-user")toast("Google 登入回復失敗："+(err&&err.message||err),true);
   });
-  // B. 重新整理/隔天再開：只有課堂／教師 QR 入口顯示帳號確認；一般首頁不沿用舊角色。
+  // B. 教師 QR 已由 Google 完成身分驗證，直接進入班級選擇，不再要求第二次確認。
   FB.auth.onAuthStateChanged(user=>{
     if(_loginResumed || !user || FB.user) return;             // 已處理過/未登入/已在使用中
     if(view.page!=="home") return;                            // 使用者已在別的頁面,不干擾
     const entry=new URLSearchParams(location.search),entryCid=normalizeClassCode(entry.get("class")||"");
     if(entry.get("teacher")==="1"){
-      // 教室與手機都可能是共用裝置；即使 Firebase 記得帳號，也必須由老師確認本人身分。
-      FB.user=user;offerTeacherQuickLogin(user);return;
+      if(_entryLoginStarted)return;
+      _entryLoginStarted=true;try{sessionStorage.removeItem("rpg-login-role");}catch(_){}FB.user=user;loginSuccess(user,"teacher");return;
     }
     else if(entryCid&&(entry.get("session")||entry.get("dota")||entry.get("reward"))){
       // 共用平板不可自動沿用上一位學生；顯示可辨識的快速登入，讓本人明確確認。
