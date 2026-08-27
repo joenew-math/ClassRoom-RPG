@@ -3972,10 +3972,18 @@ const CLOUD = {
       account=await this.getStudentAccount(FB.user,cid);
       if(!account)throw new Error("此帳號尚未加入這個班級，請先完成新生註冊");
     }
-    const reads=[c.collection(this.role==="teacher"?"data":"public").doc("main").get()];
-    if(this.role==="teacher")reads.push(c.collection("students").get(),c.collection("items").get(),c.collection("submissions").get(),c.collection("private").doc("lessonAnswer").get(),c.collection("private").doc("questionBank").get(),c.collection("helpRequests").get());
-    else reads.push(c.collection("publicRoster").get(),c.collection("items").where("status","==","approved").get(),c.collection("students").doc(String(account.sid)).get(),c.collection("submissions").where("sid","==",String(account.sid)).get(),c.collection("items").where("creatorId","==",String(account.sid)).get());
-    const got=await Promise.all(reads),metaDoc=got[0];
+    let got,metaDoc;
+    if(this.role==="teacher"){
+      got=await Promise.all([c.collection("data").doc("main").get(),c.collection("students").get(),c.collection("items").get(),c.collection("submissions").get(),c.collection("private").doc("lessonAnswer").get(),c.collection("private").doc("questionBank").get(),c.collection("helpRequests").get()]);
+      metaDoc=got[0];
+    }else{
+      /* 登入核心只依賴班級公開設定與自己的角色。商店／任務等附加查詢個別容錯，
+       * 避免其中一個索引或網路請求失敗時，把已成功註冊的角色擋在登入頁外。 */
+      const core=await Promise.all([c.collection("public").doc("main").get(),c.collection("students").doc(String(account.sid)).get()]);
+      const extras=await Promise.allSettled([c.collection("publicRoster").get(),c.collection("items").where("status","==","approved").get(),c.collection("submissions").where("sid","==",String(account.sid)).get(),c.collection("items").where("creatorId","==",String(account.sid)).get()]);
+      const empty={docs:[],empty:true},pick=i=>extras[i].status==="fulfilled"?extras[i].value:(console.warn("student class optional load",extras[i].reason),empty);
+      got=[core[0],pick(0),pick(1),core[1],pick(2),pick(3)];metaDoc=got[0];
+    }
     if(!metaDoc.exists) throw new Error("找不到班級資料");
     const meta = metaDoc.data();
     if(this.role==="teacher"){
@@ -8183,7 +8191,7 @@ function homeGuideHtml(forceOpen){
     + '<div class="home-guide-index"><span>① 📱 掃班級 QR</span><span>② 🪪 建立名冊角色</span><span>③ 🧍 選角與校正</span></div>'
     + '<div class="guide-steps">'
     + '<div class="guide-step"><span class="guide-step-icon">📱</span><div><b>步驟 1・掃描老師大屏的班級 QR</b><div class="mini">QR 已含 5 碼班級代碼與本節課通行證，不需要再手動輸入班級代碼。</div><div class="guide-example"><span>班級代碼範例：7K9M2</span></div></div></div>'
-    + '<div class="guide-step"><span class="guide-step-icon">🔐</span><div><b>步驟 2・使用自己的 Google 帳號</b><div class="mini">系統會自動判斷：已有角色直接進入；第一次使用則開啟新生註冊。</div><div class="guide-example"><span>student@mail.edu.tw</span></div></div></div>'
+    + '<div class="guide-step"><span class="guide-step-icon">🔐</span><div><b>步驟 2・選擇登入或第一次註冊</b><div class="mini">已有角色請按「Google 登入」；第一次使用請按「第一次註冊」，兩個流程不會混在一起。</div><div class="guide-example"><span>student@mail.edu.tw</span></div></div></div>'
     + '<div class="guide-step"><span class="guide-step-icon">🪪</span><div><b>步驟 3・第一次填姓名、學號與座號</b><div class="mini">系統會自動加入本班名冊並平均編組；若老師已匯入名冊，則會自動認領原資料。</div><div class="guide-example"><span>姓名：王小明</span><span>學號：1120345</span><span>座號：15</span></div></div></div>'
     + '<div class="guide-step"><span class="guide-step-icon">🧍</span><div><b>步驟 4・選角色並調整位置</b><div class="mini">選擇生理男／生理女、素體與職業，並用方向與大小按鈕讓裝備正確對齊；完成後即建立角色。</div></div></div>'
     + '</div><div class="mini" style="margin-top:9px;color:#6a5530">⚠️ 學號、座號或 Google 帳號已被使用時，系統會停止註冊並請老師核對，避免重複角色。</div>'
@@ -8308,11 +8316,11 @@ function renderHome(){
   if(studentEntry){
     const title=wantsMoba?(dotaEntry==="signup"?"Dota 即時報名":"Dota 戰場參戰"):(wantsReward?"領取教師獎勵":"本節課學生登入");
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>🎒 '+title+'</h3>'
-      +'<div class="mini" style="line-height:1.8">班級代碼 <b class="num">'+esc(cid)+'</b><br>請使用自己的 Google 帳號；系統會自動判斷是否為第一次註冊。</div>'
+      +'<div class="mini" style="line-height:1.8">班級代碼 <b class="num">'+esc(cid)+'</b><br>已有角色與第一次註冊分開進入，請選擇正確按鈕。</div>'
       +'<div class="mini" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:11px 0"><span>① Google 登入</span><span>② 核對班級</span><span>③ 進入／選角</span></div>'
       +authBrowserWarning
-      +'<div style="display:grid;gap:9px;margin-top:14px"><button class="btn gold" id="studentQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:18px;padding:11px 20px">Google 登入／第一次註冊</button>'
-      +'<div class="mini" style="padding:8px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px">已有角色會直接進入；第一次使用會自動加入班級名冊並開啟選角。</div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px"><button class="btn gold" id="studentQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:17px;padding:11px 12px">🔐 Google 登入</button><button class="btn" id="studentFirstRegister"'+(fbOk?'':' disabled')+' style="font-size:17px;padding:11px 12px;background:#fff3c4;color:#141414;border:3px solid #141414">🪪 第一次註冊</button>'
+      +'<div class="mini" style="grid-column:1/-1;padding:8px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px">已有角色選左邊；尚未建立角色才選右邊，完成後會進入選角與最後確認。</div></div>'
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
   }else if(teacherEntry){
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>📜 教師登入</h3><div class="mini">完成 Google 登入後，系統會顯示您建立或管理的班級。</div>'
@@ -8333,7 +8341,9 @@ function renderHome(){
   requestAnimationFrame(fitHomePane);setTimeout(fitHomePane,120);
   if(!window._homeFitBound){window._homeFitBound=true;window.addEventListener("resize",()=>{if(view.page==="home")fitHomePane();});}
   if(studentEntry){
-    document.getElementById("studentQrGoogle").onclick=()=>{try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","auto");sessionStorage.removeItem("rpg-student-join");}catch(_){}googleLogin("student");};
+    const beginStudentAuth=mode=>{try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode",mode);sessionStorage.removeItem("rpg-student-join");}catch(_){}googleLogin("student");};
+    document.getElementById("studentQrGoogle").onclick=()=>beginStudentAuth("login");
+    document.getElementById("studentFirstRegister").onclick=()=>beginStudentAuth("auto");
     return;
   }
   if(teacherEntry){document.getElementById("teacherQrGoogle").onclick=()=>googleLogin("teacher");return;}
@@ -8425,6 +8435,10 @@ async function completeLoginSuccess(user, role){
     if(!cid){ renderStudentSessionMissing(email,"請掃描老師投影的本節課班級 QR Code，再使用 Google 帳號登入。"); return; }
     try{
       let enrollment=null;
+      if(studentMode==="login"){
+        const account=await CLOUD.getStudentAccount(user,cid);
+        if(!account){CLOUD.cid=cid;renderStudentLoginMissing(email);return;}
+      }
       if(studentMode==="register"){
         if(!join||normalizeClassCode(join.cid)!==normalizeClassCode(cid)||!rosterBirthValid(String(join.birth||""))){renderClaim(email,join);return;}
         enrollment=await CLOUD.beginEnrollment(user,cid,join.sno,join.seat,email,join.birth);
@@ -8576,16 +8590,18 @@ function offerStudentQuickLogin(user){
   const grid=document.getElementById("studentQrGoogle").parentElement;if(!grid)return;
   const email=String(user.email||""),parts=email.split("@"),masked=parts.length>1?(parts[0].slice(0,2)+"•••@"+parts[1]):"目前的 Google 帳號";
   const box=document.createElement("div");box.id="studentQuickLogin";
-  box.innerHTML='<div class="mini student-quick-account">目前帳號：<b>'+esc(user.displayName||masked)+'</b>（'+esc(masked)+'）</div><button class="btn gold" id="studentQuickContinue" style="width:100%;margin-top:7px">⚡ 使用目前帳號進入</button><div class="mini student-quick-hint">不是你的帳號？請改按下方使用其他 Google 帳號。</div>';
+  box.innerHTML='<div class="mini student-quick-account">目前帳號：<b>'+esc(user.displayName||masked)+'</b>（'+esc(masked)+'）</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px"><button class="btn gold" id="studentQuickContinue">🔐 登入角色</button><button class="btn" id="studentQuickRegister">🪪 第一次註冊</button></div><div class="mini student-quick-hint">不是你的帳號？請改按下方使用其他 Google 帳號。</div>';
   grid.insertBefore(box,grid.firstChild);
   const other=document.getElementById("studentQrGoogle");if(other)other.textContent="使用其他 Google 帳號";
   // Firebase 登入狀態在首頁縮放完成後才回傳；插入快速登入卡後必須重算高度，避免手機底部按鈕被裁切。
   requestAnimationFrame(fitHomePane);setTimeout(fitHomePane,80);
-  document.getElementById("studentQuickContinue").onclick=()=>{
+  const continueWith=mode=>{
     const q=new URLSearchParams(location.search),cid=normalizeClassCode(q.get("class")||"");
-    try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode","auto");sessionStorage.removeItem("rpg-student-join");}catch(_){}
+    try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode",mode);sessionStorage.removeItem("rpg-student-join");}catch(_){}
     loginSuccess(user,"student");
   };
+  document.getElementById("studentQuickContinue").onclick=()=>continueWith("login");
+  document.getElementById("studentQuickRegister").onclick=()=>continueWith("auto");
 }
 /* 掃描本節課 QR 的第一次登入：後端自動建立／認領名冊，再進入選角。 */
 function prepareScrollableAuthPage(){
