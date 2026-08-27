@@ -1977,6 +1977,18 @@ function genFactor(){
 let QBANK=DUNGEON_BUILTIN_QUESTIONS.slice(); // 實際使用的題庫
 let volPick='auto';                   // auto = 依樓層對應冊別
 
+function splitQuestionVisual(raw,existingFig){
+  const figures=[];
+  const question=String(raw||'')
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi,svg=>{figures.push(svg);return '';})
+    .replace(/<img\b[^>]*>/gi,img=>{figures.push(img);return '';})
+    .trim();
+  return {
+    q:question||'請觀察圖形並作答。',
+    fig:[existingFig||'',...figures].filter(Boolean).join('')
+  };
+}
+
 function flattenBank(arr){
   const out=[];
   for(const b of arr){
@@ -1984,14 +1996,16 @@ function flattenBank(arr){
       for(const q of b.qs){
         if(!q||!q.q||!q.opts||!q.ans)continue;
         const chap=String(b.chap||''),unit=String(b.unit||''),topic=String(b.topic||'');
-        out.push({v:Number(b.vol)||1,vol:Number(b.vol)||1,grade:String(b.grade||''),q:q.q,opts:q.opts.slice(),ans:q.ans,
+        const visual=splitQuestionVisual(q.q,q.fig);
+        out.push({v:Number(b.vol)||1,vol:Number(b.vol)||1,grade:String(b.grade||''),q:visual.q,fig:visual.fig,opts:q.opts.slice(),ans:q.ans,
           sol:q.sol||'',chap,unit,topic,scopeKey:courseScopeKey(chap,unit),source:'course',
           difficulty:q.difficulty||q.diff||q.tier||b.difficulty||b.diff||b.tier||'',
           tag:['課程目錄',unit,topic].filter(Boolean).join(' · ')});
       }
     }else if(b.q&&b.opts&&b.ans){                     // 已攤平格式
       const chap=String(b.chap||''),unit=String(b.unit||''),topic=String(b.topic||'');
-      out.push({v:Number(b.v||b.vol)||1,vol:Number(b.v||b.vol)||1,q:b.q,opts:b.opts.slice(),ans:b.ans,
+      const visual=splitQuestionVisual(b.q,b.fig);
+      out.push({v:Number(b.v||b.vol)||1,vol:Number(b.v||b.vol)||1,q:visual.q,fig:visual.fig,opts:b.opts.slice(),ans:b.ans,
         sol:b.sol||'',chap,unit,topic,scopeKey:b.scopeKey||courseScopeKey(chap,unit),source:b.source||'course',
         difficulty:b.difficulty||b.diff||b.tier||'',tag:b.tag||''});
     }
