@@ -1054,6 +1054,8 @@ body.teacher-zone-mode .zone-solution{position:relative;left:auto;bottom:auto;z-
 body.teacher-zone-mode .zone-quiz-controls{position:relative;left:auto;bottom:auto;z-index:42;grid-row:5;width:max-content;max-width:100%;margin:0 auto;padding:5px 9px;transform:none;border:3px solid #141414;border-radius:12px;background:rgba(255,248,224,.98);box-shadow:3px 3px 0 rgba(0,0,0,.65)}
 /* 學生手機：題目卡清楚、可換行，地圖保持可操作比例。 */
 .zone-student .zone-question{position:relative;width:100%;padding:10px 11px;box-sizing:border-box}.zone-student .zone-question>b{font-size:clamp(20px,5.6vw,30px);line-height:1.28;white-space:normal;text-wrap:balance}.zone-student .zone-question-img{max-width:92%;max-height:20dvh;margin:7px auto 2px}.zone-student .zone-student-map{width:100%;max-width:520px;aspect-ratio:16/10;margin:8px auto}
+/* 教師發布題目後，學生端立即進入獨立作答畫面；題目結束即由 render() 自動還原。 */
+body.student-zone-mode{overflow:hidden;background:#121722}body.student-zone-mode>header,body.student-zone-mode>#copyrightWatermark{display:none!important}body.student-zone-mode main#app{position:fixed;inset:0;z-index:250;width:100vw;height:100vh;height:100dvh;max-width:none;margin:0;padding:0;overflow:hidden;background:#121722}.student-zone-screen{position:fixed;inset:0;z-index:260;display:flex;flex-direction:column;align-items:center;overflow:auto;padding:max(7px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));background:radial-gradient(circle at 50% 0,#31405f 0,#171d2b 48%,#0d1119 100%);box-sizing:border-box}.student-zone-livebar{position:sticky;top:0;z-index:280;width:min(720px,100%);margin:0 auto 7px;padding:7px 11px;border:3px solid #141414;border-radius:12px;background:#ffd234;color:#141414;box-shadow:4px 4px 0 rgba(0,0,0,.7);font-size:clamp(13px,3.8vw,18px);font-weight:1000;text-align:center;box-sizing:border-box}.student-zone-screen>.zone-student{width:min(720px,100%);max-width:720px;margin:0 auto;padding:9px!important;box-sizing:border-box}.student-zone-screen .zone-pad{margin:7px auto}.student-zone-screen .zone-battle-actions{margin:6px 0}.student-zone-screen .zone-confirm{position:sticky;bottom:max(4px,env(safe-area-inset-bottom));z-index:275}@media(max-width:520px){.student-zone-livebar{padding:5px 8px}.student-zone-screen>.zone-student{padding:6px!important}.student-zone-screen .zone-student-map{margin:5px auto}.student-zone-screen .zone-pad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,48px);gap:5px}.student-zone-screen .zone-pad .btn{width:56px!important;height:48px!important}}
 .zone-question-img,.zone-option-img{cursor:zoom-in}.quiz-image-overlay{position:fixed;inset:0;z-index:520;display:grid;place-items:center;padding:18px;background:rgba(5,8,15,.93);cursor:zoom-out}.quiz-image-overlay img{display:block;max-width:96vw;max-height:92dvh;object-fit:contain;border:4px solid #fff;border-radius:12px;box-shadow:0 0 40px rgba(255,255,255,.3)}
 @media(max-width:760px){body.teacher-zone-mode .zone-quiz-shell{padding:5px;gap:5px}body.teacher-zone-mode .zone-question{width:calc(100vw - 128px);min-height:54px;max-height:30dvh;margin:0 auto;padding:6px 8px;overflow:auto}body.teacher-zone-mode .zone-question>b{font-size:clamp(18px,4.25vw,29px)}body.teacher-zone-mode .zone-question-img{max-height:14vh}body.teacher-zone-mode .zone-back-floating{left:5px;top:5px;padding:5px 7px!important;font-size:10px!important}body.teacher-zone-mode .board-course-link{right:5px;top:5px;bottom:auto;padding:5px 7px!important;font-size:10px!important}body.teacher-zone-mode .zone-quiz-controls{gap:3px;padding:3px 5px}body.teacher-zone-mode .zone-quiz-controls .btn{padding:3px 5px!important;font-size:9px!important}body.teacher-zone-mode .zone-quiz-controls .mini{display:none}.zone-student{padding:8px!important}.zone-student>h3{font-size:15px}.zone-student .zone-question{padding:8px}.zone-student .zone-question>b{font-size:clamp(19px,6vw,27px)}.zone-student .zone-question-img{max-height:18dvh}.zone-student .zone-student-map{aspect-ratio:4/3}}
 /* ⚔️ 競技場開戰後使用獨立全螢幕：所有決鬥、團戰與 Dota 共用，離場即由 render() 還原。 */
@@ -5559,6 +5561,14 @@ function zoneStudentHtml(s,l){
     +(l.quizMode==="battle"?'<div class="zone-battle-actions"><button class="btn" data-zbattle="attack"'+(l.locked||ko||preparing?' disabled':'')+'>⚔️ 近戰普攻</button><button class="btn gold" data-zbattle="skill"'+(l.locked||ko||preparing?' disabled':'')+'>'+skill.icon+' '+esc(skill.name)+'</button></div>':'')
     +(l.quizMode==="buzzer"?'<div class="zone-confirm"><button class="btn zone-buzz-button" id="zoneBuzz"'+(!z.answer||l.locked||ko||preparing?' disabled':'')+'>🚨 搶答！'+(z.answer?'（'+z.answer+'）':'')+'</button></div>':'<div class="zone-confirm"><button class="btn gold" id="zoneConfirm"'+(!z.answer||l.locked||preparing?' disabled':'')+'>✅ 確認選擇 '+(z.answer||'')+'</button></div>')+'<div class="mini" style="text-align:center;margin-top:8px">'+(l.quizMode==="buzzer"?'站好答案區後按搶答；第一位成功者會鎖定全場。':'移動不會立即送出；站好位置後按確認，老師鎖定前仍可更改。')+'</div></div>';
 }
+function renderStudentZoneInterface(s,l){
+  app.innerHTML='<section class="student-zone-screen" role="dialog" aria-modal="true" aria-label="課堂知識挑戰作答介面"><div class="student-zone-livebar">📣 老師已發布新題目・請在時間內完成作答<br><small>老師結束本題後會自動返回角色介面</small></div>'+zoneStudentHtml(s,l)+'</section>';
+  requestAnimationFrame(bindZoneCountdown);
+  app.querySelectorAll("[data-zmove]").forEach(b=>b.onclick=()=>{if(b.disabled)return;const p=b.dataset.zmove.split(",").map(Number);if(zoneMoveStudent(s,p[0],p[1]))render();});
+  app.querySelectorAll("[data-zbattle]").forEach(b=>b.onclick=()=>{if(b.disabled)return;if(zoneBattleAction(s,b.dataset.zbattle==="skill"?"skill":"attack"))render();});
+  const confirmBtn=document.getElementById("zoneConfirm");if(confirmBtn)confirmBtn.onclick=()=>{const current=state.lesson,z=zoneAnswerState(s,current);if(!current||current.locked||!z.answer)return;z.confirmed=true;z.updatedAt=Date.now();syncZoneStudent(s,true);render();toast("✅ 已確認選擇 "+z.answer);};
+  const buzzBtn=document.getElementById("zoneBuzz");if(buzzBtn)buzzBtn.onclick=()=>zoneBuzz(s);
+}
 window.ClassRPGQuestionBridge={
   version:1,
   start(payload){if(CLOUD.on()&&CLOUD.role!=="teacher")throw new Error("只有教師可以送入題目");const q=startZoneLesson(payload);if(typeof render==="function")render();return {ok:true,questionId:q.questionId};},
@@ -8128,11 +8138,13 @@ function scheduleRender(){
 function render(){
   const teacherBoardMode=view.page==="teacher" && view.tview==="board";
   const teacherZoneMode=teacherBoardMode&&state.lesson&&state.lesson.active&&state.lesson.mode==="zone";
+  const studentZoneMode=view.page==="student"&&state.lesson&&state.lesson.active&&state.lesson.mode==="zone";
   const teacherArenaBattleMode=view.page==="teacher"&&view.tview==="arena"&&(
     (typeof GARENA!=="undefined"&&GARENA.active)||(typeof ARENA!=="undefined"&&ARENA.active)
   );
   document.body.classList.toggle("teacher-board-mode", teacherBoardMode);
   document.body.classList.toggle("teacher-zone-mode", !!teacherZoneMode);
+  document.body.classList.toggle("student-zone-mode", !!studentZoneMode);
   document.body.classList.toggle("teacher-arena-battle-mode", !!teacherArenaBattleMode);
   document.body.classList.toggle("home-menu-mode", view.page==="home");
   if((CLOUD.role==="teacher"||!CLOUD.on())&&typeof runAnnouncementSchedules==="function")runAnnouncementSchedules();
@@ -8398,6 +8410,7 @@ function renderHome(){
   }else{
     pane='<div class="home-login-pane"><p>'+(fbOk?'請選擇身分':'⚠️ 目前無法連線登入服務，請檢查網路後重新整理')+'</p>'
       +'<div class="role-grid"><button class="role-card teacher" id="loginTeacher"'+(fbOk?'':' disabled')+'><span class="face">📲</span><span class="nm">教師登入</span><span class="sub">顯示 QR Code・Google 帳號</span></button>'
+      +'<button class="role-card" id="loginStudentWait"'+(fbOk?'':' disabled')+'><span class="face">🎒</span><span class="nm">學生登入</span><span class="sub">提前登入等待・快速回課堂</span></button>'
       +'<button class="role-card" id="loginParent"><span class="face">👪</span><span class="nm">家長查看</span><span class="sub">班級代碼＋學號＋生日</span></button></div>'
       +'<div id="parentForm" style="display:none;max-width:340px;width:100%"><div class="panel"><h3>👪 家長查看</h3>'
       +(function(){try{const p=JSON.parse(sessionStorage.getItem("rpg-parent-last")||"null");window._pLast=p&&Date.now()-(p.ts||0)<30*60*1000?p:null;return window._pLast?'<div class="mini" style="color:#3fae76">本分頁暫存班級與學號（30 分鐘）・<a href="#" id="pForget">清除</a></div>':"";}catch(_){window._pLast=null;return "";}})()
@@ -8415,6 +8428,12 @@ function renderHome(){
   }
   if(teacherEntry){document.getElementById("teacherQrGoogle").onclick=()=>googleLogin("teacher");return;}
   document.getElementById("loginTeacher").onclick=openTeacherLoginQr;
+  document.getElementById("loginStudentWait").onclick=()=>{
+    try{sessionStorage.setItem("rpg-student-mode","waiting");sessionStorage.removeItem("rpg-student-join");}catch(_){}
+    const lastRole=(()=>{try{return localStorage.getItem("rpg-last-role")||"";}catch(_){return "";}})();
+    if(FB.user&&lastRole==="student")loginSuccess(FB.user,"student");
+    else googleLogin("student");
+  };
   document.getElementById("loginParent").onclick=()=>{const f=document.getElementById("parentForm"),show=f.style.display==="none";f.style.display=show?"":"none";requestAnimationFrame(fitHomePane);if(show){const el=document.getElementById("pCid");if(el&&!el.value)el.focus();}};
   document.getElementById("pGo").onclick=parentLogin;
   const rememberedCid=normalizeClassCode((window._pLast&&window._pLast.cid)||localStorage.getItem("rpg-last-class")||"");document.getElementById("pCid").value=rememberedCid;
@@ -8499,6 +8518,7 @@ async function completeLoginSuccess(user, role){
       const urlCid=normalizeClassCode(entryParams.get("class")||"");
       cid=urlCid; // 已註冊學生由本節課 QR 帶入班級，不再靠舊班級記錄猜測
     }
+    if(!cid&&studentMode==="waiting"){ renderStudentWaiting(email,user); return; }
     if(!cid){ renderStudentSessionMissing(email,"請掃描老師投影的本節課班級 QR Code，再使用 Google 帳號登入。"); return; }
     try{
       let enrollment=null;
@@ -8564,6 +8584,7 @@ async function completeLoginSuccess(user, role){
         CLOUD.saveStudentAccount(user,cid,s.id,email);          // 舊帳號登入成功後自動補建索引
         sessionStorage.removeItem("rpg-student-mode");
         sessionStorage.removeItem("rpg-student-join");
+        try{localStorage.removeItem("rpg-student-waiting-email");}catch(_){}
         const hasReward=!!new URLSearchParams(location.search).get("reward");
         loginLoading("準備完成","角色資料核對完成，正在進入班級…",3);
         view={page:"student", sid:s.id, tab:hasReward?"redeem":"stats", shopFilter:"all", role:"student"};render();startStudentRealtimeSafely();
@@ -8574,6 +8595,19 @@ async function completeLoginSuccess(user, role){
       else{ renderAutoEnroll(email,{cid}); }                 // QR 登入找不到角色：直接建立名冊與角色
     }catch(e){renderLoginRecovery("student",user,email,cid,e);toast("載入班級失敗:"+e.message,true);}
   }
+}
+function renderStudentWaiting(email,user){
+  prepareScrollableAuthPage();
+  try{localStorage.setItem("rpg-student-waiting-email",String(email||"").toLowerCase());}catch(_){}
+  app.innerHTML='<div class="home" style="min-height:100vh;padding-bottom:max(28px,env(safe-area-inset-bottom))"><div class="crest">⏳</div><h2>已登入，等待老師開課</h2>'
+    +'<div class="panel" style="max-width:520px;margin:0 auto;text-align:left"><p style="text-align:center"><b>學生身分已準備完成</b></p>'
+    +'<div class="mini" style="padding:10px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px;line-height:1.8">登入帳號：<b>'+esc(email)+'</b><br>現在可以先把這個頁面放在背景。老師按下「開始上課」後，請用同一支裝置掃描大屏的班級 QR Code，系統會沿用這個帳號快速進入角色。</div>'
+    +'<ol class="mini" style="line-height:2;margin:12px 0 0;padding-left:25px"><li>等待老師開始上課</li><li>開啟相機掃描大屏 QR Code</li><li>確認班級後自動載入自己的角色</li></ol>'
+    +'<div class="mini" style="margin-top:9px;color:#7c5b16">🔒 預先登入不會直接加入班級；每次仍須通過本節課 QR Code 驗證。</div></div>'
+    +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="studentWaitingReady">我知道了，等待掃碼</button><button class="btn" id="studentWaitingOther">使用其他 Google 帳號</button><button class="btn" id="studentWaitingHome">回首頁（保持登入）</button></div></div>';
+  document.getElementById("studentWaitingReady").onclick=()=>toast("已保持登入；老師開課後請掃描大屏 QR Code");
+  document.getElementById("studentWaitingOther").onclick=async()=>{try{localStorage.removeItem("rpg-student-waiting-email");await FB.auth.signOut();}catch(_){}FB.user=null;googleLogin("student");};
+  document.getElementById("studentWaitingHome").onclick=()=>{view={page:"home"};render();};
 }
 function renderStudentSessionMissing(email,message){
   sessionStorage.removeItem("rpg-student-mode");
@@ -14995,6 +15029,12 @@ function openStatInfo(s,key){
 function renderStudent(){
   const s = stu(view.sid);
   if(!s){ view={page:"home"}; render(); return; }
+  const liveLesson=state.lesson||{};
+  if(liveLesson.active&&liveLesson.mode==="zone"){
+    view.studentMenu=false;
+    renderStudentZoneInterface(s,liveLesson);
+    return;
+  }
   if(!classFeatureUnlocked(view.tab||"stats")) view.tab="stats";
   garenaStudentInit(s.id);                                   // 掛團體戰監聽(進場自動彈遙控器)
   const e = equipStatSum(s);
@@ -16388,10 +16428,18 @@ if(FB.ready&&!_mobaPhonePage){
       _entryLoginStarted=true;try{sessionStorage.removeItem("rpg-login-role");}catch(_){}FB.user=user;loginSuccess(user,"teacher");return;
     }
     else if(entryCid&&(entry.get("session")||entry.get("dota")||entry.get("reward"))){
-      // 共用平板不可自動沿用上一位學生；顯示可辨識的快速登入，讓本人明確確認。
+      // 已在同一裝置完成「學生提前登入」時，掃描有效課堂 QR 可直接接續；
+      // 共用平板沒有等待記號時仍要求本人按下快速登入，避免沿用上一位同學。
+      let waitingEmail="";try{waitingEmail=String(localStorage.getItem("rpg-student-waiting-email")||"").toLowerCase();}catch(_){}
+      if(waitingEmail&&waitingEmail===String(user.email||"").toLowerCase()){
+        if(_entryLoginStarted)return;
+        _entryLoginStarted=true;FB.user=user;
+        try{sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}
+        loginSuccess(user,"student");return;
+      }
       FB.user=user;offerStudentQuickLogin(user);return;
     }
-    // 一般首頁只保留教師 QR 與家長入口，不自動帶入上次的學生或教師帳號。
+    // 一般首頁提供教師、學生等待與家長入口，但不自動帶入共用裝置的舊帳號。
     return;
   });
 }
