@@ -8286,7 +8286,12 @@ async function teacherPairRequest(name,payload,user){
 }
 async function approveTeacherPair(user,pair){
   await teacherPairRequest("teacherPairApprove",{pair},user);
-  app.innerHTML='<div class="home"><div class="crest">✅</div><h2>教室螢幕登入成功</h2><div class="panel" style="max-width:500px;margin:0 auto"><p>教師身分已安全交接給教室螢幕。</p><div class="mini">請回到教室螢幕選擇班級；選班後，學生登入 QR Code 才會顯示在螢幕上。</div></div><button class="btn" id="pairPhoneClose" style="margin-top:12px">關閉此頁</button></div>';
+  // 手機只負責把教師身分安全交接給教室螢幕；完成後立即登出手機，
+  // 避免同一支手機稍後掃學生 QR 時沿用教師帳號建立學生角色。
+  try{await FB.auth.signOut();}catch(_){}
+  FB.user=null;CLOUD.role=null;
+  try{localStorage.removeItem("rpg-last-role");sessionStorage.removeItem("rpg-login-role");}catch(_){}
+  app.innerHTML='<div class="home"><div class="crest">✅</div><h2>教室螢幕登入成功</h2><div class="panel" style="max-width:500px;margin:0 auto"><p>教師身分已安全交接給教室螢幕，這支手機也已登出教師帳號。</p><div class="mini">請回到教室螢幕選擇班級，再由教師按下「開始上課」；系統才會產生本節課學生登入 QR Code。</div></div><button class="btn" id="pairPhoneClose" style="margin-top:12px">關閉此頁</button></div>';
   const b=document.getElementById('pairPhoneClose');if(b)b.onclick=()=>{try{window.close();}catch(_){} b.textContent='可以直接關閉瀏覽器';};
 }
 function openTeacherLoginQr(){
@@ -8363,7 +8368,7 @@ function renderHome(){
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
   }else if(teacherEntry){
     pane='<div class="home-login-pane"><div class="panel" style="max-width:520px;margin:0 auto;text-align:center"><h3>📜 教師登入</h3><div class="mini">完成 Google 登入後，系統會顯示您建立或管理的班級。</div>'
-      +'<div class="mini" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:11px 0"><span>① Google 登入</span><span>② 選擇班級</span><span>③ 顯示學生 QR</span></div>'
+      +'<div class="mini" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:11px 0"><span>① Google 登入</span><span>② 選擇班級</span><span>③ 按開始上課產生 QR</span></div>'
       +authBrowserWarning
       +'<button class="btn gold" id="teacherQrGoogle"'+(fbOk?'':' disabled')+' style="font-size:20px;padding:12px 24px;margin-top:14px">使用 Google 登入</button>'
       +(!fbOk?'<div class="mini" style="color:#c0392b;margin-top:8px">目前無法連線登入服務，請檢查網路後重新整理。</div>':'')+'</div></div>';
@@ -9072,12 +9077,8 @@ async function renderClasses(email){
       try{
         await CLOUD.loadClass(b.dataset.cid);
         view={page:"teacher",tview:"classhome",role:"teacher"};
-        if(!classSessionIsLive(state.classSession||{})){
-          state.classSession=makeClassSession();
-          addLog("-","📚 教師選擇班級並開始上課");save();
-          if(CLOUD.on())await CLOUD.pushDirty();
-        }
-        render();setTimeout(openQrModal,0);
+        // 選班只進入教師課堂首頁；必須由教師親自按「開始上課」才建立通行證與學生 QR。
+        render();
       }
       catch(e){ toast("載入失敗:"+e.message, true); b.disabled=false; }
     };
