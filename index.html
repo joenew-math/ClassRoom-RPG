@@ -3187,8 +3187,9 @@ function dollSVG(s, size, override){
 }
 
 /* ── 狀態 ─────────────────────────────────────────── */
+const UNASSIGNED_GROUP="無組別";
 function newStudent(id, name, job, group){
-  return { id, name, job, group,
+  return { id, name, job:job||"Warrior", group:group||UNASSIGNED_GROUP,
     registrationComplete:false,                            // 新生完成素體／職業選擇後才改為 true
     jobPending:true,                                       // 名冊暫存不代表已選戰士；最後確認才解除
     roStyle:true,                                          // 全職業 RO 風正式美術(v106 起預設)
@@ -3323,6 +3324,8 @@ function removeLegacyTestData(p){
 }
 function backfill(p){
   removeLegacyTestData(p);
+  p.groups=Array.isArray(p.groups)?p.groups.map(x=>String(x||"").trim()).filter(Boolean):["A"];
+  p.students=Array.isArray(p.students)?p.students:[];
   p.teacherQuestions = Array.isArray(p.teacherQuestions) ? p.teacherQuestions : [];
   p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
   p.submissions = Array.isArray(p.submissions) ? p.submissions : [];
@@ -3399,6 +3402,8 @@ function backfill(p){
   if(!p.siege.tournament) p.siege.tournament = null;   // 🏆 積分循環賽 {teams,matches,scores}
   if(!p.castle) p.castle = { owner:"", since:"", taxDate:"" };   // 🏰 榮耀之城:城主組/佔領日/稅收發放日
   p.students.forEach((s,i)=>{
+    if(!s.group)s.group=UNASSIGNED_GROUP;
+    if(!p.groups.includes(s.group))p.groups.push(s.group);
     if(s.seat===undefined) s.seat = String(i+1);      // 座號預設依名冊順序
     if(s.sno===undefined) s.sno = "";                  // 學號(唯一,家長查看用)
     if(!s.customTitles) s.customTitles = [];           // 教師頒發稱號
@@ -3443,7 +3448,7 @@ function backfill(p){
     if(p.boss.poison===undefined) p.boss.poison = null;
     if(!p.boss.revivedThisFight) p.boss.revivedThisFight = {};
   }
-  if(p.allowJobPick===undefined) p.allowJobPick = true;   // 學生認領時可自選職業
+  delete p.allowJobPick;                                  // 初次註冊必須自選；完成後只能用轉職卡變更
   p.allowSelfEnroll = false;                               // 正式班級只允許教師名冊認領
   if(p.backupReminder===undefined) p.backupReminder = true;    // 每週備份提醒開關
   if(typeof p.nextIdNum !== "number" || isNaN(p.nextIdNum)){    // 保險:從現有ID推算下一個號
@@ -3589,6 +3594,20 @@ const CLOUD = {
     let packet={};try{packet=await res.json();}catch(e){}
     if(!res.ok||!packet.ok){const err=new Error((packet.error&&packet.error.message)||("交易服務暫時無法使用（"+res.status+"）"));err.status=res.status;err.code=packet.error&&packet.error.code||"";throw err;}
     return packet.data;
+  },
+
+  /* 課堂 QR 狀態只寫必要欄位，避免第一次 pushDirty 同時同步商店／名冊時，
+   * 任一附加資料權限或網路錯誤連帶阻止學生通行證上線。 */
+  async syncClassSession(){
+    if(!this.on()||this.role!=="teacher")return;
+    const session=JSON.parse(JSON.stringify(state.classSession||{})),c=FB.db.collection("classes").doc(this.cid);
+    await Promise.all([
+      c.collection("data").doc("main").set({classSession:session},{merge:true}),
+      c.collection("public").doc("main").set({classSession:session},{merge:true})
+    ]);
+    this._lastSnap.meta=JSON.stringify(this._meta());
+    this._lastSnap.publicMeta=JSON.stringify(this._publicMeta());
+    this.setStatus("synced",session.active?"課堂 QR 已同步":"下課狀態已同步");
   },
 
   /* 🎁 一次性獎勵碼：雲端用交易先鎖碼，避免兩位學生同時領到同一張。 */
@@ -4030,6 +4049,7 @@ const CLOUD = {
   _snapAll(){
     this._lastSnap = { meta: JSON.stringify(this._meta()),publicMeta:JSON.stringify(this._publicMeta()) };
     this._lastSnap.teacherQuestions=JSON.stringify(state.teacherQuestions||[]);
+    this._lastSnap.catalog=JSON.stringify({items:this._catalog(),affixes:this._affixCatalog()});
     state.students.forEach(s=> this._lastSnap["stu:"+s.id] = JSON.stringify(s));
     state.customItems.forEach(it=> this._lastSnap["item:"+it.id] = JSON.stringify(it));
   },
@@ -8805,8 +8825,7 @@ function renderEnroll(email){
     if(birth && !/^\d{8}$/.test(birth)){ toast("生日請填 8 碼數字(例 20130215),或留空", true); return; }
     if(state.students.some(x=>String(x.sno||"")===sno)){ toast("座號 "+sno+" 已經有人使用,請確認你的座號", true); return; }
     const draft = { name, sno, birth, group, gender, baseVariant, email, baseTune:Object.assign({},tune) };
-    if(state.allowJobPick) renderEnrollJob(draft);
-    else finishEnroll(draft, "Warrior");
+    renderEnrollJob(draft);
   };
   app.querySelectorAll("[data-base]").forEach(b=> b.onclick=()=>{
     tune=Object.assign({x:0,y:0,s:1},(state.baseTunePresets||{})[b.dataset.base]||{});
@@ -8885,20 +8904,21 @@ function renderJobPick(st, email, draft){
   prepareScrollableAuthPage();
   draft=draft||{};
   const repairMode=!!draft.repairMode||needsLegacyClaimReview(st);
+  const canChooseJob=st.registrationComplete!==true&&!repairMode;
   const jobs = JOB_LIST();
   let selectedBase = (draft.selectedBase&&BASE_VARIANTS[draft.selectedBase])?draft.selectedBase:((st.baseVariant&&BASE_VARIANTS[st.baseVariant])
     ? st.baseVariant : ((st.gender||"male")==="female"?"female1":BASE_TUNE_REFERENCE));
   let selectedTune = Object.assign({x:0,y:0,s:1},draft.selectedTune||((state.baseTunePresets||{})[selectedBase]||{}));
-  let selectedJob=state.allowJobPick?String(draft.selectedJob||""):String(st.job||"Warrior");
+  let selectedJob=canChooseJob?String(draft.selectedJob||""):String(st.job||"Warrior");
   const radar = (j)=>{
     const S = JOB_INFO[j].stats, keys=[["atk","攻"],["def","防"],["agi","敏"],["int","智"]];
     return '<div style="display:flex;gap:8px;justify-content:center;margin:6px 0">'
       + keys.map(k=>'<span class="mini">'+k[1]+'<div style="width:10px;height:'+(S[k[0]]*7+6)+'px;background:'+JOB_INFO[j].color+';border:1.5px solid #141414;border-radius:2px;margin:2px auto 0"></div></span>').join("")
       + '</div>';
   };
-  const cards = (state.allowJobPick?jobs:[st.job||"Warrior"]).map(j=>{
+  const cards = (canChooseJob?jobs:[st.job||"Warrior"]).map(j=>{
     const J = JOB_INFO[j];
-    return '<button class="job-card'+(selectedJob===j?' on':'')+'" type="button" data-job="'+j+'" aria-pressed="'+(selectedJob===j?'true':'false')+'" style="border-color:'+J.color+'">'
+    return '<button class="job-card'+(selectedJob===j?' on':'')+'" type="button" data-job="'+j+'" aria-pressed="'+(selectedJob===j?'true':'false')+'"'+(canChooseJob?'':' disabled')+' style="border-color:'+J.color+'">'
       + '<div style="font-weight:900;font-size:20px;margin-bottom:6px">'+J.name+'</div>'
       + '<div class="tag" style="background:'+J.color+';font-size:11px">'+J.role+'・'+J.diff+'</div>'
       + radar(j)
@@ -8917,9 +8937,9 @@ function renderJobPick(st, email, draft){
     + '<div style="margin-top:10px;padding:8px;background:#fff8e8;border:2px dashed var(--gold);border-radius:10px;text-align:center"><b class="mini">裝備對位即時預覽</b><div class="mini" style="margin-top:3px">可拖曳人物移動；拖曳右上角 ↗ 或使用按鈕調整大小。</div><div id="claimBaseTryOn" style="height:210px;display:flex;align-items:flex-end;justify-content:center;position:relative;touch-action:none;user-select:none;overflow:visible"></div>'
     + '<div style="display:grid;grid-template-columns:repeat(5,minmax(48px,1fr));gap:6px;max-width:390px;margin:8px auto"><button class="btn" type="button" data-claimmove="left" aria-label="向左">←</button><button class="btn" type="button" data-claimmove="up" aria-label="向上">↑</button><button class="btn" type="button" data-claimmove="down" aria-label="向下">↓</button><button class="btn" type="button" data-claimmove="right" aria-label="向右">→</button><button class="btn" type="button" id="claimTuneReset">還原基準</button><button class="btn" type="button" data-claimscale="down" style="grid-column:2 / span 2">縮小</button><button class="btn gold" type="button" data-claimscale="up" style="grid-column:4 / span 2">放大</button></div>'
     + '<div class="mini">帽子、衣服、褲子、鞋子、背飾與武器固定在正式裝備座標</div></div></div>'
-    + '<h3>'+(state.allowJobPick?'選擇你的職業':'確認班級指定職業')+'</h3>'
+    + '<h3>'+(canChooseJob?'選擇你的初始職業':'已綁定職業')+'</h3>'
     + '<div class="job-grid">'+cards+'</div>'
-    + '<div class="mini" id="jobPickHint" style="margin-top:12px;color:#765100">'+(selectedJob?'已選擇「'+esc(JOB_INFO[selectedJob].name)+'」，請按下方按鈕檢視資料。':'請先點選一個職業。')+'</div>'
+    + '<div class="mini" id="jobPickHint" style="margin-top:12px;color:#765100">'+(canChooseJob?(selectedJob?'已選擇「'+esc(JOB_INFO[selectedJob].name)+'」，請按下方按鈕檢視資料。':'請先點選一個職業。'):'職業完成註冊後即鎖定；之後只能使用轉職卡更改。')+'</div>'
     + '<div class="inline-form" style="margin-top:12px;justify-content:center"><button class="btn" id="cbk">← 返回</button><button class="btn gold" id="jobPickConfirm"'+(selectedJob?'':' disabled')+'>下一步：檢視角色資料</button></div></div>';
   document.getElementById("cbk").onclick=()=>{
     if(draft.returnToStudent){view={page:"student",sid:st.id,tab:"stats",shopFilter:"all",role:"student"};render();}
@@ -8956,7 +8976,7 @@ function renderJobPick(st, email, draft){
   app.querySelectorAll('[data-claimmove]').forEach(b=>b.onclick=()=>{const d=b.dataset.claimmove;if(d==='left')selectedTune.x=clamp(selectedTune.x-1,-40,40);if(d==='right')selectedTune.x=clamp(selectedTune.x+1,-40,40);if(d==='up')selectedTune.y=clamp(selectedTune.y-1,-40,40);if(d==='down')selectedTune.y=clamp(selectedTune.y+1,-40,40);drawBaseTryOn();});
   app.querySelectorAll('[data-claimscale]').forEach(b=>b.onclick=()=>{selectedTune.s=clamp(selectedTune.s+(b.dataset.claimscale==='up'?.05:-.05),.55,2.2);drawBaseTryOn();});
   document.getElementById('claimTuneReset').onclick=()=>{selectedTune=Object.assign({x:0,y:0,s:1},(state.baseTunePresets||{})[selectedBase]||{});drawBaseTryOn();};
-  app.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>{
+  if(canChooseJob)app.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>{
     selectedJob=b.dataset.job;app.querySelectorAll("[data-job]").forEach(x=>{const on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on?"true":"false");});
     const confirm=document.getElementById("jobPickConfirm"),hint=document.getElementById("jobPickHint");confirm.disabled=false;hint.textContent='已選擇「'+JOB_INFO[selectedJob].name+'」，請按下方按鈕檢視資料。';drawBaseTryOn();
   });
@@ -8982,14 +9002,21 @@ function claimAppearanceMatches(student,job,appearance){
   return String(s.job||"")===String(job||"")&&String(s.baseVariant||"")===String(a.baseVariant||"")&&near(st.x,t.x)&&near(st.y,t.y)&&near(st.s,t.s);
 }
 function enterClaimedStudent(st,packet,recovered){
-  const sid=String(st&&st.id||packet&&packet.student&&packet.student.id||"");
-  if(packet&&packet.student)Object.assign(st,packet.student);
+  const cloudStudent=packet&&packet.student&&typeof packet.student==="object"?packet.student:null;
+  const sid=String(cloudStudent&&cloudStudent.id||st&&st.id||"");
+  if(!sid||!cloudStudent||cloudStudent.registrationComplete!==true)throw new Error("伺服器尚未回傳完整的正式角色資料");
+  const existingIndex=state.students.findIndex(x=>String(x.id)===sid);
+  if(existingIndex>=0)state.students[existingIndex]=Object.assign({},state.students[existingIndex],cloudStudent);
+  else state.students.push(Object.assign({},cloudStudent));
+  if(cloudStudent.group&&!state.groups.includes(cloudStudent.group))state.groups.push(cloudStudent.group);
   /* 雲端學生文件只保存必要欄位時，也必須先補齊學生介面所需資料再渲染。 */
   backfill(state);
-  const ready=stu(sid)||st;
+  const ready=stu(sid);
+  if(!ready||ready.registrationComplete!==true||ready.jobPending===true)throw new Error("角色資料仍處於未完成註冊狀態");
   try{addLog(ready.id,"🎉 完成綁定,成為"+((JOB_INFO[ready.job]||{}).name||"冒險者")+"!冒險開始!");save();}catch(e){console.warn("local claim finish",e);}
   // 認領當下才知道「我是誰」：補上本人索引並改掛學生範圍監聽。
   CLOUD.myId=ready.id;CLOUD.myGroup=ready.group;
+  try{sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}
   view={page:"student",sid:ready.id,tab:"stats",shopFilter:"all",role:"student"};
   registrationLoadingDone();
   try{
@@ -12920,12 +12947,6 @@ function gradeCsvDownload(){
   document.body.appendChild(a); a.click(); a.remove();
   toast("已匯出 "+rows.length+" 筆成績");
 }
-const ROSTER_JOB_MAP={
-  "戰士":"Warrior",warrior:"Warrior",
-  "法師":"Mage",mage:"Mage",
-  "遊俠":"Rogue",rogue:"Rogue",ranger:"Rogue",
-  "牧師":"Cleric",cleric:"Cleric",priest:"Cleric"
-};
 function rosterCell(value){
   return String(value==null?"":value).replace(/^\uFEFF/,"").trim();
 }
@@ -12936,7 +12957,6 @@ function rosterHeaderKey(value){
   if(/^(姓名|名字|name|studentname)/.test(v))return "name";
   if(/^(信箱|電子郵件|email|mail)/.test(v))return "email";
   if(/^(生日|出生日期|birth|birthday)/.test(v))return "birth";
-  if(/^(職業|job|class)/.test(v))return "job";
   if(/^(分組|組別|group|team)/.test(v))return "group";
   return "";
 }
@@ -12951,7 +12971,7 @@ function rosterBirthValid(value){
   const y=+value.slice(0,4),m=+value.slice(4,6),d=+value.slice(6,8),date=new Date(Date.UTC(y,m-1,d));
   return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d;
 }
-function parseStudentRosterRows(inputRows,defaultJob,defaultGroup,requireHeader){
+function parseStudentRosterRows(inputRows,requireHeader){
   const rows=(inputRows||[]).map(r=>Array.isArray(r)?r:[r]);
   let headerRow=-1,headers={};
   for(let i=0;i<Math.min(rows.length,20);i++){
@@ -12967,17 +12987,12 @@ function parseStudentRosterRows(inputRows,defaultJob,defaultGroup,requireHeader)
   const start=headerRow>=0?headerRow+1:0;
   for(let i=start;i<rows.length;i++){
     const cols=rows[i].map(rosterCell);if(!cols.some(Boolean))continue;
-    let sno="",seat="",name="",email="",birth="",job=defaultJob,group=defaultGroup;
+    let sno="",seat="",name="",email="",birth="",group=UNASSIGNED_GROUP;
     if(headerRow>=0){
       const get=k=>headers[k]==null?"":rosterCell(cols[headers[k]]);
       sno=get("sno");seat=get("seat");name=get("name");email=get("email").toLowerCase();birth=rosterBirth(get("birth"));
-      const jobRaw=get("job"),groupRaw=get("group");
-      if(jobRaw)job=ROSTER_JOB_MAP[jobRaw]||ROSTER_JOB_MAP[jobRaw.toLowerCase()]||"";
-      if(groupRaw)group=groupRaw;
     }else if(cols.length>=4){
       sno=cols[0];seat=cols[1];name=cols[2];email=(cols[3]||"").toLowerCase();birth=rosterBirth(cols[4]);
-      if(cols[5])job=ROSTER_JOB_MAP[cols[5]]||ROSTER_JOB_MAP[cols[5].toLowerCase()]||"";
-      if(cols[6])group=cols[6];
     }else{
       seat=cols[0]||"";sno=seat;name=cols[1]||"";email=(cols[2]||"").toLowerCase();
     }
@@ -12989,18 +13004,16 @@ function parseStudentRosterRows(inputRows,defaultJob,defaultGroup,requireHeader)
     if(existSeat.has(seat)||seenSeat.has(seat)){errors.push(label+"：座號 "+seat+" 已重複（"+name+"）");continue;}
     if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errors.push(label+"：信箱格式錯誤（"+email+"）");continue;}
     if(birth&&!rosterBirthValid(birth)){errors.push(label+"：生日需為有效的 8 碼日期（例如 20130215）");continue;}
-    if(!job){errors.push(label+"：職業只接受戰士、法師、遊俠、牧師");continue;}
-    if(!group){errors.push(label+"：缺少分組且未選擇預設組別");continue;}
-    seenSno.add(sno);seenSeat.add(seat);parsed.push({sno,seat,name,email,birth,job,group,rowNo});
+    seenSno.add(sno);seenSeat.add(seat);parsed.push({sno,seat,name,email,birth,group,rowNo});
   }
-  return {parsed,errors,headerRow,missingGroups:[...new Set(parsed.map(x=>x.group).filter(g=>!state.groups.includes(g)))]};
+  return {parsed,errors,headerRow,missingGroups:state.groups.includes(UNASSIGNED_GROUP)?[]:[UNASSIGNED_GROUP]};
 }
 async function commitStudentRosterImport(result){
   const parsed=result.parsed||[];if(!parsed.length)return;
   (result.missingGroups||[]).forEach(g=>{if(g&&!state.groups.includes(g))state.groups.push(g);});
   parsed.forEach(pd=>{
-    const id="S"+String(state.nextIdNum++).padStart(2,"0"),ns=newStudent(id,pd.name,pd.job,pd.group);
-    ns.sno=pd.sno;ns.seat=pd.seat;if(pd.email)ns.email=pd.email;if(pd.birth)ns.birth=pd.birth;
+    const id="S"+String(state.nextIdNum++).padStart(2,"0"),ns=newStudent(id,pd.name,"Warrior",UNASSIGNED_GROUP);
+    ns.sno=pd.sno;ns.seat=pd.seat;ns.email="";if(pd.email)ns.registrationEmail=pd.email;if(pd.birth)ns.birth=pd.birth;
     state.students.push(ns);addLog(id,"由教師匯入名冊，加入公會！");
   });
   save();modalHost.innerHTML="";render();toast("成功匯入 "+parsed.length+" 位學生，正在同步班級名冊");
@@ -13014,12 +13027,12 @@ async function commitStudentRosterImport(result){
 }
 function openStudentRosterPreview(result,sourceLabel){
   const rows=result.parsed||[],errors=result.errors||[],newGroups=result.missingGroups||[];
-  const tableRows=rows.slice(0,80).map(x=>'<tr><td class="num">'+esc(x.seat)+'</td><td>'+esc(x.sno)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc((JOB_INFO[x.job]||{}).name||x.job)+'</td><td>'+esc(x.group)+'</td><td>'+esc(x.email||"—")+'</td></tr>').join("");
+  const tableRows=rows.slice(0,80).map(x=>'<tr><td class="num">'+esc(x.seat)+'</td><td>'+esc(x.sno)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.group)+'</td><td>'+esc(x.email||"—")+'</td></tr>').join("");
   const errorHtml=errors.length?'<div style="margin-top:10px;padding:10px;background:#fff1f0;border:2px solid #d33;border-radius:10px;color:#8b1a1a"><b>⚠️ 將跳過 '+errors.length+' 筆</b><div class="mini" style="max-height:130px;overflow:auto;margin-top:5px">'+errors.slice(0,30).map(esc).join("<br>")+(errors.length>30?'<br>…另有 '+(errors.length-30)+' 筆':'')+'</div></div>':'';
   modalHost.innerHTML='<div class="overlay" id="rosterPreviewOverlay"><div class="modal" style="max-width:900px;width:min(94vw,900px)"><h3 style="margin-top:0">📋 匯入學生名冊前確認</h3>'
     +'<div class="mini">來源：<b>'+esc(sourceLabel||"名冊")+'</b>・可匯入 <b style="color:#16794b">'+rows.length+'</b> 位・跳過 <b style="color:#b42318">'+errors.length+'</b> 筆</div>'
     +(newGroups.length?'<div class="mini" style="margin-top:6px;color:#8a5b00">匯入時會自動新增組別：<b>'+newGroups.map(esc).join("、")+'</b></div>':'')
-    +(rows.length?'<div style="max-height:48vh;overflow:auto;margin-top:10px"><table><thead><tr><th>座號</th><th>學號</th><th>姓名</th><th>職業</th><th>分組</th><th>信箱</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>':'<div class="panel" style="margin-top:10px;color:#b42318">沒有可匯入的學生資料。</div>')
+    +(rows.length?'<div style="max-height:48vh;overflow:auto;margin-top:10px"><table><thead><tr><th>座號</th><th>學號</th><th>姓名</th><th>組別</th><th>信箱</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>':'<div class="panel" style="margin-top:10px;color:#b42318">沒有可匯入的學生資料。</div>')
     +errorHtml+'<div class="inline-form" style="justify-content:flex-end;margin-top:14px"><button class="btn" id="rosterPreviewCancel">返回修改</button><button class="btn gold" id="rosterPreviewConfirm"'+(rows.length?'':' disabled')+'>確認匯入 '+rows.length+' 位</button></div></div></div>';
   const close=()=>{modalHost.innerHTML="";};
   document.getElementById("rosterPreviewCancel").onclick=close;
@@ -13035,15 +13048,14 @@ async function previewStudentRosterFile(file){
     const buffer=await file.arrayBuffer(),book=XLSX.read(buffer,{type:"array",cellDates:false});
     if(!book.SheetNames.length)throw new Error("檔案沒有工作表");
     const sheet=book.Sheets[book.SheetNames[0]],rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
-    const job=(document.getElementById("bulkJob")||{}).value||"Warrior",group=(document.getElementById("bulkGroup")||{}).value||state.groups[0];
-    openStudentRosterPreview(parseStudentRosterRows(rows,job,group,true),file.name+"／"+book.SheetNames[0]);
+    openStudentRosterPreview(parseStudentRosterRows(rows,true),file.name+"／"+book.SheetNames[0]);
   }catch(e){toast("無法讀取名冊："+(e.message||e),true);}
 }
 function teacherRoster(){
-  const gOpts = state.groups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join("");
-  const jOpts = Object.entries(JOB_INFO).map(([k,v])=>'<option value="'+k+'">'+v.name+'</option>').join("");
+  const rosterGroups=Array.from(new Set([UNASSIGNED_GROUP].concat(state.groups||[])));
+  const gOpts = rosterGroups.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join("");
   const rows = state.students.map(s=>{
-    const gSel = state.groups.map(g=>'<option value="'+esc(g)+'" '+(s.group===g?"selected":"")+'>'+esc(g)+'</option>').join("");
+    const gSel = rosterGroups.map(g=>'<option value="'+esc(g)+'" '+(s.group===g?"selected":"")+'>'+esc(g)+'</option>').join("");
     const rosterEmail=String(s.email||s.registrationEmail||"");
     return '<tr><td>'+dollSVG(s,34)+'</td>'
       + '<td><b>'+esc(s.name)+'</b><div class="mini num">'+esc(jobNameOf(s))+'</div>'
@@ -13089,10 +13101,10 @@ function teacherRoster(){
     + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0">'
     + '<div class="panel" style="margin:0;padding:12px;background:#fff8db"><b>1　下載 Excel 範例</b><div class="mini" style="margin:5px 0 10px">必填學號、座號、姓名；範例資料放在第二張工作表。</div><a class="btn gold" href="'+STUDENT_ROSTER_TEMPLATE_URL+'" download>⬇️ 下載學生名冊範本</a></div>'
     + '<div class="panel" style="margin:0;padding:12px;background:#eef8ff"><b>2　選擇名冊檔案</b><div class="mini" style="margin:5px 0 10px">支援 .xlsx、.xls、.csv，讀取第一張工作表。</div><label class="btn gold" style="display:inline-block">📤 匯入 Excel／CSV<input id="studentRosterFile" type="file" accept=".xlsx,.xls,.csv" style="display:none"></label></div>'
-    + '<div class="panel" style="margin:0;padding:12px;background:#f0fff4"><b>3　設定空白欄預設值</b><div class="mini" style="margin:5px 0">檔案沒填職業／分組時套用：</div><div class="inline-form"><select id="bulkJob">'+jOpts+'</select><select id="bulkGroup">'+gOpts+'</select></div></div></div>'
-    + '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:800">也可從 Excel 複製後貼上</summary><div class="mini" style="margin:8px 0">每行一位學生，用逗號或 Tab 分隔。欄位：學號、座號、姓名、信箱、生日、職業、分組。</div>'
+    + '<div class="panel" style="margin:0;padding:12px;background:#f0fff4"><b>3　新生預設狀態</b><div class="mini" style="margin:5px 0">所有新生先進入：</div><div class="tag" style="font-size:15px">'+UNASSIGNED_GROUP+'</div><div class="mini" style="margin-top:6px">職業由學生完成註冊時選定，教師名冊不預先指定。</div></div></div>'
+    + '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:800">也可從 Excel 複製後貼上</summary><div class="mini" style="margin:8px 0">每行一位學生，用逗號或 Tab 分隔。欄位：學號、座號、姓名、信箱、生日。</div>'
     + '<textarea id="bulkText" rows="6" style="width:100%;font-family:monospace;font-size:13px;padding:8px" placeholder="學號,座號,姓名,信箱&#10;1120345,15,王小明,ming@mail.edu.tw&#10;1120346,16,李小華,hua@mail.edu.tw"></textarea><div class="inline-form" style="margin-top:8px"><button class="btn gold" id="bulkImport">檢核並預覽貼上資料</button></div></details>'
-    + '<div class="mini" style="margin-top:8px">會檢查缺漏、重複學號／座號、信箱、生日與職業；Excel 內的新組名會在確認匯入時自動建立。</div></div>';
+    + '<div class="mini" style="margin-top:8px">會檢查缺漏、重複學號／座號、信箱與生日；匯入後一律為「無組別、待選職業」。</div></div>';
   return rosterNav+rosterImport+'<div class="panel" style="'+showSection('backup')+'"><h3>💾 本班完整資料備份</h3>'
     + '<div style="padding:9px 11px;margin-bottom:9px;border:2px solid #3a7;border-radius:9px;background:#effff4"><b>目前備份班級：'+esc(state.className||state.lbName||'班級')+(CLOUD.cid?'（代碼 '+esc(CLOUD.cid)+'）':'（本機模式）')+'</b><div class="mini" style="margin-top:4px">共 '+(state.students||[]).length+' 名學生。每位角色的職業、等級、XP、能力、技能、裝備、背包、寵物、貨幣與學習紀錄都會完整保存。</div></div>'
     + '<div class="mini" style="margin-bottom:8px">'+bkNote+'</div>'
@@ -13117,8 +13129,7 @@ function teacherRoster(){
     + '<input type="text" id="nsSeat" placeholder="座號" style="width:65px">'
     + '<input type="email" id="nsEmail" placeholder="Google 信箱（必填）" style="width:190px">'
     + '<input type="text" id="nsBirth" maxlength="8" inputmode="numeric" placeholder="生日 20130215（選填）" style="width:155px">'
-    + '<select id="nsJob">'+jOpts+'</select>'
-    + '<select id="nsGroup">'+gOpts+'</select>'
+    + '<span class="tag">'+UNASSIGNED_GROUP+'・待選職業</span>'
     + '<button class="btn gold" id="nsAdd">建立名冊並預先綁定</button></div>'
     + '<div class="mini" style="margin-top:7px;line-height:1.7">教師輸入的 Google 信箱會成為這筆名冊唯一可認領的帳號。學生仍須掃描本節課 QR、使用同一信箱登入，並在最後確認畫面完成素體與職業選擇。</div>'
     + '</div>'
@@ -13552,7 +13563,7 @@ function bindTeacher(){
       modalConfirm("確定結束本節課？目前的學生登入 QR Code 會立即失效。",async()=>{
         state.classSession.active=false; state.classSession.endedAt=Date.now(); state.classSession.expiresAt=0; state.classSession.token="";
         addLog("-","🏁 教師結束本節課"); save();
-        try{ if(CLOUD.on()) await CLOUD.pushDirty(); }catch(e){ toast("課堂狀態雲端同步失敗："+(e.message||e),true); }
+        try{ if(CLOUD.on()) await CLOUD.syncClassSession(); }catch(e){ toast("課堂狀態雲端同步失敗："+(e.message||e),true); }
         render(); toast("本節課已結束，QR Code 已失效");
       },"結束上課");
       return;
@@ -13561,7 +13572,7 @@ function bindTeacher(){
       state.classSession=makeClassSession();
       addLog("-","📚 教師開始上課"); save();
       try{
-        if(CLOUD.on()) await CLOUD.pushDirty();
+        if(CLOUD.on()) await CLOUD.syncClassSession();
         render(); setTimeout(openQrModal,0);
       }catch(e){ render(); toast("開始上課成功，但 QR 狀態尚未同步到雲端："+(e.message||e),true); }
     })();
@@ -13831,7 +13842,8 @@ function bindTeacher(){
     if(state.students.some(x=>String(x.email||x.registrationEmail||"").trim().toLowerCase()===email)){toast("這個 Google 信箱已綁定其他名冊角色",true);return;}
     if(birth&&!rosterBirthValid(birth)){toast("生日請填有效的西元 8 碼，例如 20130215",true);return;}
     const id = "S" + String(state.nextIdNum++).padStart(2,"0");
-    const ns = newStudent(id, name, document.getElementById("nsJob").value, document.getElementById("nsGroup").value);
+    if(!state.groups.includes(UNASSIGNED_GROUP))state.groups.unshift(UNASSIGNED_GROUP);
+    const ns = newStudent(id, name, "Warrior", UNASSIGNED_GROUP);
     ns.sno=sno;ns.seat=seat;ns.email="";ns.registrationEmail=email;ns.birth=birth;ns.registrationComplete=false;ns.jobPending=true;ns.createdAt=Date.now();
     nsAdd.disabled=true;nsAdd.textContent="正在建立並同步…";
     try{
@@ -13846,8 +13858,6 @@ function bindTeacher(){
   };
   const ase = document.getElementById("allowSelfEnroll");
   if(ase) ase.onchange = ()=>{ state.allowSelfEnroll = ase.checked; save(); toast(ase.checked?"學生可自行加入名冊":"僅限老師建立的名冊"); };
-  const ajp = document.getElementById("allowJobPick");
-  if(ajp) ajp.onchange = ()=>{ state.allowJobPick = ajp.checked; save(); toast(ajp.checked?"學生可自選職業":"學生沿用名冊職業"); };
   app.querySelectorAll("[data-rosterbind]").forEach(b=>{
     b.onclick=async()=>{
       const st=stu(b.dataset.rosterbind);if(!st)return;
@@ -13911,10 +13921,8 @@ function bindTeacher(){
   if(bulkBtn) bulkBtn.onclick = ()=>{
     const raw = (document.getElementById("bulkText").value||"").trim();
     if(!raw){ toast("請先貼上名冊", true); return; }
-    const job = document.getElementById("bulkJob").value;
-    const grp = document.getElementById("bulkGroup").value;
     const rows=raw.split(/\r?\n/).map(line=>line.split(/[\t,]/));
-    openStudentRosterPreview(parseStudentRosterRows(rows,job,grp,false),"貼上的名冊資料");
+    openStudentRosterPreview(parseStudentRosterRows(rows,false),"貼上的名冊資料");
   };
   app.querySelectorAll("[data-gchange]").forEach(sel=>{
     sel.onchange = ()=>{ const s=stu(sel.dataset.gchange); if(s){ s.group=sel.value; reconcileLeadersCastle(); save(); render(); } };
