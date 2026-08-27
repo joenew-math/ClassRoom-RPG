@@ -8563,7 +8563,7 @@ async function completeLoginSuccess(user, role){
         sessionStorage.removeItem("rpg-student-join");
         const hasReward=!!new URLSearchParams(location.search).get("reward");
         loginLoading("準備完成","角色資料核對完成，正在進入班級…",3);
-        view={page:"student", sid:s.id, tab:hasReward?"redeem":"stats", shopFilter:"all", role:"student"};CLOUD.listen();render();
+        view={page:"student", sid:s.id, tab:hasReward?"redeem":"stats", shopFilter:"all", role:"student"};render();startStudentRealtimeSafely();
         if(dotaEntry==="signup")setTimeout(()=>mobaStudentEnrollFromLink(s.id),250);
         else if(wantsMoba) setTimeout(()=>toast("🏰 已進入 Dota 參戰模式；若你在本場名單內，開戰後控制器會自動出現"),250);
       }
@@ -8722,7 +8722,7 @@ function renderAutoEnroll(email,prefill){
       registrationLoadingDone();
       if(await studentRegistrationComplete(st)){
         CLOUD.myId=st.id;CLOUD.myGroup=st.group;
-        view={page:'student',sid:st.id,tab:'stats',shopFilter:'all',role:'student'};CLOUD.listen();render();
+        view={page:'student',sid:st.id,tab:'stats',shopFilter:'all',role:'student'};render();startStudentRealtimeSafely();
         toast(packet.profileImported?'已沿用這個 Google 帳號的職業與角色外型；本班等級與獎勵重新開始。':'歡迎回到你的班級角色！');
         return;
       }
@@ -8876,11 +8876,11 @@ async function finishEnroll(draft, job){
   try{
     if(CLOUD.on()){
       await FB.db.collection("classes").doc(CLOUD.cid).collection("students").doc(id).set(JSON.parse(JSON.stringify(ns)));
-      CLOUD.myId = id; CLOUD.myGroup = ns.group; CLOUD.listen();   // 📊 新生也只監聽自己+同組
+      CLOUD.myId = id; CLOUD.myGroup = ns.group;                  // 📊 新生也只監聽自己+同組
     }
     save();
     toast("歡迎加入,"+draft.name+"("+JOB_INFO[job].name+")!");
-    view={page:"student", sid:id, tab:"stats", shopFilter:"all", role:"student"}; render();
+    view={page:"student", sid:id, tab:"stats", shopFilter:"all", role:"student"}; render();startStudentRealtimeSafely();
   }catch(e){
     state.students = state.students.filter(x=>x.id!==id);   // 回滾
     state.nextIdNum--;
@@ -9001,7 +9001,37 @@ function claimAppearanceMatches(student,job,appearance){
   const a=appearance||{},t=a.baseTune||{},s=student||{},st=s.baseTune||{},near=(x,y)=>Math.abs(Number(x||0)-Number(y||0))<.011;
   return String(s.job||"")===String(job||"")&&String(s.baseVariant||"")===String(a.baseVariant||"")&&near(st.x,t.x)&&near(st.y,t.y)&&near(st.s,t.s);
 }
-function enterClaimedStudent(st,packet,recovered){
+function startStudentRealtimeSafely(){
+  if(!CLOUD.on())return;
+  try{CLOUD.listen();}
+  catch(e){
+    /* 即時監聽屬於後續同步功能；初次載入的完整角色已經成功時，
+     * 不應因監聽初始化失敗而把學生擋在註冊完成頁。 */
+    console.warn("student realtime start",e);
+    try{CLOUD.setStatus("offline","角色已載入；即時同步稍後重試");}catch(_){}
+  }
+}
+function renderClaimedStudentRecovery(st,error){
+  registrationLoadingDone();
+  console.error("student entry render failed",error);
+  app.innerHTML='<div class="home"><div class="crest">✅</div><h2>角色已安全建立</h2><div class="panel" style="max-width:560px;margin:auto"><p>雲端資料已保存，但學生介面需要重新載入一次。</p><div class="mini" style="word-break:break-word">診斷：'+esc(String(error&&error.message||error||"畫面初始化失敗"))+'</div><div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="claimEntryRetry">重新從雲端載入我的角色</button><button class="btn" id="claimEntryHome">回登入頁</button></div></div></div>';
+  const retry=document.getElementById("claimEntryRetry");if(retry)retry.onclick=()=>reloadClaimedStudentAfterClaim(st);
+  const home=document.getElementById("claimEntryHome");if(home)home.onclick=()=>{view={page:"home"};render();};
+}
+async function reloadClaimedStudentAfterClaim(st){
+  registrationLoading("正在重新載入角色","正在向雲端核對正式角色與班級資料，請保持此頁開啟…");
+  try{
+    const status=await CLOUD.callServer("registrationStatus",{});
+    if(!status||status.complete!==true||!status.student)throw new Error("雲端尚未回傳完整角色，請稍後再試");
+    const email=String((FB.user&&FB.user.email)||status.student.email||st&&st.email||"").toLowerCase();
+    /* 先重讀權威班級文件，避免按鈕只拿舊的記憶體資料反覆重畫。
+     * 若帳號索引剛建立尚未可讀，仍可使用 registrationStatus 的正式角色繼續進入。 */
+    try{await CLOUD.loadClass(CLOUD.cid,email,{listen:false});}
+    catch(loadError){console.warn("post-registration class reload",loadError);}
+    return enterClaimedStudent(st,status,true,{skipLog:true});
+  }catch(e){renderClaimedStudentRecovery(st,e);return false;}
+}
+function enterClaimedStudent(st,packet,recovered,options){
   const cloudStudent=packet&&packet.student&&typeof packet.student==="object"?packet.student:null;
   const sid=String(cloudStudent&&cloudStudent.id||st&&st.id||"");
   if(!sid||!cloudStudent||cloudStudent.registrationComplete!==true)throw new Error("伺服器尚未回傳完整的正式角色資料");
@@ -9013,7 +9043,7 @@ function enterClaimedStudent(st,packet,recovered){
   backfill(state);
   const ready=stu(sid);
   if(!ready||ready.registrationComplete!==true||ready.jobPending===true)throw new Error("角色資料仍處於未完成註冊狀態");
-  try{addLog(ready.id,"🎉 完成綁定,成為"+((JOB_INFO[ready.job]||{}).name||"冒險者")+"!冒險開始!");save();}catch(e){console.warn("local claim finish",e);}
+  if(!(options&&options.skipLog))try{addLog(ready.id,"🎉 完成綁定,成為"+((JOB_INFO[ready.job]||{}).name||"冒險者")+"!冒險開始!");save();}catch(e){console.warn("local claim finish",e);}
   // 認領當下才知道「我是誰」：補上本人索引並改掛學生範圍監聽。
   CLOUD.myId=ready.id;CLOUD.myGroup=ready.group;
   try{sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}
@@ -9021,13 +9051,11 @@ function enterClaimedStudent(st,packet,recovered){
   registrationLoadingDone();
   try{
     render();
-    if(CLOUD.on())CLOUD.listen();
   }catch(e){
-    console.error("student entry render failed",e);
-    app.innerHTML='<div class="home"><div class="crest">✅</div><h2>角色已安全建立</h2><div class="panel" style="max-width:560px;margin:auto"><p>雲端資料已保存，但學生介面需要重新載入一次。</p><div class="mini" style="word-break:break-word">診斷：'+esc(String(e&&e.message||e||"畫面初始化失敗"))+'</div><div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="claimEntryRetry">重新載入我的角色</button></div></div></div>';
-    const retry=document.getElementById("claimEntryRetry");if(retry)retry.onclick=()=>{backfill(state);render();if(CLOUD.on())CLOUD.listen();};
+    renderClaimedStudentRecovery(st,e);
     return false;
   }
+  startStudentRealtimeSafely();
   toast((recovered?"已確認雲端角色資料，":"歡迎加入，")+ready.name+"（"+((JOB_INFO[ready.job]||{}).name||"冒險者")+"）！");
   return true;
 }
@@ -14805,15 +14833,22 @@ function garenaPadStopMoveHold(){
 }
 function garenaStudentInit(sid){
   if(GPAD.unsub && GPAD.sid===sid) return;                  // 已在監聽
-  if(GPAD.unsub) GPAD.unsub();
+  if(GPAD.unsub)try{GPAD.unsub();}catch(e){console.warn("garena previous listener",e);}
   GPAD.sid = sid;
-  GPAD.unsub = CLOUD.garenaListenLive(live=>{
-    const wasIn = GPAD.live && GPAD.live.fighters && GPAD.live.fighters.some(f=>f.sid===sid);
-    GPAD.live = live;
-    const nowIn = live && live.active && live.fighters && live.fighters.some(f=>f.sid===sid && !f.ko);
-    // 進場/退場/狀態變化 → 重繪遙控器覆蓋層
-    garenaPadRender();
-  });
+  try{
+    GPAD.unsub = CLOUD.garenaListenLive(live=>{
+      const wasIn = GPAD.live && GPAD.live.fighters && GPAD.live.fighters.some(f=>f.sid===sid);
+      GPAD.live = live;
+      const nowIn = live && live.active && live.fighters && live.fighters.some(f=>f.sid===sid && !f.ko);
+      // 進場/退場/狀態變化 → 重繪遙控器覆蓋層
+      garenaPadRender();
+    });
+  }catch(e){
+    /* Dota 遙控器不是學生首頁的必要條件；權限或網路問題只停用遙控器，
+     * 不讓 renderStudent 整頁中斷。 */
+    GPAD.unsub=null;GPAD.live=null;
+    console.warn("garena student listener",e);
+  }
 }
 function garenaPadRender(){
   let ov = document.getElementById("gpadOverlay");
