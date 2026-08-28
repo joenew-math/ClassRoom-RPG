@@ -1006,6 +1006,22 @@ code{background:#1a1230;padding:1px 4px;border-radius:3px;color:#ffe38a;font-siz
   #hand{min-height:130px;padding-top:7px}.card{height:126px!important}.card .ct{line-height:1.35!important}
   #hpBottle .mglass,#manaBottle .mglass{height:47px}#hpBottle .shieldBadge{bottom:50px}
 }
+/* 手機戰鬥 HUD：生命與法力固定在藍色指令面板左右上方，手牌不再被瓶子遮住。 */
+@media(max-width:640px){
+  #cmd{padding:5px 5px 7px}
+  #cmdTop{position:relative;min-height:70px;padding:0 50px 4px;margin-bottom:2px;box-sizing:border-box}
+  #hpBottle,#manaBottle{top:5px;bottom:auto;width:42px}
+  #hpBottle{left:5px}#manaBottle{right:5px}
+  #hpBottle .mglass,#manaBottle .mglass{width:34px;height:48px}
+  #hpBottle .mglass::after,#manaBottle .mglass::after{height:28px}
+  #hpBottle .shieldBadge{left:36px;top:1px;bottom:auto;z-index:14}
+  #cmdMid{min-height:66px}
+  #comboBig{font-size:25px}
+  #battleLootHud{width:min(210px,58vw)}
+  #cmdBtns{padding:4px 3px 3px;gap:4px}
+  #hand{padding:8px 4px 5px;min-height:132px;scroll-padding-inline:4px}
+  #handRow{position:relative;z-index:13;clear:both}
+}
 /* 環繞 Boss 的蓄力眼睛 */
 /* 環繞圈整體上移：眼睛繞在頭頂上方，不遮到下方的血量與弱點資訊 */
 .eyering{position:absolute;left:50%;top:22%;width:0;height:0;z-index:26;pointer-events:none}
@@ -3912,6 +3928,30 @@ const META_DEF={
 const metaLv=k=>META_DEF[k]?Math.min(META_DEF[k].max,((S.meta&&S.meta.perks&&S.meta.perks[k])||0)):0;
 const metaCost=k=>Math.round(META_DEF[k].cost*Math.pow(META_DEF[k].mul,metaLv(k)));
 function metaVal(k){ const lv=metaLv(k); return lv?META_DEF[k].f(lv):0; }
+/* 每個區域各自累積輪迴深度：初次只開放 1F，完成一輪才開放下一層。
+   不使用全域 runs 判斷，避免通過第一冊後直接跳過後續區域的成長歷程。 */
+function rebirthDepth(zi=S.zone||0){
+  S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
+  S.meta.zoneDepth=S.meta.zoneDepth||{};
+  const z=ZONES[Math.max(0,Math.min(ZONES.length-1,zi|0))];
+  /* 舊存檔遷移：已通關區域保留全層，已有檢查點則保留原本進度。 */
+  if(S.meta.zoneDepth[z.k]===undefined){
+    const prior=(S.cleared!==undefined&&S.cleared>=zi)?z.floors:Number((S.zoneProgress||{})[z.k])||0;
+    S.meta.zoneDepth[z.k]=Math.max(0,Math.min(z.floors,prior));
+  }
+  return Math.max(0,Math.min(z.floors,Number(S.meta.zoneDepth[z.k])||0));
+}
+function rebirthFloorLimit(zi=S.zone||0){
+  const z=ZONES[Math.max(0,Math.min(ZONES.length-1,zi|0))];
+  return Math.min(z.floors,rebirthDepth(zi)+1); // 1-based：本輪可到達的最深樓層
+}
+function markRebirthFloor(floorCount,zi=S.zone||0){
+  S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
+  S.meta.zoneDepth=S.meta.zoneDepth||{};
+  const z=ZONES[Math.max(0,Math.min(ZONES.length-1,zi|0))];
+  S.meta.zoneDepth[z.k]=Math.max(rebirthDepth(zi),Math.min(z.floors,Number(floorCount)||0));
+  return S.meta.zoneDepth[z.k];
+}
 
 /* 一輪結束 → 結算知識點 */
 function endRun(win){
@@ -3981,8 +4021,12 @@ function metaScreen(msg){
       <div class="uc">${maxed?'—':'✦ '+cost}</div></div>`;
   }).join('');
   const acc=M.totalQ?Math.round(M.totalOk/M.totalQ*100):0;
+  const rz=zoneOf(),depth=rebirthDepth(),limit=rebirthFloorLimit();
   overlay(`<div class="kicker">REINCARNATION</div><h1>輪迴殿堂</h1>
     <div class="rank">✦ 知識點 ${M.souls}　第 ${M.runs} 輪</div>
+    <div class="mathbox"><div class="mh">🌀 ${hesc(rz.n)}・輪迴深度</div>
+      <div class="ml">已突破 <b>${depth}</b> 層　·　本輪可挑戰至 <b>${limit}F</b>${depth>=rz.floors?'　✓ 本區已完全突破':''}</div>
+      <div class="ml">成功完成本輪最深樓層，下一輪才會開放下一層；體魄、護甲與銳識會永久保留。</div></div>
     ${msg?`<div class="shmsg">${msg}</div>`:''}
     <div class="desc" style="margin-bottom:6px">
       知識點<b>主要來自答對題目</b>（基礎 1、標準 2、挑戰 3 點）—— 想變強就得真的把題目弄懂。<br>
@@ -4004,15 +4048,19 @@ function metaScreen(msg){
     });
 }
 /* 輪迴結算畫面 */
-function runEndScreen(win){
+function runEndScreen(win,opt={}){
   const r=endRun(win);
   const M=S.meta;
-  classroomCheckpoint(win?'run_clear':'run_end');
+  const depthClear=!!opt.depthClear;
+  classroomCheckpoint(win?'run_clear':depthClear?'run_depth':'run_end');
   // 這一輪已結束 —— 下次進地城一律重置並把血量補滿（走輪迴殿堂繞路也一樣）
   S.runOver=1; saveChar();
-  overlay(`<div class="kicker">RUN COMPLETE</div>
-    <h1 style="color:${win?'#8fe86a':'#ff6a6a'}">${win?'這一輪完成':'這一輪結束'}</h1>
+  overlay(`<div class="kicker">${depthClear?'DEPTH UNLOCKED':'RUN COMPLETE'}</div>
+    <h1 style="color:${win||depthClear?'#8fe86a':'#ff6a6a'}">${win?'這一輪完成':depthClear?'輪迴深度突破！':'這一輪結束'}</h1>
     <div class="rank">獲得 ✦ ${r.gain} 知識點</div>
+    ${depthClear?`<div class="mathbox"><div class="mh">🌀 樓層封印解除</div>
+      <div class="ml">已完成 <b>${opt.floor}F</b>，下一輪可挑戰 <b>${Math.min(zoneOf().floors,opt.floor+1)}F</b>。</div>
+      <div class="ml">先在輪迴殿堂使用知識點強化，再進入下一層會更穩定。</div></div>`:''}
     <div class="mathbox">
       <div class="mh">知識點來源</div>
       <div class="ml">答對題目 ${r.ok} 題（依難度）= <b>${r.fromQuiz}</b></div>
@@ -4043,6 +4091,14 @@ function runEndScreen(win){
       if(el.id==='resultClassroomReturn'){ classroomReturn(); return true; }
       return false;
     });
+}
+function completeRebirthFloor(){
+  const Z=zoneOf(),cleared=fl+1,nextFloor=Math.min(Z.floors-1,fl+1);
+  markRebirthFloor(cleared);
+  S.zoneProgress=S.zoneProgress||{};
+  S.zoneProgress[Z.k]=Math.max(Number(S.zoneProgress[Z.k])||0,nextFloor);
+  running=false;saveChar();
+  runEndScreen(false,{depthClear:true,floor:cleared});
 }
 
 /* ═══════════════ 外部角色匯入（預留接口）═══════════════
@@ -4702,7 +4758,8 @@ function beginZoneRun(i,startFloor){
   // 金幣與「尚未花掉的」知識點都是單次冒險資源；永久強化本身仍保留。
   S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
   S.zone=i;S.gold=0;S.meta.souls=0;saveChar();
-  const go=()=>{loadFloor(Math.max(0,Math.min(ZONES[i].floors-1,startFloor|0)));backToDungeon();};
+  const maxStart=Math.max(0,rebirthFloorLimit(i)-1);
+  const go=()=>{loadFloor(Math.max(0,Math.min(maxStart,startFloor|0)));backToDungeon();};
   if(classroomBankActive()){
     const q=dungeonActionQuestion(null);
     if(q){quizAsk(q,()=>go(),'地城入口 · 教師指定章節');return;}
@@ -4710,10 +4767,11 @@ function beginZoneRun(i,startFloor){
   go();
 }
 function zoneEntryScreen(i){
-  const Z=ZONES[i],cp=Math.max(0,Math.min(Z.floors-1,Number((S.zoneProgress||{})[Z.k])||0));
+  const Z=ZONES[i],depth=rebirthDepth(i),limit=rebirthFloorLimit(i);
+  const cp=Math.max(0,Math.min(limit-1,Number((S.zoneProgress||{})[Z.k])||0));
   overlay(`<div class="kicker">${hesc(Z.n)}</div><h1 style="color:${Z.col}">${Z.ic} 第 ${Z.vol} 冊冒險</h1>
-    <div class="rank">共 ${Z.floors} 樓・每 3 樓保存休息檢查點</div>
-    <div class="desc">${hesc(Z.d)}<br><br><b>本次進場金幣與未使用知識點會從 0 開始；已購買的永久強化會保留。</b><br>${classroomBankActive()?'<b>📚 進場第一題會優先使用教師指定章節。</b>':'目前使用同冊內建題庫；之後可匯入新的課程目錄題庫。'}</div>
+    <div class="rank">輪迴深度 ${depth}・本輪開放至 ${limit}F / 共 ${Z.floors}F</div>
+    <div class="desc">${hesc(Z.d)}<br><br><b>首次只能突破 1F；每成功完成一輪，下一輪才開放下一層。</b><br>本次進場金幣與未使用知識點會從 0 開始；輪迴神殿的永久強化會保留。<br>${classroomBankActive()?'<b>📚 進場第一題會優先使用教師指定章節。</b>':'目前使用同冊內建題庫；之後可匯入新的課程目錄題庫。'}</div>
     ${cp>0?`<button class="go" id="zoneContinue">從 ${cp+1}F 檢查點繼續</button>`:''}
     <button class="go" id="zoneStart">從 1F 開始</button>
     <button class="go" id="zoneBack" style="background:linear-gradient(180deg,#8a7ab8,#5a4a86);border-color:#3a2c60">返回校園</button>`,null,el=>{
@@ -9615,6 +9673,11 @@ function afterMove(){
     else if(p.t==='stair'){
       if(!S.key){ toast('樓梯被封印了 — 先找到這一層的鑰匙',2000); continue; }
       const nextFloor=fl+1;
+      /* 目前輪迴只允許完成一個新樓層；成功抵達樓梯即完成本輪，
+         下一層會在結算後永久解鎖，避免第一次進場一路衝完整區域。 */
+      if(nextFloor>=rebirthFloorLimit()){
+        completeRebirthFloor();return;
+      }
       if(nextFloor%3===0){
         S.zoneProgress=S.zoneProgress||{};
         const k=zoneOf().k;S.zoneProgress[k]=Math.max(Number(S.zoneProgress[k])||0,nextFloor);
@@ -10038,7 +10101,8 @@ function enemyAttackScale(){
   const lv=Math.max(1,Number(S.classroomLevel||S.lv)||1);
   const importedCatchup=Math.min(.25,
     Math.max(0,(Number(S.maxhp)||100)-100)/1000+Math.max(0,Number(S.armor)||0)/250);
-  return (DIFFS[diff].atk||1)*1.08*(1+(S.zone||0)*.07)*(1+Math.min(.18,(lv-1)/500))*(1+importedCatchup);
+  const floorPressure=1+Math.min(.55,Math.max(0,fl)*.055);
+  return (DIFFS[diff].atk||1)*1.08*(1+(S.zone||0)*.07)*floorPressure*(1+Math.min(.18,(lv-1)/500))*(1+importedCatchup);
 }
 
 const FRONT_CAP=4;   // 前排最多站 4 隻，之後排到後排
@@ -10129,7 +10193,8 @@ function deploySquad(m,animate){
     const base=FOES[kind];
     const fr=[[1,4],[1,3],[2,5]][rand(3)];
     const eliteMul=m.elite?1.35:1;
-    const bh=Math.max(8,Math.round(base.hp*DIFFS[diff].hp*eliteMul));
+    const floorVitality=1+Math.min(.90,Math.max(0,fl)*.075);
+    const bh=Math.max(8,Math.round(base.hp*DIFFS[diff].hp*eliteMul*floorVitality));
     const f={...base,kind,squad:m.id,max:bh,hp:bh,atk:Math.round(base.atk*(m.elite?1.18:1)),burn:0,dead:false,shield:0,act:'atk',
       expr:hpExpr(bh,fl),
       fracNum:fr[0],fracDen:fr[1],
@@ -10352,7 +10417,17 @@ function drawFieldBg(){
   const c=$('fieldBg'),f=$('field');
   const W=c.width=f.clientWidth,H=c.height=f.clientHeight;
   const g=c.getContext('2d');
-  // 背景沿用當下的第一人稱視角 —— 戰鬥就發生在你站的地方，場景不切換
+  // 每次進戰鬥都重新套用所在區域／樓層的主題；戰鬥就發生在玩家站的位置。
+  // 這也讓洞窟、雲海、空中花園與王座廳不會退回同一張固定黑色背景。
+  applyTheme(S.zone||0,fl);
+  c.dataset.zone=String(S.zone||0);
+  c.dataset.floor=String(fl||0);
+  const fog=CUR_TH&&CUR_TH.fog||[22,16,42];
+  const fallback=g.createLinearGradient(0,0,0,H);
+  fallback.addColorStop(0,`rgb(${fog[0]},${fog[1]},${fog[2]})`);
+  fallback.addColorStop(1,'rgb(8,6,18)');
+  g.fillStyle=fallback;g.fillRect(0,0,W,H);
+  // 背景沿用當下的第一人稱視角，不另切換到通用戰鬥場景。
   drawWeapon.skip=true;
   try{ render(); }catch(_){}
   drawWeapon.skip=false;
@@ -11439,13 +11514,12 @@ const POOL=['focus','resonate','overload','knife','dagger','poe','pebble','blank
   'nDebt','nOver','nInv','nImag','nUnit','scroll','spring','wellspring'];
 /* ═══ 等級成長 ═══
    魔力固定由牌組與通用卡管理，不再因升級擴張上限；
-   升級只小幅提高生存力，主要成長獎勵是該關卡的三選一卡牌。 */
-function levelGrowth(){return {hp:10,mana:0};}
+   升級只回滿生命、不增加上限；主要成長獎勵是該關卡的三選一卡牌。 */
+function levelGrowth(){return {hp:0,mana:0};}
 function applyLevelGrowth(){
-  const g=levelGrowth(S.lv);
-  S.maxhp+=g.hp; S.hp=Math.min(S.maxhp,S.hp+g.hp);
+  S.hp=S.maxhp;
   saveChar();
-  toast('⬆ Lv.'+S.lv+'　生命上限 +'+g.hp+'　解鎖關卡卡牌三選一',2400);
+  toast('⬆ Lv.'+S.lv+'　生命完全回復　解鎖關卡卡牌三選一',2400);
 }
 function levelUp(done){
   const z=zoneOf();
@@ -11458,11 +11532,10 @@ function levelUp(done){
   const o=[];
   let guard=0;
   while(o.length<3&&guard++<80){ const id=rollCard(src,false); if(!o.includes(id))o.push(id); }
-  const g=levelGrowth(S.lv-1);
   overlay(`<div class="kicker">LEVEL UP</div><h1>Lv.${S.lv}</h1>
     <div class="rank">${z.ic} ${z.n}・關卡卡池三選一</div>
     <div class="mathbox" style="margin:8px 0">
-      <div class="ml">❤ 生命上限 <b>+${g.hp}</b>（目前 ${S.maxhp}）</div>
+      <div class="ml">❤ 生命完全回復 <b>${S.hp}/${S.maxhp}</b>（上限不增加）</div>
       <div class="ml" style="color:#8fd0ff">💧 魔力維持 ${S.mana}；請用通用卡回魔延長連擊</div>
     </div>
     <div class="rank">選擇一張加入牌組</div>
@@ -12404,6 +12477,7 @@ if(bmCv){
 function loop(){if(!running)return;render();drawMini();if(bigMapOn)drawBigMap();requestAnimationFrame(loop);}
 function winGame(){
   const Z=zoneOf(), zi=S.zone||0;
+  markRebirthFloor(Z.floors,zi);
   const first=(S.cleared===undefined||S.cleared<zi);
   classroomPendingClear={zoneClears:1,firstClear:first,title:Z.n+'通關'};
   classroomCheckpoint('zone_clear');
@@ -12553,7 +12627,7 @@ function classroomRoleScreen(){
 /* 難度與出題範圍改成獨立畫面 */
 function diffScreen(){
   overlay(`<div class="kicker">SETTING</div><h1>難度</h1>
-    <div class="desc" style="margin-bottom:8px">影響敵人血量與援軍抵達速度，不影響題目難度。</div>
+    <div class="desc" style="margin-bottom:8px">影響敵人血量與援軍抵達速度，不影響題目難度。無論選項為何，高樓層都會逐層提高生命與攻擊，需要透過輪迴神殿累積永久強化。</div>
     <div id="rvlist">${Object.keys(DIFFS).map(k=>
       `<div class="rvrow${diff===k?' on':''}" data-d="${k}">
         <div class="rvi" style="background:#4a3b7333;color:#cbbde8">${k==='easy'?'🌱':k==='hard'?'🔥':'⚖'}</div>
