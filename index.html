@@ -1007,6 +1007,7 @@ table td{ border-bottom:2px solid #e0d8c4 !important; }
 .arena-menu-card>summary:after{content:'展開 ▼';font-size:12px;background:#fff;border:2px solid #141414;border-radius:7px;padding:3px 8px;box-shadow:2px 2px 0 rgba(0,0,0,.65);}
 .arena-menu-card[open]>summary:after{content:'收合 ▲';}
 .arena-menu-body{padding:12px;max-height:68vh;overflow:auto;}
+.title-menu-grid{display:grid;gap:12px;align-items:start}.title-menu-card{margin:0!important}.title-menu-card>summary{font-size:18px}.title-table-scroll{max-width:100%;overflow:auto}.title-table-scroll table{min-width:720px}@media(max-width:620px){.title-menu-card>summary{font-size:15px}.title-table-scroll table{min-width:640px}}
 .arena-map-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 10px;}
 .arena-map-toolbar select{min-width:210px;flex:1;}
 .teacher-task-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}.teacher-task-summary>div{background:#fff;border:3px solid #141414;border-radius:11px;padding:9px 12px;box-shadow:3px 3px 0 rgba(0,0,0,.65)}.teacher-task-summary b{display:block;font-size:23px;line-height:1.1}.task-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}.task-menu-create,.task-menu-audit{grid-column:1/-1}.task-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.task-form-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:900}.task-form-grid label.wide{grid-column:1/-1}.task-form-grid input,.task-form-grid select{width:100%}.task-review-config{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:9px;border:2px dashed #725b20;border-radius:9px;background:#fff8df}.task-review-config .mini{grid-column:1/-1}.task-section-title{font-size:15px;font-weight:900;margin:13px 0 7px}.task-reward-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:9px}.task-tier-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.task-tier-card{border:3px solid #141414;border-radius:11px;padding:9px;background:#e8f7df;box-shadow:3px 3px 0 rgba(0,0,0,.48)}.task-tier-card.advanced{background:#fff0b8}.task-tier-card.challenge{background:#ffd9d3}.task-tier-inputs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.task-tier-inputs label{font-size:11px;font-weight:900}.task-draft-preview{margin-top:11px;padding:9px 11px;border:2px dashed #8a6a16;border-radius:9px;background:#fffaf0;font-size:12px;line-height:1.65}.task-draft-preview span{display:block}.task-picker{margin-top:10px;padding:10px;border:2px dashed #6f5a22;border-radius:10px;background:#f9f3df}.task-picker-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}.task-picker-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:6px}.task-picker-person{display:flex;align-items:center;gap:5px;background:#fff;border:2px solid #141414;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;font-weight:800}.task-batch-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px;padding:7px 9px;background:#fff8df;border:2px solid #141414;border-radius:9px}.task-batch-toolbar .spacer{flex:1}.task-review-check{width:20px;height:20px;accent-color:#d99b00;flex:0 0 auto}.task-review-list,.task-manage-list,.leader-review-list{display:grid;gap:8px}.task-review-item,.task-manage-item,.leader-review-item{background:#fff;border:2px solid #141414;border-radius:10px;padding:9px;display:flex;align-items:center;gap:9px}.task-review-item:has(.task-review-check:checked){background:#fff2b8;box-shadow:inset 0 0 0 2px #d99b00}.task-review-main,.task-manage-main,.leader-review-main{flex:1;min-width:0}.task-review-actions,.task-manage-actions,.leader-review-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.task-manage-item.off{opacity:.55;filter:grayscale(.35)}.task-reward-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.task-reward-tags span{font-size:11px;font-weight:900;padding:3px 6px;border:1px solid #141414;border-radius:999px;background:#fff7d8}.review-mode-tag{display:inline-block;font-size:10px;font-weight:900;padding:2px 6px;border:1px solid #141414;border-radius:999px;background:#eaf4ff}.task-audit-table{overflow:auto}.task-audit-table table{min-width:650px}
@@ -1060,7 +1061,9 @@ body.student-zone-mode{overflow:hidden;background:#121722}body.student-zone-mode
 /* 學生觸控作答：題目固定在頂端，原題目位置改放操作說明；地圖可點擊與滑動。 */
 .student-zone-screen{touch-action:none;overscroll-behavior:none;-webkit-overflow-scrolling:auto}.student-zone-screen button{touch-action:manipulation}.student-zone-questionbar{position:sticky!important;left:auto!important;top:0!important;z-index:285!important;width:min(720px,100%)!important;max-width:720px!important;max-height:34dvh;margin:0 auto 7px!important;padding:8px 12px!important;overflow:auto;touch-action:pan-y;overscroll-behavior:contain;transform:none!important;border:3px solid #141414!important;border-radius:12px!important;background:rgba(255,247,217,.98)!important;box-shadow:4px 4px 0 rgba(0,0,0,.72)!important;box-sizing:border-box}.student-zone-questionbar>b{display:block;font-size:clamp(20px,5vw,32px)!important;line-height:1.2!important;text-align:center;text-wrap:balance}.student-zone-questionbar .zone-question-img{max-height:14dvh!important}.student-zone-questionbar .quiz-geometry svg{max-height:14dvh}.student-zone-screen .zone-touch-guide{display:flex;align-items:center;justify-content:center;min-height:50px;margin:2px 0 7px;padding:7px 10px;border:2px dashed #1d5c92;border-radius:10px;background:#eaf7ff;color:#123d60;font-size:clamp(13px,3.5vw,17px);font-weight:900;line-height:1.45;text-align:center;box-sizing:border-box}.student-zone-screen .zone-student-map{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;overscroll-behavior:none}.student-zone-screen .zone-student-map *{touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none}.student-zone-screen .zone-student-map.is-dragging{cursor:grabbing;outline:4px solid #ffd234;outline-offset:2px}.student-zone-screen .zone-student-map.answer-locked{cursor:not-allowed;filter:saturate(.78)}.student-zone-screen .zone-pad{display:none!important}@media(max-width:520px){.student-zone-questionbar{max-height:31dvh;padding:6px 8px!important}.student-zone-questionbar>b{font-size:clamp(18px,5.5vw,26px)!important}.student-zone-screen .zone-touch-guide{min-height:42px;margin-bottom:5px;padding:5px 7px;font-size:12px}.student-zone-screen .zone-student-map{margin:4px auto!important}}
 /* 學生端不另外顯示時間條；送出按鈕的色帶會隨剩餘時間由右向左縮短。 */
-.student-zone-screen .zone-confirm .zone-submit-progress{--quiz-time:100%;--quiz-fill:#ffd234;position:relative;isolation:isolate;min-width:min(420px,92vw);min-height:58px;overflow:hidden;background:#f2f2f2!important;color:#141414!important;opacity:1!important}.student-zone-screen .zone-confirm .zone-submit-progress::before{content:"";position:absolute;left:0;top:0;bottom:0;z-index:-1;width:var(--quiz-time);background:var(--quiz-fill);transition:width .1s linear,background-color .18s linear}.student-zone-screen .zone-confirm .zone-submit-progress .zone-item-notice{display:block;margin-bottom:2px;color:#8a1f18;font-size:12px;font-weight:1000;line-height:1.25}.student-zone-screen .zone-confirm .zone-submit-progress .zone-submit-label{display:block;position:relative;z-index:1;font-size:16px;font-weight:1000}.student-zone-screen .student-zone-questionbar .zone-timer{display:none!important}@media(max-width:520px){.student-zone-screen .zone-confirm .zone-submit-progress{min-width:min(360px,92vw);min-height:52px;padding:6px 9px!important}.student-zone-screen .zone-confirm .zone-submit-progress .zone-item-notice{font-size:11px}.student-zone-screen .zone-confirm .zone-submit-progress .zone-submit-label{font-size:14px}}
+.student-zone-screen .zone-confirm{width:100%;max-width:100%;box-sizing:border-box}.student-zone-screen .zone-confirm .zone-submit-progress{--quiz-time:100%;--quiz-fill:#ffd234;position:relative;isolation:isolate;display:block;width:100%;max-width:100%;min-width:0;min-height:58px;overflow:hidden;box-sizing:border-box;white-space:normal;background:#f2f2f2!important;color:#141414!important;opacity:1!important}.student-zone-screen .zone-confirm .zone-submit-progress::before{content:"";position:absolute;left:0;top:0;bottom:0;z-index:-1;width:var(--quiz-time);background:var(--quiz-fill);transition:width .1s linear,background-color .18s linear}.student-zone-screen .zone-confirm .zone-submit-progress .zone-item-notice{display:block;margin-bottom:2px;color:#8a1f18;font-size:12px;font-weight:1000;line-height:1.25;overflow-wrap:anywhere}.student-zone-screen .zone-confirm .zone-submit-progress .zone-submit-label{display:block;position:relative;z-index:1;font-size:16px;font-weight:1000}.student-zone-screen .student-zone-questionbar .zone-timer{display:none!important}@media(max-width:520px){.student-zone-screen .zone-confirm .zone-submit-progress{width:100%;max-width:100%;min-width:0;min-height:52px;padding:6px 9px!important}.student-zone-screen .zone-confirm .zone-submit-progress .zone-item-notice{font-size:11px}.student-zone-screen .zone-confirm .zone-submit-progress .zone-submit-label{font-size:14px}}
+/* 道具模式美術：道具保持可辨識的半透明玻璃感；金幣以不透明像素金屬感原地旋轉發光。 */
+.zone-stage .zone-object:not(.wall),.zone-student-map .zone-object:not(.wall){width:clamp(30px,4.6cqw,48px);height:clamp(30px,4.6cqw,48px);border:2px solid rgba(255,255,255,.76);border-radius:50%;background:rgba(255,255,255,.62);box-shadow:inset 0 0 10px rgba(255,255,255,.72),0 0 15px rgba(127,211,255,.42);opacity:.9;backdrop-filter:blur(2px);font-size:clamp(18px,2.8cqw,28px);animation:zoneItemFloat 1.15s ease-in-out infinite alternate}.zone-stage .zone-object.good,.zone-student-map .zone-object.good{background:radial-gradient(circle,rgba(236,255,243,.78),rgba(68,213,139,.48));border-color:rgba(205,255,225,.88);box-shadow:inset 0 0 10px rgba(255,255,255,.76),0 0 17px rgba(55,239,149,.64)}.zone-stage .zone-object.bad,.zone-student-map .zone-object.bad{background:radial-gradient(circle,rgba(255,238,245,.72),rgba(218,62,95,.46));border-color:rgba(255,211,220,.86);box-shadow:inset 0 0 9px rgba(255,255,255,.6),0 0 17px rgba(255,55,92,.62)}.zone-stage .zone-object.bomb,.zone-student-map .zone-object.bomb{background:radial-gradient(circle,rgba(93,74,116,.82),rgba(29,20,43,.76));opacity:.94}.zone-stage .zone-object.confuse,.zone-student-map .zone-object.confuse{background:radial-gradient(circle,rgba(230,218,255,.76),rgba(109,61,202,.5))}.zone-stage .zone-object.slow,.zone-student-map .zone-object.slow{background:radial-gradient(circle,rgba(255,244,219,.75),rgba(191,113,52,.48))}.zone-stage .zone-object.coin,.zone-student-map .zone-object.coin{background:radial-gradient(circle at 35% 28%,#fffbd0 0 10%,#ffe56d 12% 27%,#f1b817 30% 64%,#9d5b00 68% 100%);border:3px solid #fff1a0;color:#7b4700;opacity:1;box-shadow:inset -4px -5px 0 rgba(126,67,0,.34),inset 3px 3px 0 rgba(255,255,255,.58),0 0 10px #fff2a2,0 0 24px rgba(255,199,27,.94);backdrop-filter:none;animation:zoneCoinSpin .9s linear infinite,zoneCoinGlow .65s ease-in-out infinite alternate!important;transform-style:preserve-3d}@keyframes zoneItemFloat{from{transform:translate(-50%,-52%) scale(.96)}to{transform:translate(-50%,-48%) scale(1.04)}}@keyframes zoneCoinSpin{0%{transform:translate(-50%,-50%) perspective(100px) rotateY(0)}50%{transform:translate(-50%,-50%) perspective(100px) rotateY(180deg)}100%{transform:translate(-50%,-50%) perspective(100px) rotateY(360deg)}}@keyframes zoneCoinGlow{from{filter:drop-shadow(0 2px 3px rgba(0,0,0,.4)) brightness(1)}to{filter:drop-shadow(0 0 12px #ffe760) brightness(1.18)}}
 .zone-question-img,.zone-option-img{cursor:zoom-in}.quiz-image-overlay{position:fixed;inset:0;z-index:520;display:grid;place-items:center;padding:18px;background:rgba(5,8,15,.93);cursor:zoom-out}.quiz-image-overlay img{display:block;max-width:96vw;max-height:92dvh;object-fit:contain;border:4px solid #fff;border-radius:12px;box-shadow:0 0 40px rgba(255,255,255,.3)}
 @media(max-width:760px){body.teacher-zone-mode .zone-quiz-shell{padding:5px;gap:5px}body.teacher-zone-mode .zone-question{width:calc(100vw - 128px);min-height:54px;max-height:30dvh;margin:0 auto;padding:6px 8px;overflow:auto}body.teacher-zone-mode .zone-question>b{font-size:clamp(18px,4.25vw,29px)}body.teacher-zone-mode .zone-question-img{max-height:14vh}body.teacher-zone-mode .zone-back-floating{left:5px;top:5px;padding:5px 7px!important;font-size:10px!important}body.teacher-zone-mode .board-course-link{right:5px;top:5px;bottom:auto;padding:5px 7px!important;font-size:10px!important}body.teacher-zone-mode .zone-quiz-controls{gap:3px;padding:3px 5px}body.teacher-zone-mode .zone-quiz-controls .btn{padding:3px 5px!important;font-size:9px!important}body.teacher-zone-mode .zone-quiz-controls .mini{display:none}.zone-student{padding:8px!important}.zone-student>h3{font-size:15px}.zone-student .zone-question{padding:8px}.zone-student .zone-question>b{font-size:clamp(19px,6vw,27px)}.zone-student .zone-question-img{max-height:18dvh}.zone-student .zone-student-map{aspect-ratio:4/3}}
 /* ⚔️ 競技場開戰後使用獨立全螢幕：所有決鬥、團戰與 Dota 共用，離場即由 render() 還原。 */
@@ -5229,6 +5232,7 @@ function reward(sid, baseXp, baseGold, reason, fxPoint, isQuest, suppressMentorR
   if(!suppressRender) render();
 }
 /* ══ 🎁 教師一次性獎勵卡 ═══════════════════════════ */
+let rewardCardCreateBusy=false;
 function rewardCode(){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const part=()=>Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join("");
@@ -5323,14 +5327,14 @@ function zoneSeeded(seed){let n=(Number(seed)||Date.now())>>>0;return()=>{n=(n*1
 function makeZoneObjects(seed){
   const rnd=zoneSeeded(seed),out=[],occupied=[];function pos(){for(let n=0;n<50;n++){const x=10+rnd()*80,y=13+rnd()*74;if(x>42&&x<58&&y>39&&y<61)continue;if(occupied.every(p=>zoneDist(x,y,p.x,p.y)>13)){occupied.push({x,y});return{x:Math.round(x),y:Math.round(y)};}}return{x:15+rnd()*70,y:15+rnd()*70};}
   for(let i=0;i<3;i++){const p=pos();out.push({id:"wall"+i,kind:"wall",tone:"neutral",x:p.x,y:p.y,w:8+Math.round(rnd()*6),h:9+Math.round(rnd()*7),icon:"🪨"});}
-  [{kind:"bomb",tone:"bad",icon:"💣"},{kind:"slow",tone:"bad",icon:"🐌"},{kind:"reverse",tone:"bad",icon:"↔️"},{kind:"confuse",tone:"bad",icon:"🌀"},{kind:"med",tone:"good",icon:"➕"},{kind:"haste",tone:"good",icon:"⚡"},{kind:"shield",tone:"good",icon:"🛡️"},{kind:"bonus",tone:"good",icon:"⏱️"}].forEach((o,i)=>{const p=pos();out.push({...o,id:o.kind+i,x:p.x,y:p.y,r:o.kind==="bomb"?7:5});});return out;
+  [{kind:"bomb",tone:"bad",icon:"💣"},{kind:"slow",tone:"bad",icon:"🐌"},{kind:"reverse",tone:"bad",icon:"↔️"},{kind:"confuse",tone:"bad",icon:"🌀"},{kind:"med",tone:"good",icon:"➕"},{kind:"haste",tone:"good",icon:"⚡"},{kind:"shield",tone:"good",icon:"🛡️"},{kind:"bonus",tone:"good",icon:"⏱️"},{kind:"coin",tone:"good",icon:"🪙"}].forEach((o,i)=>{const p=pos();out.push({...o,id:o.kind+i,x:p.x,y:p.y,r:o.kind==="bomb"?7:5});});return out;
 }
 function zoneObjects(l){return l&&(l.quizMode==="item"||l.quizMode==="battle")&&Array.isArray(l.zoneObjects)?l.zoneObjects:[];}
 function zoneDist(x1,y1,x2,y2){return Math.hypot(Number(x1)-Number(x2),Number(y1)-Number(y2));}
 function zoneMaxHp(s){return Math.max(100,Number(s&&s.maxHp)||100);}
 function zoneAnswerState(s,l){
   const qid=l&&l.questionId||"";let z=s.liveAnswer;
-  if(!z||z.questionId!==qid){const p=zoneSpawn(s);z=s.liveAnswer={questionId:qid,x:p.x,y:p.y,answer:"",confirmed:false,quizHp:zoneMaxHp(s),quizMaxHp:zoneMaxHp(s),used:{},event:"",updatedAt:Date.now()};}
+  if(!z||z.questionId!==qid){const p=zoneSpawn(s);z=s.liveAnswer={questionId:qid,x:p.x,y:p.y,answer:"",confirmed:false,quizHp:zoneMaxHp(s),quizMaxHp:zoneMaxHp(s),used:{},itemGold:0,event:"",updatedAt:Date.now()};}
   z.quizMaxHp=Math.max(1,Number(z.quizMaxHp)||zoneMaxHp(s));z.quizHp=Math.max(0,Math.min(z.quizMaxHp,Number(z.quizHp==null?z.quizMaxHp:z.quizHp)));z.used=z.used||{};z.x=zoneClamp(z.x);z.y=zoneClamp(z.y);z.answer=zoneLetterAt(z.x,z.y);return z;
 }
 let zoneStudentSyncTimer=0,zoneStudentLocalTimer=0;
@@ -5353,7 +5357,7 @@ function zoneMoveStudent(s,dx,dy){
   const nx=zoneClamp(z.x+dx),ny=zoneClamp(z.y+dy),wall=zoneObjects(l).find(o=>o.kind==="wall"&&Math.abs(nx-o.x)<o.w/2+3&&Math.abs(ny-o.y)<o.h/2+4);
   if(wall){z.event="🪨 前方有障礙物";toast(z.event,true);return false;}
   if((z.eventUntil||0)<=now){z.event="";z.eventUntil=0;}z.x=nx;z.y=ny;z.answer=zoneLetterAt(z.x,z.y);
-  zoneObjects(l).filter(o=>o.kind!=="wall"&&!z.used[o.id]&&zoneDist(z.x,z.y,o.x,o.y)<=o.r).forEach(o=>{z.used[o.id]=Date.now();const blocked=o.tone==="bad"&&z.shield;if(blocked){z.shield=false;z.event="🛡️ 護盾抵銷了負面道具";toast(z.event);return;}if(o.kind==="bomb"){let hit=0;state.students.forEach(v=>{const vz=zoneAnswerState(v,l);if(zoneDist(vz.x,vz.y,o.x,o.y)>13||vz.quizHp<=0)return;const dmg=Math.max(1,Math.round(vz.quizMaxHp*.3));vz.quizHp=Math.max(0,vz.quizHp-dmg);vz.event="💥 爆炸範圍傷害 -"+dmg+(vz.quizHp<=0?"，原地倒下":"");vz.updatedAt=Date.now();hit++;});z.event="💥 炸彈爆炸，波及 "+hit+" 人"+(z.quizHp<=0?"；你已原地倒下":"");toast(z.event,true);}else if(o.kind==="med"){const heal=Math.max(1,Math.round(z.quizMaxHp*.3)),got=Math.min(heal,z.quizMaxHp-z.quizHp);z.quizHp=Math.min(z.quizMaxHp,z.quizHp+heal);z.event="➕ 醫療包回復 "+got+" 體力";toast(z.event);}else if(o.kind==="haste"){z.hasteUntil=Date.now()+5000;z.event="⚡ 加速 5 秒";toast(z.event);}else if(o.kind==="shield"){z.shield=true;z.event="🛡️ 可抵銷一次負面道具";toast(z.event);}else if(o.kind==="bonus"){l.endsAt+=3000;z.event="⏱️ 全場答題時間 +3 秒";toast(z.event);}else if(o.kind==="slow"){z.slowUntil=Date.now()+5000;z.event="🐌 緩速 5 秒";toast(z.event,true);}else if(o.kind==="reverse"){z.reverseUntil=Date.now()+5000;z.event="↔️ 方向反轉 5 秒";toast(z.event,true);}else if(o.kind==="confuse"){z.confuseUntil=Date.now()+5000;z.event="🌀 混亂移動 5 秒";toast(z.event,true);}});
+  zoneObjects(l).filter(o=>o.kind!=="wall"&&!z.used[o.id]&&zoneDist(z.x,z.y,o.x,o.y)<=o.r).forEach(o=>{z.used[o.id]=Date.now();const blocked=o.tone==="bad"&&z.shield;if(blocked){z.shield=false;z.event="🛡️ 護盾抵銷了負面道具";toast(z.event);return;}if(o.kind==="bomb"){let hit=0;state.students.forEach(v=>{const vz=zoneAnswerState(v,l);if(zoneDist(vz.x,vz.y,o.x,o.y)>13||vz.quizHp<=0)return;const dmg=Math.max(1,Math.round(vz.quizMaxHp*.3));vz.quizHp=Math.max(0,vz.quizHp-dmg);vz.event="💥 爆炸範圍傷害 -"+dmg+(vz.quizHp<=0?"，原地倒下":"");vz.updatedAt=Date.now();hit++;});z.event="💥 炸彈爆炸，波及 "+hit+" 人"+(z.quizHp<=0?"；你已原地倒下":"");toast(z.event,true);}else if(o.kind==="med"){const heal=Math.max(1,Math.round(z.quizMaxHp*.3)),got=Math.min(heal,z.quizMaxHp-z.quizHp);z.quizHp=Math.min(z.quizMaxHp,z.quizHp+heal);z.event="➕ 醫療包回復 "+got+" 體力";toast(z.event);}else if(o.kind==="haste"){z.hasteUntil=Date.now()+5000;z.event="⚡ 加速 5 秒";toast(z.event);}else if(o.kind==="shield"){z.shield=true;z.event="🛡️ 可抵銷一次負面道具";toast(z.event);}else if(o.kind==="bonus"){l.endsAt+=3000;z.event="⏱️ 全場答題時間 +3 秒";toast(z.event);}else if(o.kind==="coin"){const gain=3;z.itemGold=Math.min(12,(Number(z.itemGold)||0)+gain);z.event="🪙 發光金幣 +"+gain+"（結算後獲得）";toast(z.event);}else if(o.kind==="slow"){z.slowUntil=Date.now()+5000;z.event="🐌 緩速 5 秒";toast(z.event,true);}else if(o.kind==="reverse"){z.reverseUntil=Date.now()+5000;z.event="↔️ 方向反轉 5 秒";toast(z.event,true);}else if(o.kind==="confuse"){z.confuseUntil=Date.now()+5000;z.event="🌀 混亂移動 5 秒";toast(z.event,true);}});
   if(z.event)z.eventUntil=Math.max(Number(z.eventUntil)||0,Date.now()+2400);z.updatedAt=Date.now();syncZoneStudent(s,false);return true;
 }
 function zoneObjectsHtml(s,l){const z=s?zoneAnswerState(s,l):null;return zoneObjects(l).filter(o=>!z||!z.used[o.id]||o.kind==="wall").map(o=>o.kind==="wall"?'<div class="zone-object wall" data-zone-object="'+esc(o.id)+'" style="left:'+o.x+'%;top:'+o.y+'%;width:'+o.w+'%;height:'+o.h+'%">'+o.icon+'</div>':'<div class="zone-object '+o.kind+' '+(o.tone||'neutral')+'" data-zone-object="'+esc(o.id)+'" style="left:'+o.x+'%;top:'+o.y+'%" title="'+esc(o.kind)+'">'+o.icon+'</div>').join("");}
@@ -5378,7 +5382,7 @@ function zoneBuzz(s){
   if(now<(l.readyUntil||0)){toast("GO！之後才能搶答",true);return false;}
   if(!z.answer){toast("請先移動到答案區",true);return false;}
   if(l.buzzerWinner){toast("已由 "+l.buzzerWinner.name+" 搶到答題權",true);return false;}
-  z.confirmed=true;z.updatedAt=now;l.buzzerWinner={sid:s.id,name:s.name,answer:z.answer,at:now};l.locked=true;syncZoneStudent(s,true);save();render();toast("🚨 "+s.name+" 搶答成功："+z.answer);return true;
+  z.confirmed=true;z.updatedAt=now;l.buzzerWinner={sid:s.id,name:s.name,answer:z.answer,at:now};l.buzzerStoppedAt=now;l.buzzerRemainingMs=Math.max(0,(Number(l.endsAt)||now)-now);l.locked=true;clearInterval(zoneCountdownTimer);syncZoneStudent(s,true);save();render();toast("🚨 "+s.name+" 搶答成功，倒數已停止："+z.answer);return true;
 }
 const COURSE_CATALOG_URL="./Lession/Lessionindex.html";
 const TEACHER_BANK_TEMPLATE_URL="./Lession/教師題庫匯入範例.xlsx";
@@ -5424,6 +5428,10 @@ function quizGeometrySvgSafe(value){
   const s=String(value||"").trim();
   return /^<svg[\s>]/i.test(s)&&s.length<=14000&&!/<\/?(?:script|foreignObject)|on\w+\s*=|javascript:/i.test(s)?s:"";
 }
+function quizGeometryQuestionParts(value){
+  const raw=String(value||"").trim(),match=raw.match(/<svg[\s\S]*?<\/svg>/i),svg=match?quizGeometrySvgSafe(match[0]):"";
+  const text=raw.replace(/<svg[\s\S]*?<\/svg>/gi," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();return{text,svg};
+}
 function quizGeometryHtml(value,extra){
   const svg=quizGeometrySvgSafe(value);return svg?'<div class="quiz-geometry '+esc(extra||"")+'">'+svg+'</div>':"";
 }
@@ -5436,12 +5444,12 @@ function quizGeometryOptionHtml(value){
   return icon?'<i class="geo-option-icon" aria-hidden="true">'+icon+'</i>':"";
 }
 function quizGeometryVisual(row,q){
-  const qtext=String(q&&q.q||"").replace(/<[^>]+>/g,""),key=[row&&row.chap,row&&row.unit,row&&row.topic,qtext].map(x=>String(x||"")).join(" ");
+  const parts=quizGeometryQuestionParts(q&&q.q),qtext=parts.text,key=[row&&row.chap,row&&row.unit,row&&row.topic,qtext].map(x=>String(x||"")).join(" ");
   const nums=(qtext.match(/[-−]?\d+(?:\.\d+)?/g)||[]).map(n=>Number(n.replace("−","-"))),line="#18243c",blue="#5bb9ef",gold="#ffc93c",red="#f06b63",fill="#dff4ff";
   const wrap=(body,label)=>'<svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+esc(label)+'"><rect x="2" y="2" width="316" height="166" rx="16" fill="#fffdf5" stroke="#111" stroke-width="4"/>'+body+'</svg>';
-  let svg="",prompt="";
+  let svg=parts.svg,prompt=parts.svg?qtext:"";
   const coord=key.match(/[（(]\s*([-−]?\d+)\s*[,，]\s*([-−]?\d+)\s*[)）]/);
-  if(/座標|象限|坐標/.test(key)){
+  if(svg){/* 題庫已提供安全 SVG：保留原圖，題幹只顯示 SVG 外的文字，避免原始標籤成為亂碼。 */}else if(/座標|象限|坐標/.test(key)){
     const x=coord?Number(coord[1].replace("−","-")):3,y=coord?Number(coord[2].replace("−","-")):2,px=160+Math.max(-5,Math.min(5,x))*24,py=85-Math.max(-3,Math.min(3,y))*22;
     const grid=Array.from({length:11},(_,i)=>{const gx=40+i*24;return '<path d="M'+gx+' 18V151 M40 '+(19+i*13.2)+'H282" stroke="#d9e2ef" stroke-width="1"/>';}).join("");
     svg=wrap('<g>'+grid+'</g><path d="M35 85H290 M160 155V12" stroke="'+line+'" stroke-width="3"/><path d="M290 85l-10-6v12zM160 12l-6 10h12z" fill="'+line+'"/><circle cx="'+px+'" cy="'+py+'" r="10" fill="'+gold+'" stroke="'+line+'" stroke-width="4"/><text x="'+(px+13)+'" y="'+(py-10)+'" font-size="18" font-weight="900" fill="'+line+'">P('+x+', '+y+')</text><text x="278" y="105" font-size="16" font-weight="900">x</text><text x="172" y="24" font-size="16" font-weight="900">y</text>','座標平面上的點 P');prompt="觀察點 P，選出正確判斷。";
@@ -5478,7 +5486,7 @@ function quizGeometryVisual(row,q){
     const A=nums.find(n=>n>10&&n<150)||55,B=nums.find((n,i)=>i>0&&n>10&&n<150)||65,C=Math.max(10,180-A-B);
     svg=wrap('<polygon points="42,139 278,139 178,28" fill="'+fill+'" stroke="'+line+'" stroke-width="5"/><path d="M68 139a27 27 0 0 0-9-20M250 139a27 27 0 0 1 8-21M163 45a24 24 0 0 1 30 4" fill="none" stroke="'+gold+'" stroke-width="5"/><text x="65" y="126" font-size="18" font-weight="900">'+A+'°</text><text x="229" y="126" font-size="18" font-weight="900">'+B+'°</text><text x="176" y="66" font-size="24" font-weight="1000" fill="'+red+'">'+(/求|多少|？|\?/.test(key)?'?':C+'°')+'</text>','三角形的角度標記');prompt="觀察三角形標記，選出正確答案。";
   }
-  return {svg:quizGeometrySvgSafe(svg),prompt:svg?(qtext.length<=38?String(q&&q.q||""):prompt):""};
+  return {svg:quizGeometrySvgSafe(svg),prompt:svg?(qtext.length<=38?qtext:(prompt||qtext)):""};
 }
 function bankQuestionPayload(row,qIndex){
   if(!row||!Array.isArray(row.qs)||!row.qs.length)return null;
@@ -5525,8 +5533,9 @@ function settleZoneLesson(correctIds,manual){
   const winners=new Set((correctIds||[]).map(String));l.locked=true;l.reveal=true;l.settled=true;if(manual)l.offlineCorrect=[...winners];
   let correct=0,confirmed=0;
   state.students.forEach(s=>{
-    const z=s.liveAnswer||{},didAnswer=manual?winners.has(String(s.id)):(z.questionId===l.questionId&&z.confirmed),isCorrect=manual?winners.has(String(s.id)):(didAnswer&&z.answer===l.correct);
+    const z=s.liveAnswer||{},buzzerSid=l.quizMode==="buzzer"&&l.buzzerWinner?String(l.buzzerWinner.sid||""):"",didAnswer=manual?winners.has(String(s.id)):(buzzerSid?String(s.id)===buzzerSid:(z.questionId===l.questionId&&z.confirmed)),isCorrect=manual?winners.has(String(s.id)):(didAnswer&&z.answer===l.correct);
     if(didAnswer)confirmed++;
+    const itemGold=didAnswer?Math.max(0,Math.min(12,Number(z.itemGold)||0)):0;if(itemGold)creditGold(s,itemGold,"知識挑戰道具金幣",true);
     if(isCorrect){correct++;s.quizFeverStreak=(Number(s.quizFeverStreak)||0)+1;const streak=s.quizFeverStreak,multiplier=1+Math.floor(streak/3)*.25+(streak>=10?.25:0),xp=Math.round((Number(l.xp)||15)*multiplier);lessonAnswer(s.id,null,xp);if([3,6,9,10].includes(streak))addLog(s.id,"🔥 Fever 連對 "+streak+" 題，獎勵提升至 ×"+multiplier.toFixed(2));}else{s.quizFeverStreak=0;}
   });
   addLog("-",(manual?"🙋 無裝置人工點名結算：":"🧭 站位答題結算：")+correct+" 人答對"+(manual?"":"、"+confirmed+" 人作答"));save();modalHost.innerHTML="";render();toast("✨ 已發放本題獎勵："+correct+" 人答對");return true;
@@ -5549,7 +5558,8 @@ function zoneBoardHtml(){
   const counts=letters.map(k=>state.students.filter(s=>{const z=s.liveAnswer||{};return z.questionId===l.questionId&&z.confirmed&&z.answer===k;}).length);
   const zones=letters.map((k,i)=>'<div class="zone-area '+k.toLowerCase()+(correct===k?' correct':'')+'"><b>'+k+'</b><span class="zone-option-bg">'+quizImageHtml((l.optionImages||[])[i],"zone-option-img",k+" 選項圖片")+'<span>'+(l.visualSvg?quizGeometryOptionHtml((l.options||[])[i]):'')+esc((l.options||[])[i]||"")+'</span></span></div>').join("");
   const avatars=state.students.map(s=>{const z=zoneAnswerState(s,l),hp=Math.round(z.quizHp/z.quizMaxHp*100),streak=Number(s.quizFeverStreak)||0,fever=streak>=3?' zone-fever':'',lightning=streak>=10?' zone-lightning':'';return '<div class="zone-avatar '+(z.confirmed?'confirmed ':'')+(z.quizHp<=0?'zone-ko':'')+fever+lightning+'" style="left:'+z.x+'%;top:'+z.y+'%;--fever-speed:'+Math.max(.24,1.1-Math.min(streak,12)*.07)+'s" title="'+esc(s.name)+'・'+(z.answer||"待命")+'・HP '+Math.round(z.quizHp)+'">'+dollSVG(s,76)+'<span class="zone-hp"><i style="width:'+hp+'%"></i></span><span class="name">'+esc(s.name)+(z.confirmed?' ✓':'')+(streak>=3?' 🔥'+streak:'')+'</span></div>';}).join("");
-  return '<div class="zone-quiz-shell"><div class="zone-question'+(l.visualSvg?' has-geometry':'')+'"><b>'+esc(l.prompt||l.title)+'</b>'+quizGeometryHtml(l.visualSvg,"zone-geometry")+quizImageHtml(l.questionImage,"zone-question-img","題目圖片")+'<div class="zone-timer"><span>'+Number(l.durationSec||30).toFixed(1)+' 秒</span></div></div>'
+  const timerText=l.quizMode==="buzzer"&&l.buzzerWinner?(Math.max(0,Number(l.buzzerRemainingMs)||0)/1000).toFixed(1):Number(l.durationSec||30).toFixed(1);
+  return '<div class="zone-quiz-shell"><div class="zone-question'+(l.visualSvg?' has-geometry':'')+'"><b>'+esc(l.prompt||l.title)+'</b>'+quizGeometryHtml(l.visualSvg,"zone-geometry")+quizImageHtml(l.questionImage,"zone-question-img","題目圖片")+'<div class="zone-timer"><span>'+timerText+' 秒</span></div></div>'
     +'<div class="zone-stage"><div class="zone-cross-v"></div><div class="zone-cross-h"></div>'+zones+(l.quizMode==="offline"?'':zoneObjectsHtml(null,l))+'<div class="zone-wait">中央待命區</div>'+avatars+'<div class="zone-start-countdown">3</div>'+(l.buzzerWinner?'<div class="zone-buzzer-winner">🚨 '+esc(l.buzzerWinner.name)+' 搶到 '+esc(l.buzzerWinner.answer)+'</div>':'')+'</div>'
     +offlineAnswerBoardHtml(l)+'<div class="zone-quiz-controls"><span class="mini">'+zoneModeLabel(l.quizMode)+'・'+(l.locked?'🔒 已鎖定':'🟢 作答中')+'・已確認 '+counts.reduce((a,b)=>a+b,0)+' / '+state.students.length+'</span>'
     +'<button class="btn" id="zoneLock">'+(l.locked?'🔓 重新開放':'🔒 鎖定答案')+'</button><button class="btn gold" id="zoneReveal">'+(l.reveal?'🙈 隱藏答案':'👁 公布答案')+'</button><button class="btn gold" id="zoneSettle"'+(l.settled?' disabled':'')+'>✨ 結算獎勵</button>'+(l.bankRef?'<button class="btn course-next" id="zoneNext"'+(!l.settled?' disabled':'')+'>下一題 ▶</button>':'')+'<button class="btn danger" id="zoneEnd">結束本題</button></div>'
@@ -9452,7 +9462,7 @@ function teacherClassProgress(){
 function teacherGuide(){
   const ec=economyCfg(),econStudents=state.students.filter(s=>state.dataProfile!=="production"||!/^T\d+$/i.test(String(s.id||"")));
   const classGold=econStudents.reduce((n,s)=>n+(Number(s.gold)||0),0),classDiamonds=econStudents.reduce((n,s)=>n+(Number(s.diamonds)||0),0);
-  const diamondFlowRows=econStudents.map(s=>({s,flow:ensureDiamondFlow(s)})).filter(x=>x.flow.total>0).sort((a,b)=>String(a.s.name||"").localeCompare(String(b.s.name||""),"zh-Hant"));
+  const diamondFlowRows=econStudents.map(s=>({s,flow:studentDiamondFlow(s)})).filter(x=>x.flow.total>0).sort((a,b)=>String(a.s.name||"").localeCompare(String(b.s.name||""),"zh-Hant"));
   const diamondFlowTable=diamondFlowRows.length
     ? '<div class="panel"><h3>💎 本週鑽石來源紀錄（僅教師）</h3><div class="mini">分開記錄教師獎勵、學習連續與受監督互評；感謝卡不列入鑽石。</div><table><thead><tr><th>學生</th><th>教師獎勵</th><th>學習連續</th><th>有效互評</th><th>本週合計</th></tr></thead><tbody>'+diamondFlowRows.map(x=>'<tr><td>'+esc(x.s.name)+'</td><td class="num">'+x.flow.reward+' / '+ec.rewardDiamondWeeklyCap+'</td><td class="num">'+x.flow.learning+' / '+ec.learningDiamondWeeklyCap+'</td><td class="num">'+x.flow.review+' / '+ec.peerReviewWeeklyDiamondCap+'</td><td class="num"><b>'+x.flow.total+' / '+ec.totalDiamondWeeklyCap+'</b></td></tr>').join('')+'</tbody></table></div>'
     : '<div class="panel"><h3>💎 本週鑽石來源紀錄（僅教師）</h3><div class="mini">本週尚未發放鑽石；之後會依教師獎勵、學習連續、有效互評分欄記錄。</div></div>';
@@ -12777,14 +12787,10 @@ function teacherTitles(){
       '<span class="badge">【'+esc(t)+'】'+(x.title===t?" ✓配戴中":"")
       + ' <a href="#" data-revoke="'+x.id+'|'+esc(t)+'" style="color:#c0392b;text-decoration:none">✕</a></span>').join(" ")
     + '</td></tr>').join("") || '<tr><td colspan="2" class="mini">還沒有學生獲得稱號</td></tr>';
-  return '<div class="panel"><h3>🎖 稱號目錄(僅教師可見,學生看不到未獲得的稱號與條件)</h3>'
-    + '<div class="mini" style="margin-bottom:8px">配戴才生效;「建議頒發時機」只是參考,你可以彈性認定。也可在「任務」的獎勵稱號欄綁定,審核通過自動頒發。</div>'
-    + '<table><thead><tr><th>稱號</th><th>隱藏效果</th><th>建議頒發時機</th><th>頒發給</th></tr></thead><tbody>'+rows+customRows+'</tbody></table></div>'
-    + '<div class="panel"><h3>➕ 自訂稱號</h3><div class="inline-form">'
-    + '<input type="text" id="tdName" placeholder="稱號名稱(例:朗讀之星)" style="width:170px">'
-    + '<select id="tdEff">'+effOpts+'</select>'
-    + '<button class="btn gold" id="tdAdd">建立</button></div></div>'
-    + '<div class="panel"><h3>📜 已頒發紀錄(點 ✕ 可撤回)</h3><table><tbody>'+ownedRows+'</tbody></table></div>';
+  return '<div class="title-menu-grid">'
+    +'<details class="panel arena-menu-card title-menu-card"><summary>🎖 稱號目錄與頒發</summary><div class="arena-menu-body"><div class="mini" style="margin-bottom:8px">僅教師可見；配戴才生效。「建議頒發時機」只是參考，也可在任務獎勵中設定自動頒發。</div><div class="title-table-scroll"><table><thead><tr><th>稱號</th><th>隱藏效果</th><th>建議頒發時機</th><th>頒發給</th></tr></thead><tbody>'+rows+customRows+'</tbody></table></div></div></details>'
+    +'<details class="panel arena-menu-card title-menu-card"><summary>➕ 建立自訂稱號</summary><div class="arena-menu-body"><div class="inline-form"><input type="text" id="tdName" placeholder="稱號名稱（例：朗讀之星）" style="width:170px"><select id="tdEff">'+effOpts+'</select><button class="btn gold" id="tdAdd">建立</button></div></div></details>'
+    +'<details class="panel arena-menu-card title-menu-card"><summary>📜 已頒發紀錄與撤回</summary><div class="arena-menu-body"><div class="title-table-scroll"><table><tbody>'+ownedRows+'</tbody></table></div></div></details></div>';
 }
 function teacherRank(){
   const byName = [...state.students].sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"zh-Hant"));
@@ -13453,21 +13459,22 @@ function teacherAnnounce(){
 function teacherRewards(){
   const items=SHOP_ITEMS.filter(x=>x.type==="consumable");
   const opts='<option value="">不附加道具</option>'+items.map(x=>'<option value="'+x.id+'">'+x.icon+' '+esc(x.name)+'</option>').join("");
-  const rows=(state.rewardCards||[]).slice().reverse().map(c=>{
+  const uniqueCards=[...new Map((state.rewardCards||[]).filter(c=>c&&c.code).map(c=>[String(c.code),c])).values()];
+  const rows=uniqueCards.slice().reverse().map(c=>{
     const who=c.usedBy ? (stu(c.usedBy)||{}).name||c.usedBy : "尚未兌換";
     const prize=[c.xp?"+"+c.xp+" XP":"",c.gold?"+"+c.gold+" 金":"",c.diamonds?"+"+c.diamonds+" 💎":"",c.itemId?((itemById(c.itemId)||{}).name||"道具"):""].filter(Boolean).join("、");
     return '<tr><td><b>'+esc(c.title||"神秘獎勵")+'</b><div class="mini num">'+esc(c.code)+'</div></td><td class="mini">'+esc(prize||"自訂獎勵")+'</td><td class="mini">'+esc(who)+'</td><td style="white-space:nowrap">'+(c.usedBy?'<span class="mini">已兌換</span>':'<button class="btn" data-cardqr="'+esc(c.code)+'">QR</button> <button class="btn danger" data-cardstop="'+esc(c.code)+'">停用</button>')+'</td></tr>';
   }).join("") || '<tr><td colspan="4" class="mini">尚未產生獎勵卡。</td></tr>';
   return '<div class="panel"><h3>🎁 一次性獎勵卡</h3><div class="mini" style="line-height:1.7;margin-bottom:10px">產生後將 QR 給學生掃描，或直接提供兌換碼。每張卡只能由一位學生領取一次；線上班級會先在雲端鎖定兌換碼。</div>'
-    + '<div class="inline-form"><input id="rcTitle" placeholder="獎勵名稱，例如：閱讀挑戰獎" style="min-width:190px;flex:1"><input id="rcXp" type="number" min="0" value="20" placeholder="XP" style="width:80px"><input id="rcGold" type="number" min="0" value="0" placeholder="金幣" style="width:80px"><input id="rcDiamond" type="number" min="0" max="3" value="0" placeholder="鑽石" style="width:80px"><select id="rcItem">'+opts+'</select><button class="btn gold" id="rcCreate">產生 QR 獎勵卡</button></div><div class="mini" style="margin-top:7px">單張最多 3💎；學生仍受每週教師獎勵卡與鑽石總上限保護。</div>'
+    + '<div class="inline-form"><input id="rcTitle" placeholder="獎勵名稱，例如：閱讀挑戰獎" style="min-width:190px;flex:1"><input id="rcXp" type="number" min="0" value="20" placeholder="XP" style="width:80px"><input id="rcGold" type="number" min="0" value="0" placeholder="金幣" style="width:80px"><input id="rcDiamond" type="number" min="0" max="3" value="0" placeholder="鑽石" style="width:80px"><select id="rcItem">'+opts+'</select><button class="btn gold" id="rcCreate"'+(rewardCardCreateBusy?' disabled':'')+'>'+(rewardCardCreateBusy?'正在建立…':'產生 QR 獎勵卡')+'</button></div><div class="mini" style="margin-top:7px">單張最多 3💎；學生仍受每週教師獎勵卡與鑽石總上限保護。</div>'
     + '<div class="panel" style="margin:14px 0 0"><h3>已發出的獎勵卡</h3><table><thead><tr><th>名稱／兌換碼</th><th>獎勵</th><th>狀態</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function openRewardQr(card){
   const link=rewardCardLink(card.code);
-  modalHost.innerHTML='<div class="overlay" id="ovl"><div class="modal" style="max-width:440px;text-align:center"><h4>🎁 '+esc(card.title||"神秘獎勵")+'</h4><div class="mini">學生掃描 QR 後登入即可領取；也可手動輸入下方兌換碼。</div><div id="rewardQr" style="display:flex;justify-content:center;margin:14px"></div><div class="panel" style="margin:6px 0"><b class="num" style="font-size:22px;letter-spacing:1px">'+esc(card.code)+'</b></div><button class="btn" id="rewardQrClose">關閉</button></div></div>';
+  modalHost.innerHTML='<div class="overlay" id="ovl"><div class="modal" style="max-width:440px;text-align:center"><h4>🎁 '+esc(card.title||"神秘獎勵")+'</h4><div class="mini">學生掃描 QR 後登入即可領取；也可手動輸入下方兌換碼。</div><div id="rewardQr" style="display:flex;justify-content:center;margin:14px;min-height:250px;align-items:center"><span class="mini">QR 產生中…</span></div><div class="panel" style="margin:6px 0"><b class="num" style="font-size:22px;letter-spacing:1px">'+esc(card.code)+'</b></div><a class="mini" href="'+esc(link)+'" target="_blank" rel="noopener">開啟兌換連結</a><br><button class="btn" id="rewardQrClose" style="margin-top:9px">關閉</button></div></div>';
   document.getElementById("ovl").onclick=e=>{ if(e.target.id==="ovl") modalHost.innerHTML=""; };
   document.getElementById("rewardQrClose").onclick=()=>modalHost.innerHTML="";
-  loadQRCode(()=>{ const box=document.getElementById("rewardQr"); if(box&&window.QRCode) new QRCode(box,{text:link,width:250,height:250,correctLevel:QRCode.CorrectLevel.M}); });
+  loadQrLib(ok=>{const box=document.getElementById("rewardQr");if(!box)return;if(ok&&window.QRCode){try{box.innerHTML="";new QRCode(box,{text:link,width:250,height:250,correctLevel:QRCode.CorrectLevel.M});}catch(e){box.innerHTML='<div class="mini" style="color:#a32424">QR 產生失敗，請使用下方兌換碼或連結。</div>';}}else box.innerHTML='<div class="mini" style="color:#a32424">QR 元件載入失敗，請使用下方兌換碼或連結。</div>';});
 }
 function baseTuneSample(variant,tune){
   return {roStyle:true,gender:variant.indexOf('female')===0?'female':'male',baseVariant:variant,job:'Warrior',level:1,
@@ -13716,15 +13723,17 @@ function bindTeacher(){
   });
   const rcCreate=document.getElementById("rcCreate");
   if(rcCreate) rcCreate.onclick=async ()=>{
+    if(rewardCardCreateBusy)return;
     const num=id=>Math.max(0,Math.floor(+document.getElementById(id).value||0));
     const card={code:rewardCode(),title:document.getElementById("rcTitle").value.trim()||"神秘獎勵",xp:num("rcXp"),gold:num("rcGold"),diamonds:Math.min(3,num("rcDiamond")),itemId:+document.getElementById("rcItem").value||null,active:true,createdAt:Date.now(),usedBy:null,usedAt:null,status:"ready"};
     if(!card.xp&&!card.gold&&!card.diamonds&&!card.itemId){ toast("至少設定一種獎勵", true); return; }
-    rcCreate.disabled=true;
+    rewardCardCreateBusy=true;rcCreate.disabled=true;rcCreate.textContent="正在建立…";
     try{
       if(CLOUD.on()) await CLOUD.createRewardCard(card);
-      state.rewardCards.push(card); save(); render();
+      const existing=(state.rewardCards||[]).find(x=>x.code===card.code);if(existing)Object.assign(existing,card);else state.rewardCards.push(card);
+      rewardCardCreateBusy=false;save(); render();
       setTimeout(()=>openRewardQr(card),0);
-    }catch(e){ toast("產生失敗："+(e.message||e), true); rcCreate.disabled=false; }
+    }catch(e){rewardCardCreateBusy=false;toast("產生失敗："+(e.message||e), true);rcCreate.disabled=false;rcCreate.textContent="產生 QR 獎勵卡";}
   };
   app.querySelectorAll("[data-cardqr]").forEach(b=>b.onclick=()=>{
     const c=(state.rewardCards||[]).find(x=>x.code===b.dataset.cardqr); if(c) openRewardQr(c);
@@ -13849,7 +13858,7 @@ function bindTeacher(){
     }
     openLessonChallengeModal();
   };
-  const zoneLock=document.getElementById("zoneLock");if(zoneLock)zoneLock.onclick=()=>{const l=state.lesson;if(!l)return;l.locked=!l.locked;if(!l.locked){l.endsAt=Date.now()+Math.max(10,Math.min(180,+l.durationSec||30))*1000;if(l.quizMode==="buzzer")l.buzzerWinner=null;}save();render();toast(l.locked?"🔒 已鎖定答案":"🔓 已重新開放並重設倒數");};
+  const zoneLock=document.getElementById("zoneLock");if(zoneLock)zoneLock.onclick=()=>{const l=state.lesson;if(!l)return;l.locked=!l.locked;if(!l.locked){l.endsAt=Date.now()+Math.max(10,Math.min(180,+l.durationSec||30))*1000;if(l.quizMode==="buzzer"){l.buzzerWinner=null;l.buzzerStoppedAt=0;l.buzzerRemainingMs=0;state.students.forEach(s=>{const z=zoneAnswerState(s,l);z.confirmed=false;});}}save();render();toast(l.locked?"🔒 已鎖定答案":"🔓 已重新開放並重設倒數");};
   const zoneReveal=document.getElementById("zoneReveal");if(zoneReveal)zoneReveal.onclick=()=>{const l=state.lesson;if(!l)return;l.reveal=!l.reveal;save();render();};
   const zoneSettle=document.getElementById("zoneSettle");if(zoneSettle)zoneSettle.onclick=()=>{
     const l=state.lesson;if(!l||l.mode!=="zone"||l.settled)return;if(l.quizMode==="offline"){openOfflineRewardPicker();return;}const ids=state.students.filter(s=>{const z=s.liveAnswer||{};return z.questionId===l.questionId&&z.confirmed&&z.answer===l.correct;}).map(s=>s.id);settleZoneLesson(ids,false);
@@ -15554,7 +15563,7 @@ function renderStudent(){
       + '<div class="shop-grid">'+bagHtml+'</div></div>'
       + '<div class="panel"><h3>♻ 回收身上裝備(退回售價 20%)</h3><div class="shop-grid">'+recycleHtml+'</div></div>';
     // 鑽石商店內容：來源透明、每週有上限；感謝卡只累積班級關懷值。
-    const dFlow=ensureDiamondFlow(s),ownedCosmetics=s.diamondCosmetics||{};
+    const dFlow=studentDiamondFlow(s),ownedCosmetics=s.diamondCosmetics||{};
     const cosmeticCards=DIAMOND_COSMETICS.map(c=>{const owned=!!ownedCosmetics[c.id],on=s.diamondCosmeticId===c.id;return '<div class="item-card '+(on?'equipped':'')+'"><div class="iic" style="font-size:40px">'+c.icon+'</div><div class="inm">'+esc(c.name)+'</div><div class="istats">'+esc(c.desc)+'<br><b>純外觀・不增加能力</b></div><div class="price num">💎 '+c.price+'</div>'+(owned?(on?'<button class="btn danger" data-cosmeticoff="1">卸下</button>':'<button class="btn gold" data-cosmeticwear="'+c.id+'">展示</button>'):'<button class="btn gold" data-cosmeticbuy="'+c.id+'"'+((s.diamonds||0)>=c.price?'':' disabled')+'>收藏</button>')+'</div>';}).join('');
     const gemBody = '<div class="panel" style="background:linear-gradient(135deg,#eef4ff,#dce8ff);border-color:#4a6fd0">'
       + '<h3 style="color:#2b4bb0">💎 鑽石商店 <span class="mini">1💎＝1,000 金幣的價值基準，不開放自由兌換</span></h3>'
