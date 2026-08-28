@@ -6054,10 +6054,15 @@ async function bagSell(sid, idx){
    ⚠️ 絕不動鑽石(那是感謝/指導得來的珍貴資源,留給學生自己決定)
    ⚠️ 保留 AUTO_KEEP_GOLD_RATIO 比例的金幣,避免學生想自己買時沒錢 */
 const AUTO_KEEP_GOLD_RATIO = 0.2;          // 保留兩成金幣不花
+const AUTO_PILOT_FEATURES={stats:"能力配點",skills:"技能樹與技能組",shop:"商店與裝備",guild:"公會攻城券"};
+function autoFeatureReady(feature){return classFeatureUnlocked(feature);}
+function autoPilotLockedFeatures(){return Object.entries(AUTO_PILOT_FEATURES).filter(([feature])=>!autoFeatureReady(feature)).map(([,label])=>label);}
+function autoPilotFeatureLine(feature,text){return (autoFeatureReady(feature)?"✅ ":"🔒 ")+text+(autoFeatureReady(feature)?"":"（尚未解鎖，託管不會使用）");}
 
 /* 依職業決定能力點配置權重:主屬性 60%、副屬性 40% */
 const AUTO_SUB_STAT = { Warrior:"def", Rogue:"atk", Mage:"def", Cleric:"def" };
 function autoAllocStats(s){
+  if(!autoFeatureReady("stats"))return 0;
   let n = 0;
   const main = mainStatOf(s), sub = AUTO_SUB_STAT[s.job] || "def";
   s.alloc = s.alloc || {atk:0, agi:0, int:0, def:0};
@@ -6085,7 +6090,7 @@ function autoBuildLabel(s){
 }
 /* 自動點技能：同一「轉職階段 × 流派」由第一招開始連續點滿；滿了才換下一系列。 */
 function autoLevelSkills(s){
-  if(!skillsEnabled()) return 0;
+  if(!autoFeatureReady("skills")||!skillsEnabled()) return 0;
   let n = 0, guard = 0;
   const build=AUTO_SKILL_BUILD[s.job] || [];
   while((s.spPoints||0) > 0 && guard++ < 200){
@@ -6120,6 +6125,7 @@ function autoGearScore(job, it){
   return stat[main]*3 + stat.def + stat.atk + stat.agi + stat.int;
 }
 function autoBuyGear(s){
+  if(!autoFeatureReady("bag")||!autoFeatureReady("shop"))return [];
   const bought = [];
   const budget = ()=> Math.max(0, s.gold - Math.floor(s.gold * AUTO_KEEP_GOLD_RATIO));
   const isLegendary = (it)=> !!it && (it.rarity === "Legendary" || it.price === 0);
@@ -6142,6 +6148,7 @@ function autoBuyGear(s){
 }
 /* 組長自動補攻城卷(公會戰報名用) */
 function autoBuySiegeTicket(s){
+  if(!autoFeatureReady("guild"))return false;
   if(state.groupLeaders[s.group] !== s.id) return false;   // 只有組長需要
   s.consumables = s.consumables || {};
   if((s.consumables[31]||0) > 0) return false;             // 已有就不買
@@ -15730,10 +15737,10 @@ function renderStudent(){
     + '<details class="stu-optional"'+(s.autoPilot?' open':'')+'><summary>🤖 角色託管'+(s.autoPilot?'　<span class="tag" style="background:var(--gold);color:#141414">運作中</span>':'')+'</summary><div>'
       + '<div class="mini" style="line-height:1.8;margin-bottom:8px">'
       + '開啟後,系統會自動幫你:<br>'
-      + '① 依職業分配能力點(主屬性為主)<br>'
-      + '② 依「'+autoBuildLabel(s)+'」流派由低階到高階連續升級，該系列點滿才轉下一系<br>'
-      + '③ 買得起就自動升級裝備<br>'
-      + '④ 組長會自動補攻城卷<br>'
+      + autoPilotFeatureLine("stats",'① 依職業分配能力點（主屬性為主）')+'<br>'
+      + autoPilotFeatureLine("skills",'② 依「'+autoBuildLabel(s)+'」流派升級並使用技能組')+'<br>'
+      + autoPilotFeatureLine("shop",'③ 買得起就自動升級裝備')+'<br>'
+      + autoPilotFeatureLine("guild",'④ 組長會自動補攻城券')+'<br>'
       + '<b style="color:var(--gold)">💎 鑽石永遠不會被動用</b>,金幣也會保留 '+Math.round(AUTO_KEEP_GOLD_RATIO*100)+'% 讓你自己買想要的東西。</div>'
       + '<button class="btn '+(s.autoPilot?'':'gold')+'" id="autoToggle">'
       + (s.autoPilot?'⏸ 關閉託管':'▶️ 開啟託管')+'</button>'
@@ -15756,7 +15763,7 @@ function renderStudent(){
     if(s.autoPilot){
       addLog(s.id, "🤖 開啟角色託管");
       const did = runAutoPilot(s.id, true);
-      toast(did && did.length ? "🤖 託管已開啟並代管:"+did.join("、") : "🤖 託管已開啟,之後獲得資源會自動運用");
+      const locked=autoPilotLockedFeatures();toast(did && did.length ? "🤖 託管已開啟並代管:"+did.join("、") : "🤖 託管已開啟；只會運用已解鎖功能"+(locked.length?"（略過："+locked.join("、")+"）":""));
     }else{
       addLog(s.id, "⏸ 關閉角色託管");
       toast("已關閉託管,資源改由你自己分配");
@@ -15766,7 +15773,7 @@ function renderStudent(){
   const autoRunNow = document.getElementById("autoRunNow");
   if(autoRunNow) autoRunNow.onclick = ()=>{
     const did = runAutoPilot(s.id, true);
-    toast(did && did.length ? "🤖 已代管:"+did.join("、") : "目前沒有可運用的資源(能力點/技能點/金幣不足)");
+    const locked=autoPilotLockedFeatures();toast(did && did.length ? "🤖 已代管:"+did.join("、") : "目前沒有可運用的已解鎖資源"+(locked.length?"；尚未解鎖："+locked.join("、"):"（能力點／技能點／金幣不足）"));
     render();
   };
 
