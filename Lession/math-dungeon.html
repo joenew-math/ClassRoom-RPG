@@ -3329,7 +3329,7 @@ function logScreen(){
    XP／金幣由主系統的登入帳號與免費 Worker 計算，地城本身不能直接發獎。 */
 const CLASSROOM_LAUNCH_KEY='classRpgDungeonLaunch';
 const CLASSROOM_PENDING_KEY='classRpgDungeonPending';
-let classroomLaunch=null,classroomSeq=0,classroomBase={q:0,ok:0},classroomPendingClear=null;
+let classroomLaunch=null,classroomSeq=0,classroomBase={q:0,ok:0},classroomPendingClear=null,classroomDeathReported=false;
 const hesc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function classroomPendingList(){
   try{const a=JSON.parse(localStorage.getItem(CLASSROOM_PENDING_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
@@ -3499,6 +3499,30 @@ function classroomReturn(){
     window.close();return;
   }}catch(e){}
   location.href='../index.html';
+}
+
+/* 課前地下城只在老師尚未開課時開放。班級頁會即時同步 Firestore，
+   子視窗再以同網域狀態查詢；上課一開始就先回傳、再關閉遊戲。 */
+let classroomScheduleTimer=null,classroomScheduleLocked=false;
+function classroomScheduleStatus(){
+  if(!classroomLaunch||!classroomLaunch.closeWhenClassStarts)return null;
+  try{if(window.opener&&!window.opener.closed&&typeof window.opener.classRpgDungeonClassStatus==='function')return window.opener.classRpgDungeonClassStatus(classroomLaunch.cid);}catch(e){}
+  try{if(window.parent&&window.parent!==window&&typeof window.parent.classRpgDungeonClassStatus==='function')return window.parent.classRpgDungeonClassStatus(classroomLaunch.cid);}catch(e){}
+  return null;
+}
+function classroomCloseForClass(){
+  if(classroomScheduleLocked)return;classroomScheduleLocked=true;running=false;saveChar();
+  try{if(B){B.over=true;B.busy=true;clearInterval(rTimer);}}catch(e){}
+  const packet=classroomCheckpoint('class_started',{title:'老師開始上課'});
+  overlay(`<div class="kicker">CLASS STARTED</div><h1>🔔 老師開始上課</h1>
+    <div class="desc">地下城複習已暫停。<br>${packet?'本次答題成果已先存入安全佇列並回傳。':'角色進度已保存。'}<br>請回班級頁參與當節課。</div>
+    <button class="go" id="classNowBack">🏫 回到班級課堂</button>`,null,el=>{if(el.id==='classNowBack'){dungeonHealthBack();return true;}return false;});
+  clearInterval(classroomScheduleTimer);classroomScheduleTimer=setTimeout(dungeonHealthBack,5200);
+}
+function startClassroomScheduleGuard(){
+  if(!classroomLaunch||!classroomLaunch.closeWhenClassStarts)return;
+  clearInterval(classroomScheduleTimer);classroomScheduleTimer=setInterval(()=>{const s=classroomScheduleStatus();if(s&&s.active)classroomCloseForClass();},2000);
+  const s=classroomScheduleStatus();if(s&&s.active)classroomCloseForClass();
 }
 
 /* ═══════════════ 30 分鐘健康休息鎖 ═══════════════
@@ -4052,7 +4076,8 @@ function runEndScreen(win,opt={}){
   const r=endRun(win);
   const M=S.meta;
   const depthClear=!!opt.depthClear;
-  classroomCheckpoint(win?'run_clear':depthClear?'run_depth':'run_end');
+  if(classroomDeathReported)classroomDeathReported=false;
+  else classroomCheckpoint(win?'run_clear':depthClear?'run_depth':'run_end');
   // 這一輪已結束 —— 下次進地城一律重置並把血量補滿（走輪迴殿堂繞路也一樣）
   S.runOver=1; saveChar();
   overlay(`<div class="kicker">${depthClear?'DEPTH UNLOCKED':'RUN COMPLETE'}</div>
@@ -9336,6 +9361,23 @@ const walkable=(x,y)=>{
   const c=grid[y][x];
   return c!=='W'&&!(c==='L'&&!S.key);
 };
+function waypointScreen(p){
+  const floorNo=fl+1,key=String(S.zone||0)+':'+floorNo,used=!!(S.waypointRunUses||{})[key];
+  overlay(`<div class="kicker">SAFE WAYPOINT</div><h1>🛸 ${floorNo}F 學習傳送點</h1>
+    <div class="rank">每 3 層一座・安全結算點</div>
+    <div class="desc">${used?'這一輪已在此回傳過成果，不會重複發放獎勵。':'確定後會先保存角色、結算並回傳目前的作業成果，再回到地下城校園地圖。'}<br><br>你可以在地圖重新選擇已開放的區域挑戰。</div>
+    <button class="go" id="waypointConfirm">${used?'🗺️ 回到地下城地圖':'✅ 確定結算並傳送'}</button>
+    <button class="go" id="waypointCancel" style="background:linear-gradient(180deg,#8a7ab8,#5a4a86);border-color:#3a2c60">繼續探索</button>`,null,el=>{
+      if(el.id==='waypointCancel'){running=true;return true;}
+      if(el.id==='waypointConfirm'){
+        S.zoneProgress=S.zoneProgress||{};S.waypointRunUses=S.waypointRunUses||{};
+        const zk=zoneOf().k;S.zoneProgress[zk]=Math.max(Number(S.zoneProgress[zk])||0,fl);
+        let packet=null;if(!used){S.waypointRunUses[key]=1;saveChar();packet=classroomCheckpoint('waypoint',{title:zoneOf().n+' '+floorNo+'F 傳送結算',waypointFloor:floorNo});}else saveChar();
+        setTimeout(()=>campusScreen(packet?'📨 '+floorNo+'F 學習成果已回傳，可重新選擇區域。':'💾 '+floorNo+'F 進度已保存，可重新選擇區域。'),10);return true;
+      }
+      return false;
+    });
+}
 function loadFloor(i){
   const Z=zoneOf();
   fl=i;
@@ -9362,7 +9404,7 @@ function loadFloor(i){
   // 角落池要放得下全部 8 件才用；不足就直接用全地圖，並帶 fallback 保證不缺件
   const side=pickSpots(corners.filter(isFree).length>=10?corners:cells,
     [['shop',4],['shrine',4],['forge',5],['npcA',3],['npcB',3],['npcC',3],
-     ['guide',2],['numline',5],['beastshrine',5]],start,cells);
+     ['guide',2],['numline',5],['beastshrine',5],['waypoint',5]],start,cells);
   Object.assign(spots,side);
   // 每層保留一位「課程入口」與一位尚未學過的遊戲機制導師。
   // 學科教學一律開啟課程目錄，不另外在地下城維護第二份講義。
@@ -9382,6 +9424,7 @@ function loadFloor(i){
     {t:'shrine',x:at('shrine')[0],y:at('shrine')[1],alive:1},
     {t:'forge',x:at('forge')[0],y:at('forge')[1],alive:1},
     {t:'beastshrine',x:at('beastshrine')[0],y:at('beastshrine')[1],alive:1},
+    ...((i+1)%3===0?[{t:'waypoint',x:at('waypoint')[0],y:at('waypoint')[1],alive:1}]:[]),
   ].concat(npcKeys[0]&&spots.npcA
     ? [{t:'npc',k:npcKeys[0],x:spots.npcA[0],y:spots.npcA[1],alive:1}] : []
   ).concat(npcKeys[1]&&spots.npcB
@@ -9669,6 +9712,7 @@ function afterMove(){
     else if(p.t==='gemchest'){gemChest(p);return;}
     else if(p.t==='cardchest'){cardChest(p);return;}
     else if(p.t==='restout'){leaveRest();return;}
+    else if(p.t==='waypoint'){running=false;waypointScreen(p);return;}
     else if(p.t==='shop'){running=false;shopPuzzle(p);return;}
     else if(p.t==='stair'){
       if(!S.key){ toast('樓梯被封印了 — 先找到這一層的鑰匙',2000); continue; }
@@ -11498,7 +11542,8 @@ function winBattle(){
 function loseGame(){
   if(B.pvp&&B.pvp.practice){ practiceEnd(false); return; }
   if(B.pvp){ duelLose(); return; }
-  B.over=true;clearInterval(rTimer);clearBattleTemporaryState();
+  B.over=true;clearInterval(rTimer);clearBattleTemporaryState();saveChar();
+  classroomDeathReported=!!classroomCheckpoint('death',{title:'地下城戰鬥倒下'});
   overlay(`<div class="kicker">YOU DIED</div>
     <h1 style="color:#e05a5a;text-shadow:0 3px 0 #5a1010">倒下了</h1>
     <div class="rank" style="color:#e05a5a;border-color:#e05a5a;background:rgba(224,90,90,.1)">Lv.${S.lv} · 最高連擊 ${B.best}</div>
@@ -12027,6 +12072,11 @@ function artOf(t,kind,alert){
     if(kind==='restout'){
       R(10,4,12,24,'#3a2c60');R(12,6,8,20,'#8fe86a');R(14,14,4,4,'#dfffdf');
     }
+    if(kind==='waypoint'){
+      R(3,25,26,5,'#263e58');R(6,22,20,4,'#3f78a8');R(9,19,14,4,'#70cfff');
+      R(13,6,6,14,'#bff6ff');R(11,8,10,4,'#70cfff');R(11,14,10,4,'#70cfff');
+      R(14,2,4,5,'#ffffff');R(7,10,3,3,'#8fe86a');R(22,10,3,3,'#8fe86a');
+    }
     if(kind==='forge'){
       R(4,20,24,10,'#5a3020');R(4,20,24,3,'#8a5030');
       R(8,10,16,10,'#3a2018');R(10,12,12,7,'#ff8a3a');R(12,14,8,4,'#ffe38a');
@@ -12290,7 +12340,7 @@ function drawMini(){
   }
   for(const p of props){
     if(!p.alive||!seen[p.y][p.x])continue;
-    mg.fillStyle=p.t==='key'?'#ecc24e':p.t==='exit'?'#57b6ea':p.t==='stair'?'#a892e0':p.t==='shop'?'#c9a8f0':p.t==='npc'?'#8fe86a':p.t==='shrine'?'#ffe38a':p.t==='beastshrine'?'#8fe86a':p.t==='wraith'?'#e26bd6':p.t==='numline'?'#8fd0ff':p.t==='forge'?'#ff8a3a':p.t==='bed'?'#ff9ac0':p.t==='gemchest'?'#9fd0ff':p.t==='cardchest'?'#c9a8f0':p.t==='restout'?'#8fe86a':'#c98a3c';
+    mg.fillStyle=p.t==='key'?'#ecc24e':p.t==='exit'?'#57b6ea':p.t==='stair'?'#a892e0':p.t==='waypoint'?'#70cfff':p.t==='shop'?'#c9a8f0':p.t==='npc'?'#8fe86a':p.t==='shrine'?'#ffe38a':p.t==='beastshrine'?'#8fe86a':p.t==='wraith'?'#e26bd6':p.t==='numline'?'#8fd0ff':p.t==='forge'?'#ff8a3a':p.t==='bed'?'#ff9ac0':p.t==='gemchest'?'#9fd0ff':p.t==='cardchest'?'#c9a8f0':p.t==='restout'?'#8fe86a':'#c98a3c';
     mg.fillRect(p.x*s+s*.25,p.y*s+s*.25,s*.5,s*.5);
   }
   // 取得鑰匙後用箭頭指出樓梯／出口方向 —— 隨機地圖很容易迷路
@@ -12354,7 +12404,7 @@ function toggleBigMap(force){
   if(bigMapOn){buildMapLegend();drawBigMap();}
 }
 function buildMapLegend(){
-  const items=[['#8fd455','你（箭頭=面向）'],['#a892e0','樓梯'],['#57b6ea','出口'],
+  const items=[['#8fd455','你（箭頭=面向）'],['#a892e0','樓梯'],['#57b6ea','出口'],['#70cfff','3 層結算傳送點'],
     ['#ecc24e','鑰匙／上鎖門'],['#c98a3c','寶箱'],['#c9a8f0','商店'],['#8fe86a','NPC／怪物神殿'],
     ['#e05a5a','怪物'],['#ff3b3b','警戒中'],['#ff8a3b','頭目'],
     ['rgba(255,200,80,.5)','怪物視野'],['rgba(255,60,60,.5)','警戒視野'],['#0b0718','未探索']];
@@ -12513,7 +12563,7 @@ function resetRun(){
   const keepExt=S.extAbil||{};
   Object.assign(S,{hp:100,maxhp:100,lv:1,xp:0,xpNeed:3,
     deck:mkDeck(['knife','knife','dagger','blank','clock','wand','wand','garlic','whip','imelda']),
-    gems:[],dmgMul:1,step:.35,handSize:5,armor:0,key:false,mana:6,tomes:0,handCap:5,chant:false,allChains:[],gold:0,ups:{},name:'',job:'',pot:{heal:1,elixir:0,freeze:0,firebomb:0,luck:0,medkit:0},luckChest:0,shrineUses:{},wrong:[],found:[],zone:0,cleared:keepCleared,zoneBest:keepBest,zoneProgress:keepProgress,meta:keepMeta,extAbil:keepExt});
+    gems:[],dmgMul:1,step:.35,handSize:5,armor:0,key:false,mana:6,tomes:0,handCap:5,chant:false,allChains:[],gold:0,ups:{},name:'',job:'',pot:{heal:1,elixir:0,freeze:0,firebomb:0,luck:0,medkit:0},luckChest:0,shrineUses:{},waypointRunUses:{},wrong:[],found:[],zone:0,cleared:keepCleared,zoneBest:keepBest,zoneProgress:keepProgress,meta:keepMeta,extAbil:keepExt});
   quizStats={ok:0,total:0,points:0};
   if(keepJob&&JOBS[keepJob]){ S.name=keepName;S.job=keepJob;S.deck=mkDeck(JOBS[keepJob].deck);
     S.handSize=5; }
@@ -12659,6 +12709,7 @@ function volScreen(){
 }
 loadChar();
 classroomApplyLaunch();
+startClassroomScheduleGuard();
 if(grantTestMonsterTeam())saveChar();
 loadCampus();
 syncZones();

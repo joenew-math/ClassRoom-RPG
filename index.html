@@ -2790,7 +2790,7 @@ const BASE_VARIANT_SPEC = {
   male0:{w:164,h:280,footY:280,label:"生理男・原始素體"},
   male1:{w:164,h:280,footY:280,label:"生理男・側分短髮"}, male2:{w:164,h:280,footY:280,label:"生理男・刺蝟短髮"}, male3:{w:164,h:280,footY:280,label:"生理男・平瀏海"},
   female0:{w:166,h:280,footY:280,label:"生理女・原始素體"},
-  female1:{w:166,h:280,footY:280,label:"生理女・齊瀏海短髮"}, female2:{w:166,h:280,footY:280,label:"生理女・雙馬尾"}, female3:{w:166,h:280,footY:280,label:"生理女・高丸子頭"}
+  female1:{w:166,h:280,footY:280,label:"生理女・齊瀏海短髮"}, female2:{w:166,h:280,footY:280,label:"生理女・雙馬尾"}, female3:{w:166,h:280,footY:280,label:"生理女・丸子頭"}
 };
 const BASE_DYE_COLORS = {brown:"棕髮",black:"黑髮",silver:"銀灰髮",blue:"藍髮"};
 function dyedBaseSrc(s){
@@ -3569,6 +3569,17 @@ function parentLearningMajor(msg){
   if(/商店|購買|出售|裝備|圖紙|抽卡|轉盤|戰鬥|競技場|公會戰|Boss|傷害|攻擊|倒下|嘲諷|佔領|技能|寵物|城堡|攻城|MVP/.test(m))return false;
   return /回答知識挑戰|課堂回答|完成任務|任務「.*」通過|課堂表現|課堂參與|主動發表|專心投入|勇敢回答|小組合作|協助同學|幫助同學|作業|訂正|考試|測驗|成績|進步|閱讀|報告|解題|學習成果|學習連勝|地下城|自主複習|課後複習|老師獎勵|老師回饋|教師回饋|作品「.*」通過審核|設計作品「.*」上架/.test(m);
 }
+function groupParentLearningLogs(logs,masker){
+  const groups=new Map();
+  (logs||[]).forEach((l,index)=>{
+    const msg=String(masker?masker(l.msg):l.msg||"");
+    /* 獎勵數字、題數與連擊會變動，但仍屬同一種學習事件。保留任務標題，避免不同作業被誤合併。 */
+    const key=msg.replace(/[0-9０-９]+(?:\.[0-9０-９]+)?/g,"#").replace(/\s+/g," ").trim();
+    let g=groups.get(key);if(!g){g={msg,count:0,latest:l.t||"",times:[],index};groups.set(key,g);}
+    g.count++;if(l.t&&!g.times.includes(l.t)&&g.times.length<3)g.times.push(l.t);
+  });
+  return Array.from(groups.values()).sort((a,b)=>a.index-b.index);
+}
 
 /* ══ CLOUD:Firestore 雲端資料層(階段2) ══════════════
  * 結構:classes/{cid}/data/main(班級主體,不含學生與作品)
@@ -3650,12 +3661,17 @@ const CLOUD = {
   },
   async parentViewKey(cid,sno,birth){return sha256Hex([String(cid||"").toUpperCase(),String(sno||"").trim(),String(birth||"").trim()].join("|"));},
   _parentViewPayload(s){
-    const safe=JSON.parse(JSON.stringify(s));delete safe.birth;delete safe.email;delete safe.sno;
+    /* 家長文件採最小化資料：不複製完整背包、貨幣、技能、信箱或生日到可查詢文件。 */
+    const keep=["id","name","level","job","group","totalXp","termStartXp","learningStreak","lessonAnswers","gender","baseVariant","baseTune","hatId","bodyId","pantsId","shoesId","weaponId","backId","petEquipped"];
+    const safe={};keep.forEach(k=>{if(s[k]!==undefined)safe[k]=JSON.parse(JSON.stringify(s[k]));});
+    safe.thanksWall=(s.thanksWall||[]).slice(0,10).map(t=>({fromName:maskName(t.fromName||"同學"),msg:String(t.msg||"").slice(0,80),date:String(t.date||"").slice(0,20)}));
     const visibleTasks=(state.tasks||[]).filter(t=>t.active&&(t.scope==="all"||t.scope===s.group||taskScopeHas(t,s.id)));
-    return {version:1,className:state.className||state.lbName||"班級 RPG",generatedAt:Date.now(),student:safe,
-      tasks:visibleTasks,submissions:(state.submissions||[]).filter(x=>String(x.sid)===String(s.id)),
-      log:(state.log||[]).filter(x=>String(x.sid)===String(s.id)&&parentLearningMajor(x.msg)).slice(0,80),
-      awardLog:(state.awardLog||[]).filter(x=>String(x.sid)===String(s.id)&&!x.reverted).slice(-80)};
+    const maskLog=msg=>{let m=String(msg||"");state.students.forEach(x=>{if(x.id!==s.id&&x.name&&x.name.length>1)m=m.split(x.name).join(maskName(x.name));});return m;};
+    return {version:2,className:state.className||state.lbName||"班級 RPG",generatedAt:Date.now(),student:safe,
+      tasks:visibleTasks.map(t=>({id:t.id,title:String(t.title||"").slice(0,80),active:true,scope:"all",xp:Number(t.xp)||0,gold:Number(t.gold)||0,tiers:Array.isArray(t.tiers)?t.tiers.slice(0,3):null})),
+      submissions:(state.submissions||[]).filter(x=>String(x.sid)===String(s.id)).map(x=>({taskId:x.taskId,sid:String(s.id),status:x.status,tier:Number(x.tier)||0,t:String(x.t||"").slice(0,30),submittedAt:Number(x.submittedAt)||0})),
+      log:(state.log||[]).filter(x=>String(x.sid)===String(s.id)&&parentLearningMajor(x.msg)).slice(0,80).map(x=>({sid:String(s.id),t:String(x.t||"").slice(0,30),msg:maskLog(x.msg).slice(0,240)})),
+      awardLog:(state.awardLog||[]).filter(x=>String(x.sid)===String(s.id)&&!x.reverted).slice(-80).map(x=>({sid:String(s.id),t:String(x.t||"").slice(0,30),xp:Number(x.xp)||0,gold:Number(x.gold)||0,reverted:false}))};
   },
   async syncParentViews(force){
     if(!this.on()||this.role!=="teacher")return;
@@ -3757,6 +3773,10 @@ const CLOUD = {
     const id=String(sid)+"_"+Date.now(),me=state.students.find(x=>String(x.id)===String(sid));
     await FB.db.collection("classes").doc(this.cid).collection("helpRequests").doc(id).set({id,sid:String(sid),studentName:String((me&&me.name)||"學生"),group:String((me&&me.group)||""),kind,category:option.label,status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdAtMs:Date.now()});
     return id;
+  },
+  async cancelHelpRequest(id,sid){
+    if(!this.on()||this.role!=="student"||String(sid)!==String(this.myId))throw new Error("目前無法取消求助");
+    await FB.db.collection("classes").doc(this.cid).collection("helpRequests").doc(String(id)).set({status:"cancelled",cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),cancelledAtMs:Date.now()},{merge:true});
   },
   async resolveHelpRequest(id){
     if(!this.on()||this.role!=="teacher")throw new Error("只有教師能處理求助");
@@ -4005,6 +4025,23 @@ const CLOUD = {
     /* 舊版索引只相容原班級；不會阻止同一 Google 帳號加入其他班級。 */
     const legacy=await FB.db.collection("studentAccounts").doc(user.uid).get();
     return legacy.exists&&String((legacy.data()||{}).cid)===String(cid)?legacy.data():null;
+  },
+  async listStudentClassSummaries(user){
+    if(!this.on()||!user||!user.uid)return [];
+    const root=FB.db.collection("studentAccounts").doc(user.uid),scoped=await root.collection("classes").get();
+    let accounts=scoped.docs.map(d=>Object.assign({cid:String(d.id)},d.data()||{}));
+    if(!accounts.length){const legacy=await root.get();if(legacy.exists&&legacy.data().cid)accounts=[legacy.data()];}
+    const rows=await Promise.all(accounts.map(async a=>{
+      const cid=String(a.cid||"");if(!cid||!a.sid)return null;
+      try{
+        const c=FB.db.collection("classes").doc(cid),got=await Promise.all([c.collection("public").doc("main").get(),c.collection("students").doc(String(a.sid)).get()]);
+        if(!got[0].exists||!got[1].exists)return null;
+        const meta=got[0].data()||{},student=got[1].data()||{},grade=dungeonGradeOf(student);
+        const assignments=(meta.tasks||[]).filter(t=>t&&t.active&&t.dungeonHomework&&Number(t.dungeonVolume||1)<=grade.maxVolume&&(t.scope==="all"||t.scope===student.group||taskScopeHas(t,String(student.id))));
+        return {cid,sid:String(a.sid),className:String(meta.className||meta.lbName||cid),student,assignments,classSession:meta.classSession||{}};
+      }catch(e){console.warn("waiting class summary",cid,e);return null;}
+    }));
+    return rows.filter(Boolean);
   },
   async loadClass(cid, myEmail, options){
     options=options||{};
@@ -4346,11 +4383,12 @@ function dungeonTaskBank(t){return Array.isArray(t&&t.dungeonBank)?t.dungeonBank
 function dungeonGradeOf(s){const lv=Math.max(1,Number(s&&s.level)||1);return lv<=30?{name:"七年級",maxVolume:2}:lv<=60?{name:"八年級",maxVolume:4}:{name:"九年級",maxVolume:6};}
 function dungeonTaskBankForStudent(t,s){const g=dungeonGradeOf(s);return dungeonTaskBank(t).filter(q=>(!q.grade||q.grade===g.name)&&(!Number(q.vol)||Number(q.vol)<=g.maxVolume));}
 async function launchDungeon(s,task){
+  if(classSessionIsLive(state.classSession)){toast("🔒 老師已開始上課，地下城複習任務已暫停。請回到課堂頁面。",true);return;}
   const win=window.open("about:blank","classRpgMathDungeon");if(!win){toast("瀏覽器阻擋了地下城視窗，請允許彈出式視窗",true);return;}
   try{
     const grade=dungeonGradeOf(s),stats=totalStats(s),sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now()+"_"+Math.random().toString(36).slice(2)),volume=String((task&&task.dungeonVolume)||document.getElementById("dungeonVolume")?.value||"1");if(Number(volume)>grade.maxVolume)throw new Error(grade.name+"目前只開放第 1～"+grade.maxVolume+" 冊");
     const avatarData=await dungeonAvatarData(s),equipmentCards=await dungeonEquipmentCards(s),weapon=itemById(s.weaponId),dungeonJob=({Warrior:"geo",Mage:"alg",Rogue:"stat",Cleric:"num"})[s.job]||"geo";
-    const payload={type:"class_rpg_launch",version:5,sessionId,issuedAt:Date.now(),cid:String(CLOUD.cid||"offline"),sid:String(s.id),volume,studentGrade:grade.name,maxVolume:grade.maxVolume,assignment:task?{id:task.id,title:task.title,target:Number(task.autoTarget)||0,volume,reviewMode:"teacher"}:null,questionBank:dungeonTaskBankForStudent(task,s),character:{name:s.name,classJob:(JOB_INFO[s.job]||{}).name||s.job,classLevel:s.level,studentGrade:grade.name,dungeonJob,title:s.title||"",weapon:{name:weapon?weapon.name:"新手武器",rarity:weapon?weapon.rarity:"Common",type:weapon?weapon.type:"weapon"},equipmentCards,stats:{hp:Math.min(180,105+s.level+Math.round(stats.def*.25)),mana:Math.min(10,5+Math.round(stats.int/45)),hand:Math.min(7,5+Math.floor(stats.agi/80)),dmg:Math.min(1.5,1+stats.atk/500),armor:Math.min(12,Math.round(stats.def/18))},abilities:normalizeSkillLoadout(s).map(id=>{const d=skillDef(s.job,id);return d?d.name:"";}).filter(Boolean),avatarData}};
+    const payload={type:"class_rpg_launch",version:6,sessionId,issuedAt:Date.now(),cid:String(CLOUD.cid||"offline"),sid:String(s.id),preClassHomework:true,closeWhenClassStarts:true,volume,studentGrade:grade.name,maxVolume:grade.maxVolume,assignment:task?{id:task.id,title:task.title,target:Number(task.autoTarget)||0,volume,reviewMode:"teacher"}:null,questionBank:dungeonTaskBankForStudent(task,s),character:{name:s.name,classJob:(JOB_INFO[s.job]||{}).name||s.job,classLevel:s.level,studentGrade:grade.name,dungeonJob,title:s.title||"",weapon:{name:weapon?weapon.name:"新手武器",rarity:weapon?weapon.rarity:"Common",type:weapon?weapon.type:"weapon"},equipmentCards,stats:{hp:Math.min(180,105+s.level+Math.round(stats.def*.25)),mana:Math.min(10,5+Math.round(stats.int/45)),hand:Math.min(7,5+Math.floor(stats.agi/80)),dmg:Math.min(1.5,1+stats.atk/500),armor:Math.min(12,Math.round(stats.def/18))},abilities:normalizeSkillLoadout(s).map(id=>{const d=skillDef(s.job,id);return d?d.name:"";}).filter(Boolean),avatarData}};
     localStorage.setItem(DUNGEON_LAUNCH_KEY,JSON.stringify(payload));win.location.href=DUNGEON_URL+"?classroom=1&session="+encodeURIComponent(sessionId);
   }catch(e){win.close();toast("地下城啟動失敗："+(e.message||e),true);}
 }
@@ -8647,12 +8685,36 @@ function renderStudentWaiting(email,user){
   app.innerHTML='<div class="home" style="min-height:100vh;padding-bottom:max(28px,env(safe-area-inset-bottom))"><div class="crest">⏳</div><h2>已登入，等待老師開課</h2>'
     +'<div class="panel" style="max-width:520px;margin:0 auto;text-align:left"><p style="text-align:center"><b>學生身分已準備完成</b></p>'
     +'<div class="mini" style="padding:10px;background:#eef8ff;border:2px solid #8ac7e8;border-radius:9px;line-height:1.8">登入帳號：<b>'+esc(email)+'</b><br>現在可以先把這個頁面放在背景。老師按下「開始上課」後，請用同一支裝置掃描大屏的班級 QR Code，系統會沿用這個帳號快速進入角色。</div>'
-    +'<ol class="mini" style="line-height:2;margin:12px 0 0;padding-left:25px"><li>等待老師開始上課</li><li>開啟相機掃描大屏 QR Code</li><li>確認班級後自動載入自己的角色</li></ol>'
-    +'<div class="mini" style="margin-top:9px;color:#7c5b16">🔒 預先登入不會直接加入班級；每次仍須通過本節課 QR Code 驗證。</div></div>'
+    +'<ol class="mini" style="line-height:2;margin:12px 0 0;padding-left:25px"><li>課前可先完成下方的教師指定地下城複習</li><li>老師開始上課後，地下城會立即結算並關閉</li><li>開啟相機掃描大屏 QR Code 進入當節課</li></ol>'
+    +'<div class="mini" style="margin-top:9px;color:#7c5b16">🔒 課前複習與當節課分開；上課中不能再進入地下城。</div></div>'
+    +'<div class="panel dungeon-homework" style="max-width:720px;margin:14px auto;text-align:left"><h3>🏰 教師指定的課後複習</h3><div id="studentWaitingDungeon"><div class="mini">正在讀取你的班級任務…</div></div></div>'
     +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="studentWaitingReady">我知道了，等待掃碼</button><button class="btn" id="studentWaitingOther">使用其他 Google 帳號</button><button class="btn" id="studentWaitingHome">回首頁（保持登入）</button></div></div>';
   document.getElementById("studentWaitingReady").onclick=()=>toast("已保持登入；老師開課後請掃描大屏 QR Code");
   document.getElementById("studentWaitingOther").onclick=async()=>{try{localStorage.removeItem("rpg-student-waiting-email");await FB.auth.signOut();}catch(_){}FB.user=null;googleLogin("student");};
   document.getElementById("studentWaitingHome").onclick=()=>{view={page:"home"};render();};
+  loadStudentWaitingDungeon(email,user);
+}
+async function loadStudentWaitingDungeon(email,user){
+  const host=document.getElementById("studentWaitingDungeon");if(!host)return;
+  try{
+    const rows=await CLOUD.listStudentClassSummaries(user);if(!document.getElementById("studentWaitingDungeon"))return;
+    const entries=[];
+    const html=rows.map((row,ri)=>{
+      const live=classSessionIsLive(row.classSession),grade=dungeonGradeOf(row.student);
+      const tasks=(row.assignments||[]).map((t,ti)=>{const key=ri+"_"+ti;entries.push({key,row,task:t});return '<article class="dungeon-task-quick"><div><b>📘 '+esc(t.title||"地下城複習")+'</b><div class="mini">'+esc(row.className)+'・第 '+esc(t.dungeonVolume||"自選")+' 冊・目標 '+Math.max(1,Number(t.autoTarget)||1)+' 題</div></div><button class="btn gold" data-waiting-dungeon="'+key+'"'+(live?' disabled':'')+'>'+(live?'🔒 上課中':'開始作業')+'</button></article>';}).join("");
+      return '<section style="margin:10px 0;padding:10px;border:2px solid '+(live?'#d77':'#b7d9a8')+';border-radius:10px"><b>'+esc(row.className)+'</b><span class="tag" style="margin-left:8px">'+esc(grade.name)+'</span>'+(live?'<div class="mini" style="color:#a33;margin-top:6px">🔒 老師已開始上課，地下城已關閉，請掃描當節課 QR Code。</div>':tasks||'<div class="mini" style="margin-top:6px">目前沒有發布地下城複習任務。</div>')+'</section>';
+    }).join("")||'<div class="mini">這個 Google 帳號目前沒有可讀取的班級角色。請先掃描老師的 QR Code 完成第一次註冊。</div>';
+    host.innerHTML=html;
+    host.querySelectorAll("[data-waiting-dungeon]").forEach(b=>b.onclick=async()=>{
+      const entry=entries.find(x=>x.key===b.dataset.waitingDungeon);if(!entry)return;b.disabled=true;b.textContent="正在載入角色…";
+      try{
+        CLOUD.role="student";await CLOUD.loadClass(entry.row.cid,email,{listen:true});
+        if(classSessionIsLive(state.classSession))throw new Error("老師已開始上課，地下城已關閉");
+        const s=stu(String(entry.row.sid));if(!s)throw new Error("找不到這個班級角色");
+        const task=taskById(Number(entry.task.id));view={page:"student",sid:s.id,tab:"dungeon",role:"student"};render();startStudentRealtimeSafely();await launchDungeon(s,task);
+      }catch(e){b.disabled=false;b.textContent="開始作業";toast("無法進入地下城："+(e.message||e),true);}
+    });
+  }catch(e){host.innerHTML='<div class="mini" style="color:#a33">任務讀取失敗：'+esc(e.message||e)+'<br>可先等待老師 QR Code，或重新整理頁面。</div>';}
 }
 function renderStudentSessionMissing(email,message){
   sessionStorage.removeItem("rpg-student-mode");
@@ -9300,9 +9362,17 @@ async function parentLogin(){
   try{ sessionStorage.setItem("rpg-parent-last", JSON.stringify({cid,sno,ts:Date.now()}));localStorage.setItem("rpg-last-class",cid);localStorage.removeItem("rpg-parent-last"); }catch(_){}   // 只暫存班級與學號30分鐘；生日不落地
   view={page:"parent", sid:s.id, role:"parent"}; render();
 }
+const PARENT_VIEW_TTL_MS=15*60*1000;
+let parentPrivacyTimer=null;
+function armParentPrivacyTimer(){
+  clearTimeout(parentPrivacyTimer);parentPrivacyTimer=setTimeout(()=>{
+    if(view&&view.page==="parent"){doLogout();setTimeout(()=>toast("🔒 家長查看已達 15 分鐘，為保護學生隱私已自動登出。",true),80);}
+  },PARENT_VIEW_TTL_MS);
+}
 /* 家長唯讀頁:每日任務 + 學習日誌 */
 function renderParent(){
   const s = stu(view.sid); if(!s){ view={page:"home"}; render(); return; }
+  armParentPrivacyTimer();
   const today = new Date().toLocaleDateString("zh-TW");
   const activeTasks = state.tasks.filter(t=> t.active && (t.scope==="all" || t.scope===s.group || taskScopeHas(t, s.id)));
   const taskDone = activeTasks.filter(t=>{ const x=state.submissions.find(q=>q.taskId===t.id && q.sid===s.id); return x&&x.status==="approved"; }).length;
@@ -9321,10 +9391,11 @@ function renderParent(){
     return m;
   };
   const parentLearningLogs = (state.log||[]).filter(l=>l.sid===s.id && parentLearningMajor(l.msg));
-  const logs = parentLearningLogs.slice(0,30).map(l=>
-    '<li><span class="num">['+esc(l.t)+']</span> '+esc(maskMsg(l.msg))+'</li>').join("") || '<li class="mini">尚無重大學習紀錄</li>';
-  const learnRows = parentLearningLogs.slice(0,8).map(l=>
-    '<div class="parent-learning-row"><time>'+esc(l.t)+'</time><div>'+esc(maskMsg(l.msg))+'</div></div>').join("")
+  const groupedLearningLogs=groupParentLearningLogs(parentLearningLogs,maskMsg);
+  const logs = groupedLearningLogs.slice(0,30).map(g=>
+    '<li><span class="num">['+esc(g.latest)+']</span> '+esc(g.msg)+(g.count>1?' <b class="tag">累計 '+g.count+' 次</b>':'')+(g.times.length>1?'<div class="mini">近期紀錄：'+g.times.map(esc).join("、")+'</div>':'')+'</li>').join("") || '<li class="mini">尚無重大學習紀錄</li>';
+  const learnRows = groupedLearningLogs.slice(0,8).map(g=>
+    '<div class="parent-learning-row"><time>'+esc(g.latest)+'</time><div>'+esc(g.msg)+(g.count>1?'<div class="mini"><b>累計 '+g.count+' 次</b>・近期：'+g.times.map(esc).join("、")+'</div>':'')+'</div></div>').join("")
     || '<div class="mini">尚無重大學習紀錄；課堂回答、任務通過或老師記錄學習成果後會顯示於此。</div>';
   const streak=s.learningStreak||{}, responseCount=s.lessonAnswers||0;
   const termXp=Math.max(0,(s.totalXp||0)-(s.termStartXp||0));
@@ -9356,7 +9427,7 @@ function renderParent(){
     + '<div class="panel"><h3>📚 最近重大學習紀錄</h3><div class="mini" style="margin-bottom:9px">只整理課堂回答、任務完成、評量進步與老師的重要學習回饋。</div><div class="parent-learning-list">'+learnRows+'</div></div>'
     + '<div class="panel"><h3>📋 進行中的任務</h3><table><thead><tr><th>任務</th><th>獎勵</th><th>狀態</th></tr></thead><tbody>'+myTasks+'</tbody></table></div>'
     + '<details class="stu-optional"><summary>📖 查看重大學習日誌（最近 30 筆）</summary><div><ul class="log-list">'+logs+'</ul></div></details>'
-    + '<div class="mini" style="margin:10px 0;color:#777">※ 為保護學生隱私，這裡不顯示其他學生姓名、購物、裝備、抽卡、戰鬥或其他遊戲操作內容。</div>'
+    + '<div class="panel" style="border-color:#4d79a8;background:#f2f8ff"><h3>🔒 隱私保護說明</h3><div class="mini" style="line-height:1.9">只顯示孩子的學習摘要；其他學生姓名會隱藏，不顯示信箱、生日、貨幣、背包、技能、購物、抽卡或戰鬥紀錄。生日只用於當次核對，不存在瀏覽器。本頁 15 分鐘後會自動登出。</div></div>'
     + '<button class="btn" id="pBack">🚪 登出</button></div>';
   /* 家長頁沒有分頁列，改把各學習區塊做成一致的收合選單；第一項預設展開。 */
   app.querySelectorAll('.parent-shell > .panel').forEach((panel,i)=>{
@@ -9402,6 +9473,11 @@ function classSessionIsLive(cs,expectedToken){
   const expires=Number(cs.expiresAt)||(Number(cs.startedAt)?Number(cs.startedAt)+CLASS_SESSION_MAX_MS:0);
   return !expires||Date.now()<expires;
 }
+/* 同網域地下城視窗每數秒查詢：老師一開始上課就先結算、再退出複習。 */
+window.classRpgDungeonClassStatus=function(cid){
+  const same=String(cid||"")===String(CLOUD.cid||"");
+  return {sameClass:same,active:same&&classSessionIsLive(state.classSession),className:String(state.className||state.lbName||"本班")};
+};
 let _studentSessionExit=false;
 function forceStudentClassExit(message){
   if(_studentSessionExit)return;_studentSessionExit=true;
@@ -15111,9 +15187,9 @@ function renderStudent(){
 
   let body = "";
   if(view.tab==="help"){
-    const pending=(state.helpRequests||[]).some(x=>String(x.sid)===String(s.id)&&x.status==="pending");
+    const pending=(state.helpRequests||[]).find(x=>String(x.sid)===String(s.id)&&x.status==="pending");
     body='<div class="panel" style="max-width:680px;margin:auto;background:linear-gradient(135deg,#effff6,#eef6ff)"><h3>🫶 需要老師協助</h3><div class="mini" style="line-height:1.8;margin-bottom:12px">這是私人訊息，只有老師看得到，不會公開給同學、不會影響個人或全班經驗值。若現在有立即危險，請直接找附近老師或可信任的大人。</div>'
-      +(pending?'<div class="unlock-note" style="border-color:#2b7a57">✅ 老師已收到你的求助，會找適當時間私下關心你。</div>':'<div class="shop-grid">'+Object.entries(HELP_REQUEST_OPTIONS).map(([key,o])=>'<button class="item-card" data-helprequest="'+key+'" style="cursor:pointer;text-align:left"><span class="iic">'+o.icon+'</span><span class="inm">'+esc(o.label)+'</span><span class="mini">按下後只通知老師</span></button>').join("")+'</div>')+'</div>';
+      +(pending?'<div class="unlock-note" style="border-color:#2b7a57">✅ 老師已收到你的求助，會找適當時間私下關心你。<br><button class="btn" data-help-cancel="'+esc(pending.id)+'" style="margin-top:9px">我誤點了，取消通知</button></div>':'<div class="shop-grid">'+Object.entries(HELP_REQUEST_OPTIONS).map(([key,o])=>'<button class="item-card" data-helprequest="'+key+'" style="cursor:pointer;text-align:left"><span class="iic">'+o.icon+'</span><span class="inm">'+esc(o.label)+'</span><span class="mini">點選後還會再確認一次</span></button>').join("")+'</div>')+'</div>';
   }
   else if(view.tab==="lesson"){
     const l=state.lesson||{}, st=s.learningStreak||{days:0,total:0};
@@ -15124,6 +15200,9 @@ function renderStudent(){
       +'<h3>📖 我的知識戰績</h3><ul class="log-list">'+hist+'</ul></div>';
   }
   else if(view.tab==="dungeon"){
+    if(classSessionIsLive(state.classSession)){
+      body='<div class="panel" style="max-width:680px;margin:auto;text-align:center;border-color:#c55;background:linear-gradient(135deg,#fff4f0,#fff)"><div style="font-size:54px">🔒</div><h3>上課中・地下城已暫停</h3><div class="mini" style="line-height:1.9">老師已按下「開始上課」。為了專心參與課堂，地下城作業會在下課後再開放。<br>正在遊玩的紀錄也會先自動結算。</div><button class="btn gold" data-tab="lesson" style="margin-top:12px">📣 回到課堂冒險</button></div>';
+    }else{
     const grade=dungeonGradeOf(s),ds=dungeonStatsOf(s),accuracy=ds.totalQuestions?Math.round(ds.totalCorrect/ds.totalQuestions*100):0,dx=Math.min(40,Number(ds.daily.xp)||0),dungeonGoldCap=Math.max(0,Number(economyCfg().dungeonDailyGoldCap)||0),dg=Math.min(dungeonGoldCap,Number(ds.daily.gold)||0);
     const assignments=tasksForStudent(s).filter(t=>t.active&&t.dungeonHomework&&Number(t.dungeonVolume||1)<=grade.maxVolume).map(t=>{const sub=subFor(t.id,s.id),st=taskAutoStatus(t,s),bankN=dungeonTaskBankForStudent(t,s).length,status=sub&&sub.status==="approved"?'・✅ 已審核發獎':sub&&sub.status==="pending"?'・⏳ 已回傳待教師審核':sub&&sub.status==="rejected"?'・↩ 請重新挑戰':'';return '<article class="dungeon-task-quick"><div><b>📘 '+esc(t.title)+'</b><div class="mini">第 '+esc(t.dungeonVolume||"自選")+' 冊・目標 '+st.value+'／'+st.target+' 題'+(bankN?'・課程目錄 '+bankN+' 題＋地下城同單元題型':'・地下城內建題庫')+status+'</div></div><button class="btn gold" data-dungeon-task="'+t.id+'">'+(st.passed?'再複習':'開始作業')+'</button></article>';}).join("")||'<div class="mini">老師目前沒有發布符合 '+grade.name+' 範圍的指定作業；你仍可自由選冊複習。</div>';
     body='<div class="panel dungeon-homework"><div class="dungeon-hero">'+dollSVG(s,120)+'<div><h3>🏰 數學地下城自主複習</h3><div class="mini">使用你的班級角色探索迷宮、答題與解鎖區域。結算會回到班級學習紀錄，不需另外建立角色。</div><div class="stat-strip"><span class="stat-chip">✅ 答對 '+ds.totalCorrect+'／'+ds.totalQuestions+'</span><span class="stat-chip">🎯 正確率 '+accuracy+'%</span><span class="stat-chip">⚡ 最高 '+ds.bestChain+' 連擊</span><span class="stat-chip">🏁 通關 '+ds.clears+' 次</span><span class="stat-chip">🔥 連續 '+ds.streakDays+' 天</span></div></div></div>'
@@ -15131,6 +15210,7 @@ function renderStudent(){
       +'<div class="dungeon-reward-note">每次依答對題數、正確率與通關計算；單次最多 25 XP／12 金，每日最多 40 XP／20 金。指定作業達標會自動送審，教師通過後才發正式任務獎勵。</div>'
       +'<h3>📌 老師發布的地下城作業</h3><div class="dungeon-assignment-list">'+assignments+'</div>'
       +'<h3>🧭 自由複習 <span class="tag">'+grade.name+'・第 1～'+grade.maxVolume+' 冊</span></h3><div class="inline-form"><label>選擇課本冊別 <select id="dungeonVolume">'+Array.from({length:grade.maxVolume},(_,i)=>i+1).map(v=>'<option value="'+v+'">第 '+v+' 冊</option>').join("")+'</select></label><button class="btn gold" id="dungeonStart">🏰 帶角色進入地下城</button></div></div>';
+    }
   }
   else if(view.tab==="redeem"){
     const urlCode=new URLSearchParams(location.search).get("reward")||"";
@@ -16016,11 +16096,21 @@ function renderStudent(){
   app.querySelectorAll("[data-helprequest]").forEach(b=>b.onclick=async()=>{
     const kind=b.dataset.helprequest,opt=HELP_REQUEST_OPTIONS[kind];if(!opt)return;
     if((state.helpRequests||[]).some(x=>String(x.sid)===String(s.id)&&x.status==="pending")){toast("老師已收到你的求助",true);return;}
-    b.disabled=true;
-    try{
-      const id=CLOUD.on()&&CLOUD.role==="student"?await CLOUD.sendHelpRequest(s.id,kind):(String(s.id)+"_"+Date.now());
-      state.helpRequests.push({id,sid:String(s.id),studentName:s.name,group:s.group,kind,category:opt.label,status:"pending",createdAtMs:Date.now()});save();toast("🫶 老師已收到，會私下關心你");render();
-    }catch(e){b.disabled=false;toast("求助訊息未送出："+(e.message||e),true);}
+    modalConfirm("請確認你現在真的需要老師協助：\n\n「"+opt.label+"」\n\n這個通知會請老師抽空私下關心你。若只是誤點，請選擇取消。",async()=>{
+      b.disabled=true;
+      try{
+        const id=CLOUD.on()&&CLOUD.role==="student"?await CLOUD.sendHelpRequest(s.id,kind):(String(s.id)+"_"+Date.now());
+        state.helpRequests.push({id,sid:String(s.id),studentName:s.name,group:s.group,kind,category:opt.label,status:"pending",createdAtMs:Date.now()});save();toast("🫶 老師已收到，會私下關心你");render();
+      }catch(e){b.disabled=false;toast("求助訊息未送出："+(e.message||e),true);}
+    },"確認送出求助");
+  });
+  app.querySelectorAll("[data-help-cancel]").forEach(b=>b.onclick=()=>{
+    const id=String(b.dataset.helpCancel||""),req=(state.helpRequests||[]).find(x=>String(x.id)===id&&String(x.sid)===String(s.id)&&x.status==="pending");if(!req)return;
+    modalConfirm("確定這是誤點，要取消給老師的通知嗎？\n\n如果你仍需要協助，請保留通知或直接找老師。",async()=>{
+      b.disabled=true;
+      try{if(CLOUD.on()&&CLOUD.role==="student")await CLOUD.cancelHelpRequest(id,s.id);req.status="cancelled";req.cancelledAtMs=Date.now();save();toast("已取消誤點的通知");render();}
+      catch(e){b.disabled=false;toast("無法取消通知："+(e.message||e),true);}
+    },"取消通知");
   });
   const syncEd = ()=>{
     const ed = view.editor; if(!ed) return;
