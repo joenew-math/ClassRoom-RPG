@@ -1,0 +1,12 @@
+ffconcat version 1.0
+file 'shot-01-frame-a-look-at-book.png'
+duration 1.50
+file 'shot-01-frame-b-turning.png'
+duration 0.55
+file 'shot-01-classroom-awakening-v1.png'
+duration 1.55
+file 'shot-01-frame-d-blink.png'
+duration 0.12
+file 'shot-01-classroom-awakening-v1.png'
+duration 1.80
+file 'shot-01-classroom-awakening-v1.png'
