@@ -674,6 +674,11 @@ code{background:#1a1230;padding:1px 4px;border-radius:3px;color:#ffe38a;font-siz
   border:2px solid #4a3b73;border-radius:6px;padding:6px}
 .qfig.small{max-width:200px;opacity:.9}
 .qfig svg,.qfig img{display:block;max-width:100%;height:auto;margin-inline:auto}
+.question-scene-hint{margin:7px auto 5px;padding:8px 11px;max-width:470px;border:2px solid #4a3b73;border-radius:6px;background:rgba(143,208,255,.1);color:#dfeeff;font-size:12px;line-height:1.55;text-align:left;font-weight:850}
+.question-scene-hint.trap{border-color:#8fe86a;background:rgba(143,232,106,.1);color:#dfffd2}
+.question-scene-hint.geometry,.question-scene-hint.mural{border-color:#ff9a5a;background:rgba(255,154,90,.11);color:#ffe4cf}
+.question-scene-hint.challenge{border-color:#ff6a6a;background:rgba(255,106,106,.1);color:#ffd9d9}
+.question-scene-hint.facility{border-color:#ecc24e;background:rgba(236,194,78,.1);color:#fff0ad}
 .geo-opt-icon{display:inline-grid;place-items:center;width:28px;height:28px;margin-right:7px;border:2px solid #ffe38a;border-radius:7px;background:#160f2b;color:#ffe38a;font-size:20px;font-weight:1000;vertical-align:middle;box-shadow:2px 2px 0 #080510}
 
 /* 課後複習 */
@@ -1466,6 +1471,7 @@ code{background:#1a1230;padding:1px 4px;border-radius:3px;color:#ffe38a;font-siz
   .veil:has(.quiz-card){align-items:flex-start;padding:6px 10px}
   .cw.quiz-card{max-height:calc(100dvh - 12px);display:grid;grid-template-columns:minmax(150px,.85fr) minmax(260px,1.4fr);column-gap:12px;align-items:start}
   .cw.quiz-card>.kicker,.cw.quiz-card>h1{grid-column:1}
+  .cw.quiz-card>.question-scene-hint{grid-column:1;margin-block:3px}
   .cw.quiz-card>.qfig{grid-column:1;width:min(34vw,210px);max-height:43dvh;margin-top:3px}
   .cw.quiz-card>.qfig svg,.cw.quiz-card>.qfig img{max-height:calc(43dvh - 16px)}
   .cw.quiz-card>#qopts{grid-column:2;grid-row:1 / span 4;margin-top:0;display:grid;grid-template-columns:1fr;gap:6px}
@@ -1612,12 +1618,12 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #5a3f0d}
 <div id="veil" class="veil"><div class="cw" id="veilCard"></div></div>
 
 <script src="../app/runtime-health.js"></script>
-<script src="question-bank-data.js?v=60"></script>
-<script src="./app/math-dungeon-data.js?v=60"></script>
-<script src="./app/math-dungeon-monster-data.js?v=60"></script>
-<script src="./app/math-dungeon-learning.js?v=60"></script>
-<script src="./app/math-dungeon-pets.js?v=60"></script>
-<script src="./app/math-dungeon-gameplay.js?v=60"></script>
-<script src="./app/math-dungeon.js?v=60" data-runtime-check="resetRun" data-runtime-label="地下城系統"></script>
+<script src="question-bank-data.js?v=62"></script>
+<script src="./app/math-dungeon-data.js?v=62"></script>
+<script src="./app/math-dungeon-monster-data.js?v=62"></script>
+<script src="./app/math-dungeon-learning.js?v=62"></script>
+<script src="./app/math-dungeon-pets.js?v=62"></script>
+<script src="./app/math-dungeon-gameplay.js?v=62"></script>
+<script src="./app/math-dungeon.js?v=62" data-runtime-check="resetRun" data-runtime-label="地下城系統"></script>
 </body>
 </html>

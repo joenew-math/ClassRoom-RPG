@@ -156,7 +156,7 @@ function flattenBank(arr){
         const visual=splitQuestionVisual(q.q,q.fig);
         out.push({v:Number(b.vol)||1,vol:Number(b.vol)||1,grade:String(b.grade||''),q:visual.q,fig:visual.fig,opts:q.opts.slice(),ans:q.ans,
           sol:q.sol||'',chap,unit,topic,scopeKey:courseScopeKey(chap,unit),source:'course',
-          difficulty:q.difficulty||q.diff||q.tier||b.difficulty||b.diff||b.tier||'',
+          difficulty:q.difficulty||q.diff||q.tier||b.difficulty||b.diff||b.tier||'',adv:q.adv===true||b.adv===true,
           tag:['課程目錄',unit,topic].filter(Boolean).join(' · ')});
       }
     }else if(b.q&&b.opts&&b.ans){                     // 已攤平格式
@@ -164,7 +164,7 @@ function flattenBank(arr){
       const visual=splitQuestionVisual(b.q,b.fig);
       out.push({v:Number(b.v||b.vol)||1,vol:Number(b.v||b.vol)||1,q:visual.q,fig:visual.fig,opts:b.opts.slice(),ans:b.ans,
         sol:b.sol||'',chap,unit,topic,scopeKey:b.scopeKey||courseScopeKey(chap,unit),source:b.source||'course',
-        difficulty:b.difficulty||b.diff||b.tier||'',tag:b.tag||''});
+        difficulty:b.difficulty||b.diff||b.tier||'',adv:b.adv===true,tag:b.tag||''});
     }
   }
   return out;
@@ -270,6 +270,55 @@ function wrongEvent(w){
 
 function trapSignature(q){return String((q&&q.q)||'').replace(/<[^>]+>/g,'').replace(/\s+/g,'').slice(0,160);}
 
+/* 題目場景分流：地面陷阱應是「看懂就能快速判斷」的基礎題；
+ * 圖形引導、多步驟與挑戰題留給壁畫、封印門與特殊設施，避免玩家
+ * 走一步就被大型幾何圖或長題幹打斷探索節奏。 */
+function dungeonQuestionText(q){
+  return String(q&&q.q||'').replace(/<svg\b[\s\S]*?<\/svg>/gi,' ').replace(/<img\b[^>]*>/gi,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function dungeonQuestionIsGeometry(q){
+  const key=[q&&q.tag,q&&q.chap,q&&q.unit,q&&q.topic,dungeonQuestionText(q)].filter(Boolean).join(' ');
+  return !!(q&&q.fig)||/<svg\b|<img\b/i.test(String(q&&q.q||''))||
+    /幾何|圖形|三角形|四邊形|平行|垂直|全等|相似|畢氏|角度|內角|外角|圓周|圓心|弧長|扇形|座標|坐標|斜率|立體|柱體|錐體|球體|多面體|表面積|體積/.test(key);
+}
+
+function dungeonQuestionDifficulty(q){
+  q=q||{};
+  if(q.adv===true)return 3;
+  const raw=q.difficulty!==undefined&&q.difficulty!==''?q.difficulty:(q.diff!==undefined&&q.diff!==''?q.diff:q.tier);
+  const n=Number(raw);
+  if(Number.isFinite(n)&&n>0)return Math.max(1,Math.min(3,Math.round(n)));
+  const label=String(raw||'').toLowerCase();
+  if(/挑戰|困難|進階|高階|hard|advanced|expert|3/.test(label))return 3;
+  if(/標準|中等|普通|medium|normal|2/.test(label))return 2;
+  if(/基礎|簡單|入門|easy|basic|1/.test(label))return 1;
+  const text=[q.tag,q.topic,dungeonQuestionText(q),q.sol].filter(Boolean).join(' ');
+  if(/多步|逆向|綜合|跨單元|證明|推導|情境應用|同時求|分別求|再求|為什麼|如何驗證/.test(text))return 3;
+  if(dungeonQuestionIsGeometry(q)||dungeonQuestionText(q).length>58||String(q.sol||'').replace(/<[^>]+>/g,'').length>95)return 2;
+  return 1;
+}
+
+function dungeonQuestionFitsScene(q,scene){
+  if(!q)return false;
+  const difficulty=dungeonQuestionDifficulty(q),geometry=dungeonQuestionIsGeometry(q),text=dungeonQuestionText(q);
+  if(scene==='trap')return difficulty===1&&!geometry&&!q.fig&&!/<svg\b|<img\b/i.test(String(q.q||''))&&text.length<=58;
+  if(scene==='geometry')return geometry;
+  if(scene==='mural')return geometry||difficulty>=3;
+  if(scene==='challenge')return difficulty>=3;
+  if(scene==='facility')return geometry||difficulty>=2;
+  return true;
+}
+
+function dungeonQuestionSceneHint(q){
+  const scene=String(q&&q.sceneProfile||'');
+  if(scene==='trap')return '⚡ 快速基礎題：只要辨認一個觀念，直接判斷即可。';
+  if(scene==='geometry'||scene==='mural')return '🔺 圖形引導：先看圖上的已知與標記，再找出它們的關係。';
+  if(scene==='challenge')return '🔥 挑戰題：先整理條件，再分步計算，不必急著作答。';
+  if(scene==='facility')return '🧭 標準試煉：先找已知與所求，必要時分成兩步。';
+  return '';
+}
+
 function rememberTrapQuestion(q){
   const sig=trapSignature(q);if(!sig)return;
   trapRecent=trapRecent.filter(x=>x!==sig);trapRecent.push(sig);
@@ -280,7 +329,9 @@ function chooseTrapQuestion(T){
   const forceCourse=classroomBankActive();
   for(let i=0;i<8;i++){
     const useCourse=forceCourse||Math.random()<.6;
-    const q=useCourse?dungeonActionQuestion(null):T.make();
+    /* 指定單元找不到基礎短題時，寧可退回陷阱本身的簡單判斷，
+       不把高難度或大型幾何題硬塞進地面陷阱。 */
+    const q=useCourse?dungeonSceneBankQuestion('trap'):T.make();
     if(!q)continue;
     if(!trapRecent.includes(trapSignature(q))||i===7){rememberTrapQuestion(q);return {q,course:useCourse};}
   }
@@ -300,7 +351,7 @@ function trapEvent(key,tx,ty){
   bang.textContent='⁉️';
   document.body.appendChild(bang);
   setTimeout(()=>bang.remove(),900);
-  setTimeout(()=>picked.course?quizAsk(Q,ok=>trapResolve(tx,ty,Q,ok),dungeonActionLabel('陷阱解鎖')):trapQuiz(key,tx,ty,T,Q),720);
+  setTimeout(()=>picked.course?quizAsk(Q,ok=>trapResolve(tx,ty,Q,ok),dungeonActionLabel('陷阱解鎖 · 基礎快問')):trapQuiz(key,tx,ty,T,Q),720);
 }
 
 function trapResolve(tx,ty,Q,ok){
@@ -315,7 +366,7 @@ function trapResolve(tx,ty,Q,ok){
 }
 
 function trapQuiz(key,tx,ty,T,Q){
-  overlay(`<div class="kicker">TRAP · ${T.n}</div>
+  overlay(`<div class="kicker">TRAP · 基礎快問 · ${T.n}</div>
     <h1 style="color:${T.col};font-size:20px">${T.ic} ${T.n}</h1>
     <div class="desc" style="font-size:15px;text-align:center">${Q.q}</div>
     <button class="go" id="tYes">${Q.yes}</button>
@@ -1373,7 +1424,7 @@ function muralEvent(key,pos){
     <div class="rank" style="color:${M.col};border-color:${M.col}">${M.who}</div>
     <div class="desc">${M.tale}</div>
     <button class="go" id="ok">接受試煉</button>`,()=>{
-      quizAsk(dungeonActionQuestion(()=>M.q()),ok=>{
+      quizAsk(dungeonSceneQuestion('mural',()=>M.q()),ok=>{
         if(ok){
           muralSeen[key]=1;
           if(pos)delete murals[pos];
@@ -1396,7 +1447,8 @@ function muralEvent(key,pos){
 function doorPuzzle(){
   running=false;
   if(classroomBankActive()){
-    const q=dungeonActionQuestion(null);
+    const q=dungeonSceneQuestion('challenge',null)||dungeonActionQuestion(null);
+    if(q)q.sceneProfile=q.sceneProfile||'challenge';
     quizAsk(q,ok=>{
       if(ok){S.key=true;fbMarkDoor();updBar();toast('答對！封印解除，門開了',2000);}
       else toast('答錯了，封印門仍然關閉',1800);
@@ -1705,18 +1757,36 @@ function geoTriangleSum(cb){
   draw();
 }
 
-function nextFromBank(vol){
-  const src=QBANK.filter(x=>Number(x.v)===Number(vol));
+function nextFromBank(vol,scene){
+  const profile=String(scene||'general');
+  const src=QBANK.filter(x=>Number(x.v)===Number(vol)&&dungeonQuestionFitsScene(x,profile));
   if(!src.length)return null;
-  if(!qQueue[vol]||!qQueue[vol].length) qQueue[vol]=shuffle(src.map((_,i)=>i));
-  const q=src[qQueue[vol].pop()];
+  const queueKey=String(vol)+'|'+profile;
+  if(!qQueue[queueKey]||!qQueue[queueKey].length) qQueue[queueKey]=shuffle(src.map((_,i)=>i));
+  const q=src[qQueue[queueKey].pop()];
   return q?visualizeGeometryQuestion({q:q.q,opts:q.opts,ans:q.ans,sol:q.sol,fig:q.fig||'',
-    difficulty:q.difficulty||q.diff||'',tier:q.tier||0,
-    tag:'第'+q.v+'冊'+(q.tag?' · '+q.tag:'')}):null;
+    difficulty:q.difficulty||q.diff||'',tier:q.tier||0,adv:q.adv===true,
+    tag:'第'+q.v+'冊'+(q.tag?' · '+q.tag:''),sceneProfile:profile}):null;
 }
 
 function classroomBankActive(){
   return !!(classroomLaunch&&Array.isArray(classroomLaunch.questionBank)&&classroomLaunch.questionBank.length&&Array.isArray(QBANK)&&QBANK.length);
+}
+
+function dungeonSceneBankQuestion(scene){
+  const picked=Number(volPick),zone=typeof zoneOf==='function'?zoneOf():null;
+  const want=Number.isFinite(picked)&&picked>=1?picked:Number(zone&&zone.vol)||Number(classroomLaunch&&classroomLaunch.volume)||1;
+  const primary=nextFromBank(want,scene);
+  if(primary)return primary;
+  const assigned=Number(classroomLaunch&&classroomLaunch.volume)||1;
+  return assigned!==want?nextFromBank(assigned,scene):null;
+}
+
+function dungeonSceneQuestion(scene,fallback){
+  const fromBank=classroomBankActive()?dungeonSceneBankQuestion(scene):null;
+  if(fromBank)return fromBank;
+  const q=typeof fallback==='function'?fallback():fallback;
+  return q?visualizeGeometryQuestion(Object.assign({},q,{sceneProfile:scene})):null;
 }
 
 function dungeonActionQuestion(fallback){
@@ -1733,9 +1803,9 @@ function dungeonActionLabel(name){return name+(classroomBankActive()?' · 教師
 
 function mediumFacilityQuestion(){
   /* 教師指定章節永遠優先；自由探索才暫時鎖定標準（中）難度。 */
-  if(classroomBankActive())return dungeonActionQuestion(null);
+  if(classroomBankActive())return dungeonSceneQuestion('facility',null)||dungeonActionQuestion(null);
   const old=forceTier;forceTier=2;
-  let q=null;try{q=pickQ(Number((zoneOf()||{}).vol)||1);if(q)q.tier=2;}finally{forceTier=old;}
+  let q=null;try{q=pickQ(Number((zoneOf()||{}).vol)||1);if(q){q.tier=2;q.sceneProfile='facility';}}finally{forceTier=old;}
   return q;
 }
 
@@ -1781,6 +1851,7 @@ function quizAsk(q,cb,label){
   overlay(`<div class="kicker">${label||'MATH'}${q.tag?' · '+q.tag:''}${
       q.tier?' · '+TIER_NAME[q.tier]:''}</div>
     <h1 style="font-size:19px;line-height:1.5">${q.q}</h1>
+    ${dungeonQuestionSceneHint(q)?`<div class="question-scene-hint ${hesc(String(q.sceneProfile||''))}">${dungeonQuestionSceneHint(q)}</div>`:''}
     ${q.fig?`<div class="qfig">${q.fig}</div>`:''}
     <div id="qopts">${opts.map(o=>
       `<div class="qopt" data-v="${o}">${q.fig?geometryOptionBadge(o):''}${o}</div>`).join('')}</div>`,null,el=>{
