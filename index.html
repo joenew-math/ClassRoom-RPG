@@ -125,6 +125,36 @@ header .sp{flex:1}
   .role-card .sub{font-size:11px;color:var(--dim)}
   .role-card.teacher{grid-column:1/-1;background:linear-gradient(135deg,#2c2a1c,#212940);border-color:var(--gold-dim);padding:16px}
   .role-card.teacher .face{font-size:34px}
+  /* 教師選班頁：使用獨立的大型卡片，避免沿用首頁小角色卡後名稱與按鈕互相擠壓。 */
+  .teacher-class-picker{width:100%;max-width:1080px;margin:0 auto;padding:0 6px 24px}
+  .teacher-class-picker-head{display:flex;align-items:center;justify-content:center;gap:12px;margin:2px auto 18px}
+  .teacher-class-picker-head .crest{margin:0;font-size:48px;line-height:1}
+  .teacher-class-picker-head h2{margin:0;text-align:left}
+  .teacher-class-picker-head .mini{margin-top:4px;text-align:left}
+  .teacher-class-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;width:100%;align-items:stretch}
+  .teacher-class-card{min-width:0;min-height:190px;display:grid;grid-template-rows:1fr auto;background:#fff8df;border:4px solid #141414;border-radius:14px;box-shadow:6px 7px 0 rgba(20,20,20,.72);overflow:hidden}
+  .teacher-class-enter{width:100%;min-height:130px;padding:20px 18px 14px;border:0;background:linear-gradient(145deg,#fffdf6,#fff0b9);color:#141414;cursor:pointer;display:grid;grid-template-columns:64px minmax(0,1fr);gap:15px;align-items:center;text-align:left}
+  .teacher-class-enter:hover{background:linear-gradient(145deg,#fff8d7,#ffd86b)}
+  .teacher-class-enter:focus-visible{outline:5px solid #2d73d5;outline-offset:-7px}
+  .teacher-class-enter:disabled{cursor:wait;opacity:.7}
+  .teacher-class-icon{width:62px;height:62px;display:grid;place-items:center;font-size:38px;background:#f0b429;border:3px solid #141414;border-radius:12px;box-shadow:3px 3px 0 rgba(20,20,20,.65)}
+  .teacher-class-copy{min-width:0;display:flex;flex-direction:column;gap:7px}
+  .teacher-class-name{display:block;font-size:24px;line-height:1.25;font-weight:950;overflow-wrap:anywhere}
+  .teacher-class-code{display:inline-flex;align-items:center;align-self:flex-start;padding:4px 9px;background:#141414;color:#ffd45a;border-radius:6px;font-size:15px;letter-spacing:1.5px;font-weight:900}
+  .teacher-class-hint{font-size:13px;color:#5a5a5a;font-weight:800}
+  .teacher-class-actions{display:grid;grid-template-columns:1fr auto;gap:9px;padding:10px 12px 13px;background:#fff;border-top:3px solid #141414}
+  .teacher-class-actions .btn{width:100%;min-height:44px;margin:0;padding:8px 12px!important;font-size:14px!important;display:flex;align-items:center;justify-content:center}
+  .teacher-class-actions .teacher-class-delete{width:auto;min-width:88px}
+  .teacher-new-class{max-width:760px!important;margin:24px auto 0!important;text-align:left}
+  .teacher-new-class .inline-form{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:12px;align-items:stretch}
+  .teacher-new-class input{min-height:50px;font-size:17px}
+  .teacher-new-class #ncCreate{min-height:50px}
+  @media(max-width:700px){
+    .teacher-class-picker{padding-inline:2px}.teacher-class-picker-head{justify-content:flex-start;padding:0 4px}.teacher-class-picker-head .crest{font-size:40px}
+    .teacher-class-grid{grid-template-columns:1fr;gap:15px}.teacher-class-card{min-height:174px}.teacher-class-enter{min-height:118px;padding:16px 14px;grid-template-columns:56px minmax(0,1fr)}
+    .teacher-class-icon{width:54px;height:54px;font-size:32px}.teacher-class-name{font-size:21px}.teacher-class-actions{grid-template-columns:minmax(0,1fr) auto}
+    .teacher-new-class .inline-form{grid-template-columns:1fr}.teacher-new-class #ncCreate{width:100%}
+  }
 
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
   .panel h3{font-size:14px;color:var(--parch);letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1111,17 +1141,17 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="./Lession/question-bank-data.js"></script>
 <script src="./app/firebase-bootstrap.js"></script>
-<script src="./app/classroom-game-data.js?v=60"></script>
-<script src="./app/classroom-skill-data.js?v=60"></script>
-<script src="./app/classroom-policy-data.js?v=60"></script>
-<script src="./app/classroom-avatar-data.js?v=60"></script>
-<script src="./app/classroom-art.js?v=60"></script>
-<script src="./app/classroom-rule-functions.js?v=60"></script>
-<script src="./app/classroom-skill-rules.js?v=60"></script>
-<script src="./app/classroom-cloud.js?v=60"></script>
-<script src="./app/classroom-auth.js?v=60"></script>
-<script src="./app/classroom-quiz.js?v=60"></script>
-<script src="./app/classroom-battle.js?v=60"></script>
+<script src="./app/classroom-game-data.js?v=61"></script>
+<script src="./app/classroom-skill-data.js?v=61"></script>
+<script src="./app/classroom-policy-data.js?v=61"></script>
+<script src="./app/classroom-avatar-data.js?v=61"></script>
+<script src="./app/classroom-art.js?v=61"></script>
+<script src="./app/classroom-rule-functions.js?v=61"></script>
+<script src="./app/classroom-skill-rules.js?v=61"></script>
+<script src="./app/classroom-cloud.js?v=61"></script>
+<script src="./app/classroom-auth.js?v=61"></script>
+<script src="./app/classroom-quiz.js?v=61"></script>
+<script src="./app/classroom-battle.js?v=61"></script>
 <header>
   <h1>⚔ 班級 RPG</h1><span class="tag">班級經營公會 v1.0</span>
   <span class="sp"></span>
@@ -1135,10 +1165,10 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 <div id="modalHost"></div>
 <div id="copyrightWatermark">© 2025 誠兆(Joenew)｜班級經營公會｜未經授權請勿轉載或商用</div>
 
-<script src="./app/classroom-parent.js?v=60"></script>
-<script src="./app/classroom-teacher.js?v=60"></script>
-<script src="./app/classroom-student.js?v=60"></script>
-<script src="./app/classroom-rpg.js?v=60" data-runtime-check="render" data-runtime-label="班級經營系統"></script>
+<script src="./app/classroom-parent.js?v=61"></script>
+<script src="./app/classroom-teacher.js?v=61"></script>
+<script src="./app/classroom-student.js?v=61"></script>
+<script src="./app/classroom-rpg.js?v=61" data-runtime-check="render" data-runtime-label="班級經營系統"></script>
 <script>
 /* 📱 PWA:正式 service worker 必須是同源檔案；Blob URL 在多數瀏覽器不可註冊。 */
 (function(){

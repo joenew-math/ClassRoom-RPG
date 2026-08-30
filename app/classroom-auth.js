@@ -871,23 +871,22 @@ async function renderClasses(email){
   }
   if(document.getElementById("loginFlowLoading"))loginLoading("準備完成","教師身分與班級權限核對完成。",3);
   const cards = list.map(c=>
-    '<div style="position:relative;display:inline-block">'
-    + '<button class="role-card" data-cid="'+esc(c.cid)+'"><span class="face">🏫</span><span class="nm">'+esc(c.name)+'</span><span class="sub num" style="font-weight:900;color:#d8ad45">代碼 '+esc(c.cid)+'</span><span class="sub">點擊進入</span></button>'
-    + '<button class="btn danger" data-cdel="'+esc(c.cid)+'" data-cname="'+esc(c.name)+'" title="刪除班級" style="position:absolute;top:6px;right:6px;padding:2px 9px;font-size:13px">✕</button>'
-    + '<button class="btn" data-ccopy="'+esc(c.cid)+'" title="複製班級代碼" style="position:absolute;bottom:6px;left:6px;padding:2px 9px;font-size:13px">📋</button>'
-    + '</div>').join("");
+    '<article class="teacher-class-card">'
+    + '<button class="teacher-class-enter" data-cid="'+esc(c.cid)+'"><span class="teacher-class-icon" aria-hidden="true">🏫</span><span class="teacher-class-copy"><span class="teacher-class-name">'+esc(c.name)+'</span><span class="teacher-class-code num">班級代碼 '+esc(c.cid)+'</span><span class="teacher-class-hint">點擊進入班級管理</span></span></button>'
+    + '<div class="teacher-class-actions"><button class="btn" data-ccopy="'+esc(c.cid)+'" title="複製班級代碼">📋 複製代碼</button><button class="btn danger teacher-class-delete" data-cdel="'+esc(c.cid)+'" data-cname="'+esc(c.name)+'" title="刪除班級">🗑 刪除</button></div>'
+    + '</article>').join("");
   const hasLocal = !!localStorage.getItem(LS_KEY);
   app.innerHTML =
-    '<div class="home"><div class="crest">🏫</div><h2>我的班級</h2>'
-    + '<div class="role-grid">'+cards+'</div>'
-    + '<div class="panel" style="max-width:420px;margin:16px auto 0;text-align:left"><h3>➕ 新增班級</h3>'
+    '<div class="home teacher-class-picker"><div class="teacher-class-picker-head"><div class="crest">🏫</div><div><h2>我的班級</h2><div class="mini">請選擇今天要管理的班級</div></div></div>'
+    + '<div class="teacher-class-grid">'+(cards||'<div class="empty">目前還沒有班級，請先在下方建立第一個班級。</div>')+'</div>'
+    + '<div class="panel teacher-new-class"><h3>➕ 新增班級</h3>'
     + '<div class="inline-form"><input type="text" id="ncName" placeholder="班級名稱(例:七年三班)" style="flex:1">'
     + '<button class="btn gold" id="ncCreate">建立空白班級</button></div>'
     + (hasLocal ? '<div style="margin-top:8px"><button class="btn" id="ncMigrate">📦 把這台裝置的現有資料上傳成新班級</button><div class="mini" style="margin-top:4px">會把本機 localStorage 的班級搬上雲端(本機資料保留)。</div></div>' : "")
     + '</div></div>';
   app.querySelectorAll("[data-cid]").forEach(b=>{
     b.onclick = async ()=>{
-      b.disabled = true; b.querySelector(".sub").textContent = "載入中…";
+      b.disabled = true; const hint=b.querySelector(".teacher-class-hint");if(hint)hint.textContent = "正在載入班級…";
       try{
         await CLOUD.loadClass(b.dataset.cid);
         view={page:"teacher",tview:"classhome",role:"teacher"};

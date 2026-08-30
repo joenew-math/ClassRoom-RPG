@@ -5167,7 +5167,7 @@ function teacherClassHome(){
     +'<div class="classroom-flow"><div class="classroom-flow-step '+(live?'ready':'')+'"><b><span class="step-no">1</span>開始上課</b><div class="mini">建立本節課專用通行證；下課後 QR 自動失效。</div></div>'
     +'<div class="classroom-flow-step '+(live?'ready':'')+'"><b><span class="step-no">2</span>學生掃碼</b><div class="mini">學生掃班級 QR，再用已綁定的 Google 帳號登入。</div></div>'
     +'<div class="classroom-flow-step '+(live?'ready':'')+'"><b><span class="step-no">3</span>連接大屏</b><div class="mini">投影所有組員，快速點名、加分與進行課堂活動。</div></div></div>'
-    +'<div class="classroom-home-actions"><button class="btn '+(live?'danger':'gold')+'" id="classStartBtn">'+(live?'⏹ 結束本節課':'▶ 開始上課並顯示 QR')+'</button>'
+    +'<div class="classroom-home-actions">'+(live?'<button class="btn danger" id="classEndBtn">⏹ 結束課程</button>':'<button class="btn gold" id="classStartBtn">▶ 開始上課</button>')
     +'<button class="btn gold" id="classShowQr"'+(!live?' disabled':'')+'>📱 顯示學生登入 QR</button>'
     +'<button class="btn" id="classGoBoard"'+(!live?' disabled':'')+'>🖥️ 進入大屏模式</button>'
     +'<button class="btn" id="classOpenRoster">📋 查看／管理名冊</button></div>'
@@ -6847,15 +6847,6 @@ function bindTeacher(){
   });
   const classStartBtn=document.getElementById("classStartBtn");
   if(classStartBtn) classStartBtn.onclick=()=>{
-    if((state.classSession||{}).active){
-      modalConfirm("確定結束本節課？目前的學生登入 QR Code 會立即失效。",async()=>{
-        state.classSession.active=false; state.classSession.endedAt=Date.now(); state.classSession.expiresAt=0; state.classSession.token="";
-        addLog("-","🏁 教師結束本節課"); save();
-        try{ if(CLOUD.on()) await CLOUD.syncClassSession(); }catch(e){ toast("課堂狀態雲端同步失敗："+(e.message||e),true); }
-        render(); toast("本節課已結束，QR Code 已失效");
-      },"結束上課");
-      return;
-    }
     (async()=>{
       state.classSession=makeClassSession();
       addLog("-","📚 教師開始上課"); save();
@@ -6864,6 +6855,15 @@ function bindTeacher(){
         render(); setTimeout(openQrModal,0);
       }catch(e){ render(); toast("開始上課成功，但 QR 狀態尚未同步到雲端："+(e.message||e),true); }
     })();
+  };
+  const classEndBtn=document.getElementById("classEndBtn");
+  if(classEndBtn) classEndBtn.onclick=()=>{
+    modalConfirm("確定結束本節課？目前的學生登入 QR Code 會立即失效。",async()=>{
+      state.classSession.active=false; state.classSession.endedAt=Date.now(); state.classSession.expiresAt=0; state.classSession.token="";
+      addLog("-","🏁 教師結束本節課"); save();
+      try{ if(CLOUD.on()) await CLOUD.syncClassSession(); }catch(e){ toast("課堂狀態雲端同步失敗："+(e.message||e),true); }
+      render(); toast("本節課已結束，QR Code 已失效");
+    },"結束上課");
   };
   const classShowQr=document.getElementById("classShowQr");
   if(classShowQr) classShowQr.onclick=openQrModal;
