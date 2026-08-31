@@ -546,9 +546,29 @@ function addHighTierPixelDetails(g,kind,tier,fm){
   g.restore();
 }
 
+const MONSTER_ATLAS_RUNTIME=window.CLASS_RPG_MONSTER_ATLAS||null;
+const MONSTER_ATLAS_IMAGE=MONSTER_ATLAS_RUNTIME?new Image():null;
+if(MONSTER_ATLAS_IMAGE){
+  MONSTER_ATLAS_IMAGE.decoding='async';
+  MONSTER_ATLAS_IMAGE.onload=()=>{
+    if(typeof PET_CARD_ART_CACHE!=='undefined')PET_CARD_ART_CACHE.clear();
+    if(typeof B!=='undefined'&&B&&!B.over&&typeof renderFoes==='function')renderFoes();
+  };
+  MONSTER_ATLAS_IMAGE.src='./assets/monsters/'+MONSTER_ATLAS_RUNTIME.image;
+}
+function drawMonsterAtlasFrame(g,c,kind){
+  const frame=MONSTER_ATLAS_RUNTIME&&MONSTER_ATLAS_RUNTIME.frames&&MONSTER_ATLAS_RUNTIME.frames[kind];
+  if(!frame||!MONSTER_ATLAS_IMAGE||!MONSTER_ATLAS_IMAGE.complete||!MONSTER_ATLAS_IMAGE.naturalWidth)return false;
+  g.save();g.imageSmoothingEnabled=false;g.clearRect(0,0,c.width,c.height);
+  g.drawImage(MONSTER_ATLAS_IMAGE,frame.x,frame.y,frame.width,frame.height,0,0,c.width,c.height);
+  g.restore();return true;
+}
+
 function foeArt(kind){
   const artTier=monsterTier(kind),hiRes=artTier>=4||!!(FOES[kind]&&FOES[kind].boss),c=document.createElement('canvas');c.width=c.height=hiRes?64:32;
-  const g=c.getContext('2d');g.imageSmoothingEnabled=false;if(hiRes)g.scale(2,2);
+  const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+  if(drawMonsterAtlasFrame(g,c,kind))return c;
+  if(hiRes)g.scale(2,2);
   const R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};
   if(drawUltimateFoe(g,kind,R)){addHighTierPixelDetails(g,kind,7,FLOOR_MONSTER_LOOK[kind]);return c;}
   const fm=FLOOR_MONSTER_LOOK[kind];

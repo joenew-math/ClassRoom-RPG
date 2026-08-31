@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cellSize": 128,
+  "columns": 4,
+  "padding": 8,
+  "outputImage": "monster-atlas-foundation-v1.png",
+  "outputData": "monster-atlas-foundation-v1.json",
+  "outputScript": "monster-atlas-foundation-v1.js",
+  "sprites": [
+    {
+      "id": "rm1_1",
+      "name": "符號芽獸",
+      "family": "plant",
+      "source": "art-source/monsters/symbol-sprout-beast-v1.png"
+    },
+    {
+      "id": "rm2_2",
+      "name": "方程水狼",
+      "family": "beast",
+      "source": "art-source/monsters/equation-water-wolf-v1.png"
+    },
+    {
+      "id": "rm3_3",
+      "name": "畢氏銀蛛",
+      "family": "insect",
+      "source": "art-source/monsters/pythagorean-silver-spider-v1.png"
+    },
+    {
+      "id": "rm6_5",
+      "name": "圓柱銀兵",
+      "family": "construct",
+      "source": "art-source/monsters/cylinder-silver-soldier-v1.png"
+    }
+  ]
+}
