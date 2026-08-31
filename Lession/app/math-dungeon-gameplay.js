@@ -1321,13 +1321,18 @@ function enemyStrike(){
 
 function nextStep(cost){ return cost+1; }
 
-function playCard(i){
-  if(!B||B.over||B.busy)return;
+function playCard(i,afterLaunch=false){
+  if(!B||B.over||B.busy||(!afterLaunch&&B.cardResolving)){
+    if(afterLaunch&&B)B.cardResolving=false;
+    return;
+  }
   const o=B.hand[i];
-  if(!o)return;
-  if(DUEL&&DUEL.waiting){ toast('現在是對方的回合',1200); return; }
-  if(!legal(o))return;
-  try{ _playCard(i); }catch(err){ console.error("playCard 發生錯誤",err); toast("出牌失敗，請回報",1400); }
+  if(!o){if(afterLaunch)B.cardResolving=false;return;}
+  if(DUEL&&DUEL.waiting){ if(afterLaunch)B.cardResolving=false;toast('現在是對方的回合',1200); return; }
+  if(!legal(o)){if(afterLaunch)B.cardResolving=false;return;}
+  try{ _playCard(i); }
+  catch(err){ console.error("playCard 發生錯誤",err); toast("出牌失敗，請回報",1400); }
+  finally{B.cardResolving=false;}
 }
 
 function _playCard(i){
@@ -1719,7 +1724,9 @@ function renderAll(){
     el.addEventListener('mouseup',endHold);
     el.addEventListener('mouseleave',endHold);
     el.onclick=()=>{ if(held){ held=false; return; }   // 長按 0.42 秒看詳情
-      cardLaunch(el); playCard(i); };
+      if(!B||B.cardResolving||B.busy||!legal(B.hand[i]))return;
+      B.cardResolving=true;
+      cardLaunch(el,()=>playCard(i,true)); };
     h.appendChild(el);
   });
   refreshBattleLootHud();
@@ -1730,10 +1737,8 @@ function ultimateCheck(){
   for(const u of ULTS){
     if(B.chain!==u.n || B.ults[u.n]) continue;
     B.ults[u.n]=1;
-    if(u.n===2)drawCards(2);
     if(u.n===4)drawCards(1);
     if(u.n===5)drawCards(2);
-    if(u.n===5){ const h=Math.min(8,S.maxhp-S.hp); S.hp+=h; if(h)popPlayer('+'+h+' ♥','heal',150); }
     ultBanner(u);
     shake();
   }
@@ -2072,10 +2077,6 @@ function winBattle(){
   const med=all.length?(all.length%2?all[(all.length-1)/2]:((all[all.length/2-1]+all[all.length/2])/2)):0;
   const cb=B.best,xpGain=B.lootXp||0,goldGain=B.lootGold||0,levels=B.levelsGained||0;
   const grade=cb>=10?'S':cb>=7?'A':cb>=4?'B':'C';
-  // 戰技回復：打得越漂亮，回得越多 —— 把「回血」跟「技術」綁在一起，
-  // 而不是靠道具堆。藥水因此仍然珍貴。
-  const heal=Math.min(Math.round(cb*1.5),S.maxhp-S.hp);
-  if(heal>0) S.hp+=heal;
   fbPushDeck();
   clearBattleTemporaryState();
   saveChar();updBar();
@@ -2086,7 +2087,7 @@ function winBattle(){
       <div><b>◆ +${xpGain}</b><span>經驗寶石・${S.xp}/${S.xpNeed}</span></div>
       <div><b>${levels?'Lv. +'+levels:'Lv.'+S.lv}</b><span>${levels?'已完成卡牌三選一':'距升級 '+Math.max(0,S.xpNeed-S.xp)+' XP'}</span></div>
     </div>
-    <div class="desc" style="text-align:center;margin:5px 0">剩餘生命 <b>${S.hp}/${S.maxhp}</b>${heal>0?`　·　連擊回復 <i>+${heal}</i>`:''}</div>
+    <div class="desc" style="text-align:center;margin:5px 0">剩餘生命 <b>${S.hp}/${S.maxhp}</b>　·　連擊不會自動回血</div>
     ${bossDown?'<div class="rank" style="margin-top:8px;color:#ffe38a;border-color:#ffe38a;background:rgba(255,227,138,.1)">👑 守衛掉落了稀有寶箱</div>':''}
     <details class="resultMore"><summary>📊 展開戰鬥與數學統計</summary><div class="mathbox">
       <div class="mh">📐 本場最長連擊的費用數列</div>

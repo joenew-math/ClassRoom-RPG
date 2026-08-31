@@ -537,14 +537,16 @@ function figCoordinate(x,y){
 
 function figParallel(angle){
   angle=Number.isFinite(+angle)?+angle:65;
-  return `<svg viewBox="0 0 200 138" width="100%" height="138" role="img" aria-label="兩平行線被一直線截過">
+  return `<svg viewBox="0 0 200 150" width="100%" height="150" data-geometry="alternate-interior" role="img" aria-label="兩條平行線被截線切開，標示的內錯角在兩線內側且分居截線兩側">
+    <rect x="18" y="38" width="164" height="65" rx="7" fill="${FIGC.fill}" opacity=".42"/>
     <path d="M18 38H182 M18 103H182" stroke="${FIGC.line}" stroke-width="4"/>
     <path d="M55 128L142 10" stroke="${FIGC.ang}" stroke-width="4"/>
     <path d="M24 31l9 7-9 7 M42 31l9 7-9 7 M146 96l9 7-9 7 M164 96l9 7-9 7" fill="none" stroke="${FIGC.dim}" stroke-width="2"/>
-    <path d="M121 38A22 22 0 0 0 133 56" fill="none" stroke="${FIGC.mark}" stroke-width="3"/>
-    <path d="M74 85A22 22 0 0 0 86 103" fill="none" stroke="${FIGC.mark}" stroke-width="3" stroke-dasharray="4 3"/>
-    <text x="137" y="58" fill="${FIGC.mark}" font-size="12" font-weight="900">${angle}°</text>
-    <text x="54" y="86" fill="${FIGC.mark}" font-size="15" font-weight="900">?</text>
+    <path data-angle-position="upper-interior-left" d="M121.36 38 L99.36 38 A22 22 0 0 0 108.29 55.71 Z" fill="${FIGC.mark}" fill-opacity=".42" stroke="${FIGC.mark}" stroke-width="2"/>
+    <path data-angle-position="lower-interior-right" d="M73.43 103 L95.43 103 A22 22 0 0 0 86.50 85.29 Z" fill="${FIGC.ang}" fill-opacity=".42" stroke="${FIGC.ang}" stroke-width="2"/>
+    <text x="96" y="65" fill="${FIGC.mark}" font-size="12" font-weight="900">${angle}°</text>
+    <text x="101" y="88" fill="${FIGC.ang}" font-size="16" font-weight="900">?</text>
+    <text x="100" y="143" fill="${FIGC.txt}" font-size="11" text-anchor="middle" font-weight="800">兩線內側 · 截線兩側</text>
   </svg>`;
 }
 
@@ -1106,9 +1108,9 @@ function genGuideQuiz(){
     w:['不能打出','打出後會扣血','會消耗兩倍法力'],
     sol:'費用不等於序列值的牌照樣生效，只是連擊重新計算。'},
    {q:'生命要怎麼回復？',
-    ans:'打出長連擊，或使用稀有藥水',
-    w:['過關就會回滿','每回合自動回復','升級時回滿'],
-    sol:'戰後依最長連擊回血（連擊×1.5），另外就只有稀有藥水。'},
+    ans:'升級時回滿，或使用治療卡與藥水',
+    w:['打出長連擊就會回血','每回合自動回復','每場勝利都會回滿'],
+    sol:'連擊與戰鬥勝利不會自動回血；升級時回滿，也可使用治療卡或稀有藥水。'},
    {q:'通用卡（✦）最重要的功能是什麼？',
     ans:'無視目前費用需求並接續連擊',
     w:['造成大量傷害','回復法力上限','讓敵人跳過回合'],

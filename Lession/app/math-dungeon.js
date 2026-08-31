@@ -92,7 +92,7 @@ const NPCS={
       負數位在序列起點 0 的<b>下方</b>，所以打出後序列會<b>重置回 0</b>，連擊不會斷。<br>
       但天下沒有白吃的午餐 —— 每張負費卡都有代價：扣血、混入詛咒、或讓敵人得到護盾。<br>
       <i>這就是負數：得到的另一面，是付出。</i>`},
-   {t:`最後一件事：<b>生命不會自動回復</b>。<br>回血只有兩條路 —— <i>打出長連擊</i>（戰後依連擊回血）和<i>稀有藥水</i>。<br>所以打得漂亮不只是好看，是真的能活下去。`},
+   {t:`最後一件事：<b>連擊不會自動回血</b>。<br>生命主要靠<i>升級時回滿</i>、治療卡與稀有藥水回復；因此每場戰鬥都要評估防禦、法力與撤退時機。`},
   ],
   quiz:genGuideQuiz, reward:{k:'potion',v:1,d:'治療藥水 ×1'}},
  sage:{name:'數列賢者 · 歐拉',art:'sage',col:'#8fd0ff',
@@ -4250,9 +4250,9 @@ function flyCard(item,dur,done){
 
 /* ═══════════════ 出牌瞬間的卡片飛出 ═══════════════
    點下去的那張卡會化成殘影衝向戰場 —— 把「我打了這張」的因果連起來。 */
-function cardLaunch(el){
-  if(!el)return;
-  const field=$('field'); if(!field)return;
+function cardLaunch(el,done){
+  if(!el){done&&done();return;}
+  const field=$('field'); if(!field){done&&done();return;}
   const r=el.getBoundingClientRect(), fr=field.getBoundingClientRect();
   const ghost=el.cloneNode(true);
   ghost.className='cardGhost';
@@ -4262,7 +4262,8 @@ function cardLaunch(el){
   ghost.style.height=r.height+'px';
   field.appendChild(ghost);
   requestAnimationFrame(()=>ghost.classList.add('go'));
-  setTimeout(()=>ghost.remove(),420);
+  setTimeout(()=>{done&&done();},320);
+  setTimeout(()=>ghost.remove(),440);
 }
 /* 命中停格：大傷害時短暫凍結，讓打擊感落地 */
 let hitStopUntil=0;
@@ -4992,11 +4993,10 @@ const chainMul=()=>{
 /* 只更新狀態列，不重建手牌（避免敵人出手時手牌閃動） */
 
 /* ═══ 連擊里程碑：以隨機手牌接成連段，每回合每階各一次。
-   2 連補抽、4 連小爆發、5 連完成破勢；傷害受控，避免免費效果蓋過卡牌本身。 */
+   取消 2 連免費補抽；4 連與 5 連才提供戰術獎勵，且不再回復生命。 */
 const ULTS=[
-  {n:2, name:'疾風連擊', d:'抽 2 張', col:'#8fd0ff'},
   {n:4, name:'專注連擊', d:'抽 1 張', col:'#ff8a5a'},
-  {n:5, name:'終極連擊', d:'抽 2 張 · 回復 8', col:'#ffe38a'},
+  {n:5, name:'終極連擊', d:'抽 2 張 · 破勢', col:'#ffe38a'},
 ];
 
 /* ═══════════════ 全畫面演出 ═══════════════
@@ -5023,11 +5023,11 @@ const ULTS=[
    怪物倒下時，戰利品先旋轉／發光後留在地面，不立刻入帳。
    全部敵人清空後才一次吸進 HUD，再處理戰後升級三選一。 */
 
-$('endBtn').onclick=()=>{ if(B&&B.busy)return; endTurn(); };
-$('supBtn').onclick=()=>{ if(!B||B.over||B.busy)return; supportScreen(); };
-$('potBtn').onclick=()=>{ if(!B||B.over||B.busy)return; potionScreen(true); };
+$('endBtn').onclick=()=>{ if(B&&(B.busy||B.cardResolving))return; endTurn(); };
+$('supBtn').onclick=()=>{ if(!B||B.over||B.busy||B.cardResolving)return; supportScreen(); };
+$('potBtn').onclick=()=>{ if(!B||B.over||B.busy||B.cardResolving)return; potionScreen(true); };
 $('fleeBtn').onclick=()=>{
-  if(!B||B.over||B.busy)return;
+  if(!B||B.over||B.busy||B.cardResolving)return;
   if(!B.pvp||!B.pvp.stake)return;
   fleeDuel();
 };
