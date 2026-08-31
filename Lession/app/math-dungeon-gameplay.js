@@ -50,6 +50,15 @@ function paintPrologueTeacher(id){
   }
 }
 
+function teacherBattleArt(){
+  const cv=document.createElement('canvas');cv.width=128;cv.height=192;
+  const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+  const draw=()=>{g.clearRect(0,0,128,192);g.drawImage(MATH_TEACHER_IMAGE,0,0,128,192);};
+  if(MATH_TEACHER_IMAGE.complete&&MATH_TEACHER_IMAGE.naturalWidth)draw();
+  else MATH_TEACHER_IMAGE.addEventListener('load',draw,{once:true});
+  return cv;
+}
+
 function prologueSupplyScreen(){
   running=false;
   overlay(`<div class="kicker">PROLOGUE · 1F</div><h1>🎁 新手補給爆滿！</h1>
@@ -174,24 +183,45 @@ function hiddenTeacherGate(){
     });
 }
 
-function hiddenTeacherBattle(step=0,teacherHp=100,playerHp=100,message='依六區線索，依序打出五張傳說卡。'){
-  const expected=TEACHER_LEGEND_ORDER[step],cards=TEACHER_LEGEND_ORDER.slice().sort(()=>Math.random()-.5);
-  overlay(`<div class="kicker">THE FINAL LESSON</div><h1>數學老師・隱藏大魔王</h1>
-    <div class="teacher-final-stage" id="teacherFinalStage"><canvas id="finalTeacherSprite" class="teacher-pixel battle"></canvas>
-      <div class="teacher-final-formula">Σ　π　√　x²</div><div class="teacher-final-book">📘</div><div class="teacher-final-flash"></div>
-      <div class="teacher-final-hp"><span>老師的推理護盾</span><i><b style="width:${teacherHp}%"></b></i><em>${teacherHp}%</em></div>
-      <div class="teacher-final-hp player"><span>你的專注力</span><i><b style="width:${playerHp}%"></b></i><em>${playerHp}%</em></div>
-      <div class="teacher-sequence">${TEACHER_LEGEND_ORDER.map((id,i)=>`<span class="${i<step?'done':i===step?'now':''}">${i<step?'✓':i}</span>`).join('')}</div></div>
-    <div class="desc teacher-battle-message">${hesc(message)}<br><b>目前進度 ${step}/5</b></div>
-    <div class="teacher-card-hand">${cards.map(id=>{const c=CARDS[id];return `<button data-teacher-card="${id}"><small>費用 ${c.c}</small><b>${hesc(c.n)}</b><span>${hesc(c.d||'傳說數學卡')}</span></button>`;}).join('')}</div>`,null,el=>{
-      const cardEl=el.closest&&el.closest('[data-teacher-card]');
-      const id=cardEl&&cardEl.dataset.teacherCard;if(!id)return false;
-      const stage=$('teacherFinalStage');cardEl.disabled=true;
-      if(id===expected){stage&&stage.classList.add('solved');const ns=step+1,nh=Math.max(0,100-ns*20);setTimeout(()=>ns>=TEACHER_LEGEND_ORDER.length?hiddenTeacherVictory():hiddenTeacherBattle(ns,nh,playerHp,'正確！前一步已成為下一步的基礎。'),520);}
-      else{stage&&stage.classList.add('punish');const hp=playerHp-20;setTimeout(()=>hp<=0?hiddenTeacherRetry():hiddenTeacherBattle(0,100,hp,'順序中斷。老師提醒：別急著猜，回想 0 → 1 → 2 → 3 → 4。'),1050);}
-      return true;
-    });
-  paintPrologueTeacher('finalTeacherSprite');
+function hiddenTeacherBattle(){
+  running=false;
+  const teacher={kind:'mathTeacherFinal',art:'mathTeacherFinal',n:'數學老師・最終試煉',uid:'mathTeacherFinalBoss',
+    max:2400,hp:2400,atk:Math.max(14,Math.round(S.maxhp*.13)),burn:0,dead:false,shield:0,
+    act:'atk',intent:Math.max(12,Math.round(S.maxhp*.12)),row:0,boss:false,teacherBoss:true,fresh:true,
+    expr:'唯有完成五步推理，才能擊破',abilityName:'奧義・課本演算連擊'};
+  const ordinary=freshBattleDraw().filter(o=>!TEACHER_LEGEND_ORDER.includes(o.id));
+  const legends=shuffle(TEACHER_LEGEND_ORDER.map(id=>({id,gem:null,_dealt:0})));
+  B={foes:[teacher],draw:ordinary.concat(legends),disc:[],hand:[],thr:-1,chain:0,nextMul:1,block:0,best:0,over:false,waves:1,target:0,
+    open:'normal',skipEnemy:0,firstTurn:true,pendingLoot:0,lootGold:0,lootXp:0,lootKills:0,levelsGained:0,
+    lootAbsorbing:false,lootCollected:false,victoryQueued:false,victoryFinalizing:false,delta:1,trait:null,
+    cur:[],bestArr:[],chains:[],ults:{},teacherFinal:true,teacherStep:0,teacherOrder:TEACHER_LEGEND_ORDER.slice()};
+  PARTY.forEach(m=>m.used=false);S.deck.forEach(o=>{delete o._dealt;});
+  $('dungeon').classList.add('hide');const bt=$('battle');bt.classList.remove('hide','enter');void bt.offsetWidth;bt.classList.add('enter','teacher-final-battle');
+  $('veil').classList.add('hide');drawFieldBg();newTurn();
+  toast('📘 正常卡牌戰：依費用 0 → 1 → 2 → 3 → 4 施放五張傳說卡',3600);
+  setTimeout(()=>teacherTextbookAttackFx(teacher,'最終試煉・開卷'),420);
+}
+
+function teacherFinalSequenceOnCard(o){
+  if(!B||!B.teacherFinal||B.teacherFinalFinishing||!o)return false;
+  const order=B.teacherOrder||TEACHER_LEGEND_ORDER,idx=order.indexOf(o.id);
+  if(idx<0)return false; // 一般攻擊、護盾與回魔卡仍可正常使用，不中斷推理。
+  const expected=order[B.teacherStep||0];
+  if(o.id!==expected){
+    B.teacherStep=0;const f=B.foes.find(x=>x.teacherBoss&&!x.dead);
+    teacherTextbookAttackFx(f,'順序中斷・課本反擊');
+    toast('順序中斷：傳說卡必須依 0 → 1 → 2 → 3 → 4，進度歸零。',2600);return false;
+  }
+  B.teacherStep=(B.teacherStep||0)+1;
+  toast('推理連鎖 '+B.teacherStep+'/5：'+CARDS[o.id].n,1600);
+  if(B.teacherStep<order.length)return false;
+  const f=B.foes.find(x=>x.teacherBoss&&!x.dead);if(!f)return false;
+  B.teacherFinalFinishing=true;B.busy=true;teacherStudentFullPowerFx(f);
+  setTimeout(()=>{
+    if(!B||B.over||!f)return;
+    f.hp=0;f.dead=true;popDmg(f,99999,true,'全力一擊 ');renderAll();queueBattleVictory();
+  },1550);
+  return true;
 }
 
 function hiddenTeacherRetry(){
@@ -762,6 +792,7 @@ function drawMonsterAtlasFrame(g,c,kind){
 }
 
 function foeArt(kind){
+  if(kind==='mathTeacherFinal')return teacherBattleArt();
   const artTier=monsterTier(kind),hiRes=artTier>=4||!!(FOES[kind]&&FOES[kind].boss),c=document.createElement('canvas');c.width=c.height=hiRes?64:32;
   const g=c.getContext('2d');g.imageSmoothingEnabled=false;
   if(drawMonsterAtlasFrame(g,c,kind))return c;
@@ -1236,7 +1267,7 @@ function layoutFoes(){
     line.forEach((f,i)=>{
       const el=document.getElementById(f.uid);
       if(!el)return;
-      const sc=foeScale(n,i)*(f.boss?1.55:1)*(row?.74:1);   // 後排再縮小
+      const sc=foeScale(n,i)*(f.boss?1.55:f.teacherBoss?1.45:1)*(row?.74:1);   // 教師與頭目保留大型輪廓
       const w=Math.round(92*sc);
       const off=i-(n-1)/2;
       const x=W/2+off*gap-w/2+(row?gap*.32:0);              // 後排錯開，不被前排完全擋住
@@ -1360,6 +1391,7 @@ function renderFoes(){
       field.appendChild(el);
       f.fresh=false;
     }
+    el.classList.toggle('mathTeacherFoe',!!f.teacherBoss);
     const locked=f.row===1&&rowOf(0).length>0;
     el.classList.toggle('back',f.row===1);
     el.classList.toggle('front',f.row===0);
@@ -1708,6 +1740,10 @@ function _playCard(i){
   jobOnPlay(c,cont);
   if(c.back)B.hand.push(o);else if(!c.CURSE&&!c.TEMP)B.disc.push(o);
   if(c.draw)drawCards(c.draw);
+  // 最終教師的推理護盾不會被一般傷害擊破；必須依序完成五張傳說卡。
+  const teacherFoe=B.teacherFinal&&B.foes.find(f=>f.teacherBoss);
+  if(teacherFoe&&teacherFoe.hp<=0&&!B.teacherFinalFinishing){teacherFoe.hp=1;teacherFoe.dead=false;}
+  const teacherFinisher=teacherFinalSequenceOnCard(o);
   // 集中偵測擊殺 → 子彈時間
   const killed=aliveBefore.filter(u=>{const f=B.foes.find(x=>x.uid===u);return f&&f.dead;});
   const tFoe=targetFoe();
@@ -1718,6 +1754,7 @@ function _playCard(i){
   ultimateCheck();
   if(advanceRows()) setTimeout(renderAll,60);
   popCombo();renderAll();
+  if(teacherFinisher)return;
   if(B.foes.every(f=>f.dead)){queueBattleVictory();return;}
   if(!B.hand.some(legal)){
     $('endBtn').classList.add('urge');
@@ -1779,7 +1816,8 @@ function enemyPhase(i,done){
          void el.offsetWidth;el.classList.add('attack');}
   monsterSay(f,f.hp/f.max<=.3?'low':(f.act||'atk'));
   const usedSpeciesFx=monsterAbilityFx(f);
-  if(!usedSpeciesFx&&(f.act==='atk'||f.act==='curse'))monsterFullFx(f,f.act==='curse'?'情緒迷霧':'勇敢出手');
+  if(f.teacherBoss)teacherTextbookAttackFx(f,'奧義・課本演算連擊');
+  else if(!usedSpeciesFx&&(f.act==='atk'||f.act==='curse'))monsterFullFx(f,f.act==='curse'?'情緒迷霧':'勇敢出手');
   if(f.act==='def'){                       // 上盾：自己獲得護盾
     f.shield=(f.shield||0)+f.intent;
     let regen=0;if(f.battleType==='regen'&&f.hp<f.max){regen=Math.min(6,f.max-f.hp);f.hp+=regen;}
@@ -1833,7 +1871,7 @@ function enemyPhase(i,done){
     refreshStatus();
     if(S.hp<=0){S.hp=0;refreshStatus();B.busy=false;setTimeout(loseGame,650);return;}
     setTimeout(()=>enemyPhase(i+1,done),absorbed&&toHp?430:340);
-  },170);
+  },f.teacherBoss?820:170);
 }
 
 function finishEnemyPhase(){
@@ -1842,6 +1880,7 @@ function finishEnemyPhase(){
   B.foes.forEach(f=>{
     if(B.pvp){ f.act='atk'; f.intent=simDeckTurn(f.deck,f.job,5+Math.floor((B.pvp.lv||1)/3),5).dmg; }
     else if(f.boss){ /* Boss 不走一般攻擊，只由蓄力眼管理行動。 */ }
+    else if(f.teacherBoss){f.act='atk';f.intent=Math.max(12,Math.round(S.maxhp*.12));}
     else rollIntent(f);
   });
   B.disc.push(...B.hand);
@@ -1901,7 +1940,7 @@ function renderAll(){
   $('multBig').innerHTML='×'+m.toFixed(2)+(B.nextMul>1?` <span class="nx">下張×${B.nextMul}</span>`:'');
   const ms=$('milestone2');
   const boss=B.foes.find(f=>!f.dead&&f.boss);
-  const t=boss&&B.chain<5?'👁 再接 '+(5-B.chain)+' 張可破除集氣':B.chain===5?'💥 五連破勢！':B.chain>=30?'★ 30 張 · 無限循環':B.chain>=20?'★ 20 張 · 神速':B.chain>=10?'★ 10 張 · 屠殺':'';
+  const t=B.teacherFinal?'📚 五步推理 '+(B.teacherStep||0)+'/5　順序 0 → 1 → 2 → 3 → 4':boss&&B.chain<5?'👁 再接 '+(5-B.chain)+' 張可破除集氣':B.chain===5?'💥 五連破勢！':B.chain>=30?'★ 30 張 · 無限循環':B.chain>=20?'★ 20 張 · 神速':B.chain>=10?'★ 10 張 · 屠殺':'';
   ms.textContent=t;ms.classList.toggle('on',!!t);
   const sb=$('shieldBadge');
   if(sb){ sb.classList.toggle('hide',!(B.block>0)); sb.innerHTML='🛡 <b>'+B.block+'</b>'; }
@@ -1977,6 +2016,23 @@ function cineLayer(){
     document.body.appendChild(el);
   }
   return el;
+}
+
+function teacherTextbookAttackFx(f,label){
+  if(!f)return;
+  const L=cineLayer(),w=document.createElement('div');w.className='cine teacherTextbookCine';
+  w.innerHTML=`<div class="teacherCineVignette"></div><div class="teacherCineFormula">Σ　π　√　x²</div>
+    <img src="./assets/npcs/math-teacher-v1.png" alt="數學教師">
+    <div class="teacherCineBooks"><i>📘</i><i>📗</i><i>📙</i></div><div class="teacherCinePages">▱　▰　▱　▰　▱</div>
+    <div class="teacherCineTitle">${hesc(label||'奧義・課本演算連擊')}</div>`;
+  L.appendChild(w);cineClear(w,1050);
+}
+
+function teacherStudentFullPowerFx(f){
+  const L=cineLayer(),w=document.createElement('div');w.className='cine teacherFullPowerCine';
+  w.innerHTML=`<div class="teacherPowerRays"></div><div class="teacherPowerSequence">0　→　1　→　2　→　3　→　4</div>
+    <div class="teacherPowerTitle">五步推理・全力一擊<em>LOGIC BREAK　99999!</em></div>`;
+  L.appendChild(w);cineClear(w,1900);shake(4);
 }
 
 function cineClear(node,ms){ setTimeout(()=>node.remove(),ms); }
@@ -2250,6 +2306,7 @@ function resolvePendingLevelUps(done){
 
 function queueBattleVictory(){
   if(!B||B.victoryFinalizing)return;
+  if(B.teacherFinal){B.victoryFinalizing=true;B.over=true;clearInterval(rTimer);setTimeout(hiddenTeacherVictory,900);return;}
   B.victoryQueued=true;B.busy=true;
   const finish=()=>{
     if(!B||B.victoryFinalizing)return;
@@ -2333,6 +2390,7 @@ function winBattle(){
 function loseGame(){
   if(B.pvp&&B.pvp.practice){ practiceEnd(false); return; }
   if(B.pvp){ duelLose(); return; }
+  if(B.teacherFinal){B.over=true;clearInterval(rTimer);clearBattleTemporaryState();setTimeout(hiddenTeacherRetry,350);return;}
   B.over=true;clearInterval(rTimer);clearBattleTemporaryState();saveChar();
   classroomDeathReported=!!classroomCheckpoint('death',{title:'地下城戰鬥倒下'});
   overlay(`<div class="kicker">YOU DIED</div>

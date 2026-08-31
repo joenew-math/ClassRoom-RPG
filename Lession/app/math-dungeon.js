@@ -5073,6 +5073,6 @@ syncZones();
 const TEACHER_FINAL_SIMULATION=new URLSearchParams(location.search).get('teacherFinalTest')==='1';
 if(!startDungeonHealthGuard()){
   if(TEACHER_FINAL_SIMULATION){
-    setTimeout(()=>overlay(`<div class="kicker">TEACHER FINAL TEST</div><h1>🧪 隱藏戰模擬模式</h1><div class="desc">此入口只用來測試五張傳說卡的正確出牌順序。<br>不需要先通關六區，勝負也不會寫入正式角色紀錄。</div><button class="go" id="teacherSimulationGo">開始模擬</button>`,null,el=>{if(el.id!=='teacherSimulationGo')return false;setTimeout(()=>hiddenTeacherBattle(0,100,100),20);return true;}),30);
+    setTimeout(()=>overlay(`<div class="kicker">TEACHER FINAL TEST</div><h1>🧪 數學教師卡牌戰測試</h1><div class="desc">使用地下城原本的抽牌、魔力、連擊與回合戰鬥。<br>一般卡能攻擊與防禦；依序施放費用 <b>0 → 1 → 2 → 3 → 4</b> 的五張傳說數學卡，才能使出秒殺教師的「五步推理・全力一擊」。<br><br>模擬勝負不寫入正式角色紀錄。</div><button class="go" id="teacherSimulationGo">進入正常卡牌戰</button>`,null,el=>{if(el.id!=='teacherSimulationGo')return false;setTimeout(()=>hiddenTeacherBattle(),20);return true;}),30);
   }else introScreen();
 }
