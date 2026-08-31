@@ -1,6 +1,7 @@
 # 課程與地下城前端程式
 
 - `math-dungeon.js`：地下城相容 runtime，保留牌組、角色、校園與對戰等既有入口。
+- `math-dungeon-network.js`：Realtime Database 房間、玩家位置與共享世界同步；不保存正式班級 RPG 獎勵。
 - `math-dungeon-classroom.js`：班級角色／指定題庫帶入、成果回傳、上課關閉與健康休息控制器。
 - `math-dungeon-learning.js`：題庫、幾何題、錯題複習、NPC 與設施問答。
 - `math-dungeon-pets.js`：寵物收服、圖鑑、性格、技能與融合。

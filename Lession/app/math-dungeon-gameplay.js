@@ -36,10 +36,18 @@ function prepareFirstDungeonPrologue(){
   saveChar();
 }
 
+const MATH_TEACHER_IMAGE=new Image();
+MATH_TEACHER_IMAGE.src='./assets/npcs/math-teacher-v1.png';
+
 function paintPrologueTeacher(id){
   const cv=$(id);if(!cv)return;
-  cv.width=cv.height=64;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
-  const src=npcArt('guide');g.clearRect(0,0,64,64);g.drawImage(src,0,0,src.width,src.height,4,4,56,56);
+  cv.width=128;cv.height=192;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+  const draw=()=>{g.clearRect(0,0,128,192);g.drawImage(MATH_TEACHER_IMAGE,0,0,128,192);};
+  if(MATH_TEACHER_IMAGE.complete&&MATH_TEACHER_IMAGE.naturalWidth)draw();
+  else{
+    const fallback=npcArt('guide');g.clearRect(0,0,128,192);g.drawImage(fallback,0,0,fallback.width,fallback.height,20,38,88,116);
+    MATH_TEACHER_IMAGE.addEventListener('load',draw,{once:true});
+  }
 }
 
 function prologueSupplyScreen(){
@@ -71,7 +79,11 @@ function teacherPrologueBattle(){
   overlay(`<div class="kicker">FORCED LESSON BATTLE</div><h1>數學老師・課本試煉</h1>
     <div class="teacher-battle" id="teacherBattleScene">
       <canvas id="teacherBattleSprite" class="teacher-pixel battle"></canvas>
+      <div class="teacher-formula-ring"><span>Σ</span><span>π</span><span>x²</span><span>√</span></div>
+      <div class="teacher-open-book">📖</div>
       <div class="teacher-book b1">📘</div><div class="teacher-book b2">📗</div><div class="teacher-book b3">📙</div>
+      <div class="teacher-page p1"></div><div class="teacher-page p2"></div><div class="teacher-page p3"></div><div class="teacher-page p4"></div>
+      <div class="teacher-impact">100!</div><div class="teacher-attack-name">奧義・課本演算連擊</div>
       <div class="teacher-battle-line">「這場不是比裝備，是練習如何面對不會的題目。」</div>
     </div>
     <div class="teacher-player-hp"><span>你的生命</span><i><b id="teacherHpDrain"></b></i><em id="teacherHpText">${S.hp}/${S.maxhp}</em></div>
@@ -79,8 +91,8 @@ function teacherPrologueBattle(){
       if(el.id!=='teacherBattleGo')return false;
       const scene=$('teacherBattleScene'),btn=$('teacherBattleGo');btn.disabled=true;btn.textContent='課本連擊！';scene.classList.add('active');
       const bar=$('teacherHpDrain'),txt=$('teacherHpText');bar.style.width='0%';
-      setTimeout(()=>{txt.textContent='0/'+S.maxhp;S.hp=0;},2100);
-      setTimeout(()=>teacherPrologueFallen(0),2900);return false;
+      setTimeout(()=>{txt.textContent='0/'+S.maxhp;S.hp=0;},2750);
+      setTimeout(()=>teacherPrologueFallen(0),3600);return false;
     });
   paintPrologueTeacher('teacherBattleSprite');
 }
@@ -165,7 +177,8 @@ function hiddenTeacherGate(){
 function hiddenTeacherBattle(step=0,teacherHp=100,playerHp=100,message='依六區線索，依序打出五張傳說卡。'){
   const expected=TEACHER_LEGEND_ORDER[step],cards=TEACHER_LEGEND_ORDER.slice().sort(()=>Math.random()-.5);
   overlay(`<div class="kicker">THE FINAL LESSON</div><h1>數學老師・隱藏大魔王</h1>
-    <div class="teacher-final-stage"><canvas id="finalTeacherSprite" class="teacher-pixel battle"></canvas>
+    <div class="teacher-final-stage" id="teacherFinalStage"><canvas id="finalTeacherSprite" class="teacher-pixel battle"></canvas>
+      <div class="teacher-final-formula">Σ　π　√　x²</div><div class="teacher-final-book">📘</div><div class="teacher-final-flash"></div>
       <div class="teacher-final-hp"><span>老師的推理護盾</span><i><b style="width:${teacherHp}%"></b></i><em>${teacherHp}%</em></div>
       <div class="teacher-final-hp player"><span>你的專注力</span><i><b style="width:${playerHp}%"></b></i><em>${playerHp}%</em></div>
       <div class="teacher-sequence">${TEACHER_LEGEND_ORDER.map((id,i)=>`<span class="${i<step?'done':i===step?'now':''}">${i<step?'✓':i}</span>`).join('')}</div></div>
@@ -173,8 +186,9 @@ function hiddenTeacherBattle(step=0,teacherHp=100,playerHp=100,message='依六�
     <div class="teacher-card-hand">${cards.map(id=>{const c=CARDS[id];return `<button data-teacher-card="${id}"><small>費用 ${c.c}</small><b>${hesc(c.n)}</b><span>${hesc(c.d||'傳說數學卡')}</span></button>`;}).join('')}</div>`,null,el=>{
       const cardEl=el.closest&&el.closest('[data-teacher-card]');
       const id=cardEl&&cardEl.dataset.teacherCard;if(!id)return false;
-      if(id===expected){const ns=step+1,nh=Math.max(0,100-ns*20);setTimeout(()=>ns>=TEACHER_LEGEND_ORDER.length?hiddenTeacherVictory():hiddenTeacherBattle(ns,nh,playerHp,'正確！前一步已成為下一步的基礎。'),260);}
-      else{const hp=playerHp-20;setTimeout(()=>hp<=0?hiddenTeacherRetry():hiddenTeacherBattle(0,100,hp,'順序中斷。老師提醒：別急著猜，回想 0 → 1 → 2 → 3 → 4。'),260);}
+      const stage=$('teacherFinalStage');cardEl.disabled=true;
+      if(id===expected){stage&&stage.classList.add('solved');const ns=step+1,nh=Math.max(0,100-ns*20);setTimeout(()=>ns>=TEACHER_LEGEND_ORDER.length?hiddenTeacherVictory():hiddenTeacherBattle(ns,nh,playerHp,'正確！前一步已成為下一步的基礎。'),520);}
+      else{stage&&stage.classList.add('punish');const hp=playerHp-20;setTimeout(()=>hp<=0?hiddenTeacherRetry():hiddenTeacherBattle(0,100,hp,'順序中斷。老師提醒：別急著猜，回想 0 → 1 → 2 → 3 → 4。'),1050);}
       return true;
     });
   paintPrologueTeacher('finalTeacherSprite');
