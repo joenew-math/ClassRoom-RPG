@@ -171,7 +171,8 @@ function hiddenTeacherBattle(step=0,teacherHp=100,playerHp=100,message='依六�
       <div class="teacher-sequence">${TEACHER_LEGEND_ORDER.map((id,i)=>`<span class="${i<step?'done':i===step?'now':''}">${i<step?'✓':i}</span>`).join('')}</div></div>
     <div class="desc teacher-battle-message">${hesc(message)}<br><b>目前進度 ${step}/5</b></div>
     <div class="teacher-card-hand">${cards.map(id=>{const c=CARDS[id];return `<button data-teacher-card="${id}"><small>費用 ${c.c}</small><b>${hesc(c.n)}</b><span>${hesc(c.d||'傳說數學卡')}</span></button>`;}).join('')}</div>`,null,el=>{
-      const id=el.dataset&&el.dataset.teacherCard;if(!id)return false;
+      const cardEl=el.closest&&el.closest('[data-teacher-card]');
+      const id=cardEl&&cardEl.dataset.teacherCard;if(!id)return false;
       if(id===expected){const ns=step+1,nh=Math.max(0,100-ns*20);setTimeout(()=>ns>=TEACHER_LEGEND_ORDER.length?hiddenTeacherVictory():hiddenTeacherBattle(ns,nh,playerHp,'正確！前一步已成為下一步的基礎。'),260);}
       else{const hp=playerHp-20;setTimeout(()=>hp<=0?hiddenTeacherRetry():hiddenTeacherBattle(0,100,hp,'順序中斷。老師提醒：別急著猜，回想 0 → 1 → 2 → 3 → 4。'),260);}
       return true;
