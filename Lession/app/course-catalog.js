@@ -141,10 +141,16 @@ function installCourseSideDrawer(d){
     style.id='course-side-drawer-style';
     style.textContent='body,#sidenav{transition:padding-left .24s ease,transform .24s ease!important}#sidenav{overflow:visible!important}#courseSideDrawerToggle{position:absolute;right:-42px;top:12px;width:42px;height:48px;border:3px solid #14161C;border-left:0;border-radius:0 12px 12px 0;background:#FFC93C;color:#14161C;font-size:21px;font-weight:1000;box-shadow:3px 3px 0 rgba(0,0,0,.55);cursor:pointer;z-index:80}body.course-side-collapsed{padding-left:0!important}body.course-side-collapsed #sidenav{transform:translateX(-100%)}@media(prefers-reduced-motion:reduce){body,#sidenav{transition:none!important}}';
     d.head.appendChild(style);
-    const button=d.createElement('button');button.id='courseSideDrawerToggle';button.type='button';button.textContent='‹';button.title='收合課程目錄';button.setAttribute('aria-expanded','true');
-    button.onclick=()=>{const closed=d.body.classList.toggle('course-side-collapsed');button.textContent=closed?'›':'‹';button.title=closed?'展開課程目錄':'收合課程目錄';button.setAttribute('aria-expanded',closed?'false':'true');};
+    const button=d.createElement('button');button.id='courseSideDrawerToggle';button.type='button';button.textContent='‹';button.title='收合課程目錄；可按住沿左側上下移動';button.setAttribute('aria-expanded','true');
+    const setClosed=closed=>{d.body.classList.toggle('course-side-collapsed',closed);button.textContent=closed?'›':'‹';button.title=(closed?'展開':'收合')+'課程目錄；可按住沿左側上下移動';button.setAttribute('aria-expanded',closed?'false':'true');};
+    const saved=Number(sessionStorage.getItem('courseSideDrawerY'));if(Number.isFinite(saved)&&saved>0)button.style.top=Math.max(8,Math.min(d.defaultView.innerHeight-58,saved))+'px';
+    let drag=null,interacted=false;
+    button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;interacted=true;drag={id:e.pointerId,startY:e.clientY,moved:false};try{button.setPointerCapture(e.pointerId);}catch(_){}});
+    button.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const y=Math.max(8,Math.min(d.defaultView.innerHeight-58,e.clientY));if(Math.abs(e.clientY-drag.startY)>5)drag.moved=true;if(drag.moved){button.style.top=y+'px';sessionStorage.setItem('courseSideDrawerY',String(Math.round(y)));e.preventDefault();}});
+    const stop=e=>{if(!drag||drag.id!==e.pointerId)return;button._drawerDragged=drag.moved;drag=null;try{button.releasePointerCapture(e.pointerId);}catch(_){}};button.addEventListener('pointerup',stop);button.addEventListener('pointercancel',stop);
+    button.onclick=()=>{interacted=true;if(button._drawerDragged){button._drawerDragged=false;return;}setClosed(!d.body.classList.contains('course-side-collapsed'));};
     nav.appendChild(button);
-    setTimeout(()=>button.click(),1200);
+    setTimeout(()=>{if(!interacted)setClosed(true);},1200);
   };
   install();setTimeout(install,0);
 }

@@ -45,10 +45,32 @@ function zoneSpawn(s){
 
 function zoneSeeded(seed){let n=(Number(seed)||Date.now())>>>0;return()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};}
 
-function makeZoneObjects(seed){
-  const rnd=zoneSeeded(seed),out=[],occupied=[];function pos(){for(let n=0;n<50;n++){const x=10+rnd()*80,y=13+rnd()*74;if(x>42&&x<58&&y>39&&y<61)continue;if(occupied.every(p=>zoneDist(x,y,p.x,p.y)>13)){occupied.push({x,y});return{x:Math.round(x),y:Math.round(y)};}}return{x:15+rnd()*70,y:15+rnd()*70};}
-  for(let i=0;i<3;i++){const p=pos();out.push({id:"wall"+i,kind:"wall",tone:"neutral",x:p.x,y:p.y,w:8+Math.round(rnd()*6),h:9+Math.round(rnd()*7),icon:"🪨"});}
-  [{kind:"bomb",tone:"bad",icon:"💣"},{kind:"slow",tone:"bad",icon:"🐌"},{kind:"reverse",tone:"bad",icon:"↔️"},{kind:"confuse",tone:"bad",icon:"🌀"},{kind:"med",tone:"good",icon:"➕"},{kind:"haste",tone:"good",icon:"⚡"},{kind:"shield",tone:"good",icon:"🛡️"},{kind:"bonus",tone:"good",icon:"⏱️"},{kind:"coin",tone:"good",icon:"🪙"}].forEach((o,i)=>{const p=pos();out.push({...o,id:o.kind+i,x:p.x,y:p.y,r:o.kind==="bomb"?7:5});});return out;
+function zoneLayoutSeed(s,l){return String((l&&l.questionId)||"")+"|"+String((s&&s.id)||"").split("").reduce((n,c)=>((n*31)+c.charCodeAt(0))>>>0,2166136261);}
+function zoneStudentLayout(s,l){
+  if(!s||!l||l.quizMode==="offline")return ["A","B","C","D"];
+  const key=zoneLayoutSeed(s,l);let seed=0;for(let i=0;i<key.length;i++)seed=((seed*33)^key.charCodeAt(i))>>>0;
+  const rnd=zoneSeeded(seed),layout=["A","B","C","D"];
+  for(let i=layout.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[layout[i],layout[j]]=[layout[j],layout[i]];}
+  if(layout.join("")==="ABCD")[layout[0],layout[1]]=[layout[1],layout[0]];
+  return layout;
+}
+function zoneLogicalAnswer(s,l,x,y){const physical=zoneLetterAt(x,y),slot="ABCD".indexOf(physical);return slot<0?"":zoneStudentLayout(s,l)[slot];}
+
+function zoneAnswerZonesHtml(s,l,publicView){
+  const physical=["A","B","C","D"],layout=zoneStudentLayout(s,l),correct=l.reveal?String(l.correct||"").toUpperCase():"";
+  return physical.map((slot,i)=>{if(publicView)return '<div class="zone-area '+slot.toLowerCase()+' public-zone"><b>◆</b><span class="zone-option-bg"><span>選項區</span></span></div>';
+    const answer=layout[i],idx="ABCD".indexOf(answer);return '<div class="zone-area '+slot.toLowerCase()+(correct===answer?' correct':'')+'"><b>'+answer+'</b><span class="zone-option-bg">'+quizImageHtml((l.optionImages||[])[idx],"zone-option-img",answer+" 選項圖片")+'<span>'+(l.visualSvg?quizGeometryOptionHtml((l.options||[])[idx]):'')+esc((l.options||[])[idx]||"")+'</span></span></div>';}).join("");
+}
+
+function makeZoneObjects(seed,studentCount){
+  const rnd=zoneSeeded(seed),out=[],occupied=[];function pos(){for(let n=0;n<70;n++){const x=10+rnd()*80,y=13+rnd()*74;if(x>42&&x<58&&y>39&&y<61)continue;if(occupied.every(p=>zoneDist(x,y,p.x,p.y)>11)){occupied.push({x,y});return{x:Math.round(x),y:Math.round(y)};}}return{x:15+rnd()*70,y:15+rnd()*70};}
+  // 道具模式保持場面清楚：固定兩個障礙、三個效果道具；金幣才依參與人數增加。
+  for(let i=0;i<2;i++){const p=pos();out.push({id:"wall"+i,kind:"wall",tone:"neutral",x:p.x,y:p.y,w:8+Math.round(rnd()*5),h:9+Math.round(rnd()*6),icon:"🪨"});}
+  const bad=[{kind:"bomb",tone:"bad",icon:"💣"},{kind:"slow",tone:"bad",icon:"🐌"},{kind:"reverse",tone:"bad",icon:"↔️"},{kind:"confuse",tone:"bad",icon:"🌀"}],good=[{kind:"med",tone:"good",icon:"➕"},{kind:"haste",tone:"good",icon:"⚡"},{kind:"shield",tone:"good",icon:"🛡️"}];
+  [bad[Math.floor(rnd()*bad.length)],good[Math.floor(rnd()*good.length)],good[Math.floor(rnd()*good.length)]].forEach((o,i)=>{const p=pos();out.push({...o,id:o.kind+i,x:p.x,y:p.y,r:o.kind==="bomb"?7:5});});
+  const coinCount=Math.max(2,Math.min(8,Math.ceil(Math.max(1,Number(studentCount)||1)/5)));
+  for(let i=0;i<coinCount;i++){const p=pos();out.push({id:"coin"+i,kind:"coin",tone:"good",icon:"🪙",x:p.x,y:p.y,r:5});}
+  return out;
 }
 
 function zoneObjects(l){return l&&(l.quizMode==="item"||l.quizMode==="battle")&&Array.isArray(l.zoneObjects)?l.zoneObjects:[];}
@@ -60,11 +82,12 @@ function zoneMaxHp(s){return Math.max(100,Number(s&&s.maxHp)||100);}
 function zoneAnswerState(s,l){
   const qid=l&&l.questionId||"";let z=s.liveAnswer;
   if(!z||z.questionId!==qid){const p=zoneSpawn(s);z=s.liveAnswer={questionId:qid,x:p.x,y:p.y,answer:"",confirmed:false,quizHp:zoneMaxHp(s),quizMaxHp:zoneMaxHp(s),used:{},itemGold:0,event:"",updatedAt:Date.now()};}
-  z.quizMaxHp=Math.max(1,Number(z.quizMaxHp)||zoneMaxHp(s));z.quizHp=Math.max(0,Math.min(z.quizMaxHp,Number(z.quizHp==null?z.quizMaxHp:z.quizHp)));z.used=z.used||{};z.x=zoneClamp(z.x);z.y=zoneClamp(z.y);z.answer=zoneLetterAt(z.x,z.y);return z;
+  z.quizMaxHp=Math.max(1,Number(z.quizMaxHp)||zoneMaxHp(s));z.quizHp=Math.max(0,Math.min(z.quizMaxHp,Number(z.quizHp==null?z.quizMaxHp:z.quizHp)));z.used=z.used||{};z.x=zoneClamp(z.x);z.y=zoneClamp(z.y);if(!z.confirmed)z.answer=zoneLogicalAnswer(s,l,z.x,z.y);return z;
 }
 
+let zoneStudentLastCloudPush=0,zoneStudentCloudPending=0;
 function syncZoneStudent(s,force){
-  const persist=()=>{try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(_){}};clearTimeout(zoneStudentLocalTimer);if(force)persist();else zoneStudentLocalTimer=setTimeout(persist,180);
+  const persist=()=>{try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(_){}};clearTimeout(zoneStudentLocalTimer);if(force)persist();else zoneStudentLocalTimer=setTimeout(persist,500);
   if(!(CLOUD.on()&&CLOUD.role==="student"&&FB.db))return;
   clearTimeout(zoneStudentSyncTimer);
   const push=()=>{
@@ -73,7 +96,10 @@ function syncZoneStudent(s,force){
       CLOUD._lastSnap["stu:"+s.id]=JSON.stringify(s);
     }).catch(e=>console.warn("zone answer sync",e));
   };
-  if(force)push();else zoneStudentSyncTimer=setTimeout(push,420);
+  const now=Date.now(),wait=Math.max(0,650-(now-zoneStudentLastCloudPush));
+  if(force){clearTimeout(zoneStudentCloudPending);zoneStudentCloudPending=0;zoneStudentLastCloudPush=now;push();}
+  else if(wait===0){clearTimeout(zoneStudentCloudPending);zoneStudentCloudPending=0;zoneStudentLastCloudPush=now;push();}
+  else if(!zoneStudentCloudPending)zoneStudentCloudPending=setTimeout(()=>{zoneStudentCloudPending=0;zoneStudentLastCloudPush=Date.now();push();},wait);
 }
 
 function zoneMoveStudent(s,dx,dy){
@@ -82,8 +108,8 @@ function zoneMoveStudent(s,dx,dy){
   const now=Date.now();if(z.reverseUntil>now){dx=-dx;dy=-dy;}if(z.confuseUntil>now){const mag=Math.max(Math.abs(dx),Math.abs(dy)),pick=Math.floor(Math.random()*4);dx=[mag,-mag,0,0][pick];dy=[0,0,mag,-mag][pick];}const speed=(z.slowUntil>now ? 0.55 : 1)*(z.hasteUntil>now ? 1.55 : 1);dx*=speed;dy*=speed;
   const nx=zoneClamp(z.x+dx),ny=zoneClamp(z.y+dy),wall=zoneObjects(l).find(o=>o.kind==="wall"&&Math.abs(nx-o.x)<o.w/2+3&&Math.abs(ny-o.y)<o.h/2+4);
   if(wall){z.event="🪨 前方有障礙物";toast(z.event,true);return false;}
-  if((z.eventUntil||0)<=now){z.event="";z.eventUntil=0;}z.x=nx;z.y=ny;z.answer=zoneLetterAt(z.x,z.y);
-  zoneObjects(l).filter(o=>o.kind!=="wall"&&!z.used[o.id]&&zoneDist(z.x,z.y,o.x,o.y)<=o.r).forEach(o=>{z.used[o.id]=Date.now();const blocked=o.tone==="bad"&&z.shield;if(blocked){z.shield=false;z.event="🛡️ 護盾抵銷了負面道具";toast(z.event);return;}if(o.kind==="bomb"){let hit=0;state.students.forEach(v=>{const vz=zoneAnswerState(v,l);if(zoneDist(vz.x,vz.y,o.x,o.y)>13||vz.quizHp<=0)return;const dmg=Math.max(1,Math.round(vz.quizMaxHp*.3));vz.quizHp=Math.max(0,vz.quizHp-dmg);vz.event="💥 爆炸範圍傷害 -"+dmg+(vz.quizHp<=0?"，原地倒下":"");vz.updatedAt=Date.now();hit++;});z.event="💥 炸彈爆炸，波及 "+hit+" 人"+(z.quizHp<=0?"；你已原地倒下":"");toast(z.event,true);}else if(o.kind==="med"){const heal=Math.max(1,Math.round(z.quizMaxHp*.3)),got=Math.min(heal,z.quizMaxHp-z.quizHp);z.quizHp=Math.min(z.quizMaxHp,z.quizHp+heal);z.event="➕ 醫療包回復 "+got+" 體力";toast(z.event);}else if(o.kind==="haste"){z.hasteUntil=Date.now()+5000;z.event="⚡ 加速 5 秒";toast(z.event);}else if(o.kind==="shield"){z.shield=true;z.event="🛡️ 可抵銷一次負面道具";toast(z.event);}else if(o.kind==="bonus"){l.endsAt+=3000;z.event="⏱️ 全場答題時間 +3 秒";toast(z.event);}else if(o.kind==="coin"){const gain=3;z.itemGold=Math.min(12,(Number(z.itemGold)||0)+gain);z.event="🪙 發光金幣 +"+gain+"（結算後獲得）";toast(z.event);}else if(o.kind==="slow"){z.slowUntil=Date.now()+5000;z.event="🐌 緩速 5 秒";toast(z.event,true);}else if(o.kind==="reverse"){z.reverseUntil=Date.now()+5000;z.event="↔️ 方向反轉 5 秒";toast(z.event,true);}else if(o.kind==="confuse"){z.confuseUntil=Date.now()+5000;z.event="🌀 混亂移動 5 秒";toast(z.event,true);}});
+  if((z.eventUntil||0)<=now){z.event="";z.eventUntil=0;}z.x=nx;z.y=ny;z.answer=zoneLogicalAnswer(s,l,z.x,z.y);
+  zoneObjects(l).filter(o=>o.kind!=="wall"&&!z.used[o.id]&&zoneDist(z.x,z.y,o.x,o.y)<=o.r).forEach(o=>{z.used[o.id]=Date.now();const blocked=o.tone==="bad"&&z.shield;if(blocked){z.shield=false;z.event="🛡️ 護盾抵銷了負面道具";toast(z.event);return;}if(o.kind==="bomb"){let hit=0;state.students.forEach(v=>{const vz=zoneAnswerState(v,l);if(zoneDist(vz.x,vz.y,o.x,o.y)>13||vz.quizHp<=0)return;const dmg=Math.max(1,Math.round(vz.quizMaxHp*.3));vz.quizHp=Math.max(0,vz.quizHp-dmg);vz.event="💥 爆炸範圍傷害 -"+dmg+(vz.quizHp<=0?"，原地倒下":"");vz.updatedAt=Date.now();hit++;});z.event="💥 炸彈爆炸，波及 "+hit+" 人"+(z.quizHp<=0?"；你已原地倒下":"");toast(z.event,true);}else if(o.kind==="med"){const heal=Math.max(1,Math.round(z.quizMaxHp*.3)),got=Math.min(heal,z.quizMaxHp-z.quizHp);z.quizHp=Math.min(z.quizMaxHp,z.quizHp+heal);z.event="➕ 醫療包回復 "+got+" 體力";toast(z.event);}else if(o.kind==="haste"){z.hasteUntil=Date.now()+5000;z.event="⚡ 加速 5 秒";toast(z.event);}else if(o.kind==="shield"){z.shield=true;z.event="🛡️ 可抵銷一次負面道具";toast(z.event);}else if(o.kind==="coin"){z.itemGold=Math.min(12,(Number(z.itemGold)||0)+1);z.event="🪙 發光金幣 +1（結算後獲得）";toast(z.event);}else if(o.kind==="slow"){z.slowUntil=Date.now()+5000;z.event="🐌 緩速 5 秒";toast(z.event,true);}else if(o.kind==="reverse"){z.reverseUntil=Date.now()+5000;z.event="↔️ 方向反轉 5 秒";toast(z.event,true);}else if(o.kind==="confuse"){z.confuseUntil=Date.now()+5000;z.event="🌀 混亂移動 5 秒";toast(z.event,true);}});
   if(z.event)z.eventUntil=Math.max(Number(z.eventUntil)||0,Date.now()+2400);z.updatedAt=Date.now();syncZoneStudent(s,false);return true;
 }
 
@@ -91,8 +117,21 @@ function zoneObjectsHtml(s,l){const z=s?zoneAnswerState(s,l):null;return zoneObj
 
 function bindZoneCountdown(){
   clearInterval(zoneCountdownTimer);const l=state.lesson;if(!l||!l.active||l.mode!=="zone"||l.locked)return;
-  const tick=()=>{const cur=state.lesson;if(!cur||!cur.active||cur.questionId!==l.questionId){clearInterval(zoneCountdownTimer);return;}const now=Date.now(),elapsed=now-(cur.startedAt||now),preparing=now<(cur.readyUntil||0);let countText="";if(elapsed<1000)countText="3";else if(elapsed<2000)countText="2";else if(elapsed<3000)countText="1";else if(elapsed<4000)countText="GO!";document.querySelectorAll(".zone-start-countdown").forEach(el=>{el.textContent=countText;el.classList.toggle("show",!!countText);el.classList.toggle("go",countText==="GO!");});const total=Math.max(1000,(cur.durationSec||10)*1000),left=preparing?total:Math.max(0,(cur.endsAt||0)-now),pct=preparing?100:Math.max(0,Math.min(100,left/total*100)),fill=pct>55?"#ffd234":pct>25?"#ff8b2d":"#ef3838";document.querySelectorAll(".zone-timer>i").forEach(el=>{el.style.width=pct+"%";el.style.backgroundColor=fill;});document.querySelectorAll(".zone-timer>span").forEach(el=>el.textContent=preparing?"準備！":(left/1000).toFixed(1)+" 秒");document.querySelectorAll(".zone-submit-progress").forEach(el=>{el.style.setProperty("--quiz-time",pct+"%");el.style.setProperty("--quiz-fill",fill);});if(!preparing&&left<=0){clearInterval(zoneCountdownTimer);cur.locked=true;save();render();toast("⏰ 時間到，答案已鎖定！");}};
-  tick();zoneCountdownTimer=setInterval(tick,100);
+  const tick=()=>{const cur=state.lesson;if(!cur||!cur.active||cur.questionId!==l.questionId){clearInterval(zoneCountdownTimer);return;}const now=Date.now(),elapsed=now-(cur.startedAt||now),preparing=now<(cur.readyUntil||0);let countText="";if(elapsed<1000)countText="3";else if(elapsed<2000)countText="2";else if(elapsed<3000)countText="1";else if(elapsed<4000)countText="GO!";document.querySelectorAll(".zone-start-countdown").forEach(el=>{el.textContent=countText;el.classList.toggle("show",!!countText);el.classList.toggle("go",countText==="GO!");});const total=Math.max(1000,(cur.durationSec||10)*1000),left=preparing?total:Math.max(0,(cur.endsAt||0)-now),pct=preparing?100:Math.max(0,Math.min(100,left/total*100)),fill=pct>55?"#ffd234":pct>25?"#ff8b2d":"#ef3838";document.querySelectorAll(".zone-timer>i").forEach(el=>{el.style.width=pct+"%";el.style.backgroundColor=fill;});document.querySelectorAll(".zone-timer>span").forEach(el=>el.textContent=preparing?"準備！":(left/1000).toFixed(1)+" 秒");document.querySelectorAll(".zone-submit-progress").forEach(el=>{el.style.setProperty("--quiz-time",pct+"%");el.style.setProperty("--quiz-fill",fill);});if(!preparing&&left<=0){clearInterval(zoneCountdownTimer);if(view.page==="teacher"&&cur.quizMode!=="offline"&&!cur.settled){settleZoneByCurrentPositions("⏰ 時間到，已依最後所在區域自動結算");return;}cur.locked=true;save();render();toast("⏰ 時間到，答案已鎖定！");}};
+  tick();zoneCountdownTimer=setInterval(tick,200);
+}
+
+function settleZoneByCurrentPositions(reason){
+  const l=state.lesson;if(!l||l.mode!=="zone"||l.quizMode==="offline"||l.settled)return false;
+  state.students.forEach(s=>{const z=zoneAnswerState(s,l);z.answer=zoneLogicalAnswer(s,l,z.x,z.y);z.confirmed=!!z.answer;z.updatedAt=Date.now();});
+  const ok=settleZoneLesson();if(ok&&reason)toast(reason);return ok;
+}
+
+function maybeAutoSettleConfirmedZone(){
+  const l=state.lesson;if(view.page!=="teacher"||!l||!l.active||l.mode!=="zone"||l.quizMode==="offline"||l.locked||l.settled||Date.now()<(l.readyUntil||0))return false;
+  const joined=state.students.filter(s=>s.liveAnswer&&s.liveAnswer.questionId===l.questionId);
+  if(!joined.length||joined.some(s=>!s.liveAnswer.confirmed))return false;
+  return settleZoneByCurrentPositions("✨ 全員已確認，系統已自動結算");
 }
 
 function zoneBattleSkill(s){const id=(normalizeSkillLoadout(s)||[])[0],def=id&&skillDef(s.job,id);return def?{id,name:def.name,icon:def.icon||"✨"}:{id:"basic_skill",name:"職業技",icon:"✨"};}
@@ -265,7 +304,7 @@ function startZoneLesson(payload){
   while(opts.length<4)opts.push("");
   const durationSec=Math.max(10,Math.min(180,+payload.durationSec||30)),startedAt=Date.now();
   const requestedMode=payload.quizMode==="battle"?"item":payload.quizMode,quizMode=["peace","item","buzzer","offline"].includes(requestedMode)?requestedMode:"peace",readyUntil=startedAt+4000;
-  state.lesson={active:true,mode:"zone",quizMode,durationSec,readyUntil,endsAt:readyUntil+durationSec*1000,zoneObjects:quizMode==="item"?makeZoneObjects(startedAt):[],buzzerWinner:null,questionId:"ZQ"+startedAt,title:String(payload.title||"角色站位答題"),prompt:String(payload.prompt||payload.question||"請選擇正確答案"),originalPrompt:String(payload.originalPrompt||payload.prompt||payload.question||""),visualSvg:quizGeometrySvgSafe(payload.visualSvg),options:opts.map((x,i)=>String(x||String.fromCharCode(65+i))),questionImage:quizImageSrc(payload.questionImage),optionImages:(payload.optionImages||[]).slice(0,4).map(quizImageSrc),correct:String(payload.correct||"A").toUpperCase(),solution:String(payload.solution||""),bankRef:payload.bankRef||null,xp:Math.max(1,+payload.xp||15),gold:Math.max(0,+payload.gold||0),answered:{},locked:false,reveal:false,settled:false,startedAt,source:String(payload.source||"manual")};
+  state.lesson={active:true,mode:"zone",quizMode,durationSec,readyUntil,endsAt:readyUntil+durationSec*1000,zoneObjects:quizMode==="item"?makeZoneObjects(startedAt,state.students.length):[],buzzerWinner:null,questionId:"ZQ"+startedAt,title:String(payload.title||"角色站位答題"),prompt:String(payload.prompt||payload.question||"請選擇正確答案"),originalPrompt:String(payload.originalPrompt||payload.prompt||payload.question||""),visualSvg:quizGeometrySvgSafe(payload.visualSvg),options:opts.map((x,i)=>String(x||String.fromCharCode(65+i))),questionImage:quizImageSrc(payload.questionImage),optionImages:(payload.optionImages||[]).slice(0,4).map(quizImageSrc),correct:String(payload.correct||"A").toUpperCase(),solution:String(payload.solution||""),bankRef:payload.bankRef||null,xp:Math.max(1,+payload.xp||15),gold:Math.max(0,+payload.gold||0),answered:{},locked:false,reveal:false,settled:false,startedAt,source:String(payload.source||"manual")};
   state.students.forEach(s=>{delete s.liveAnswer;zoneAnswerState(s,state.lesson);});
   addLog("-","🧭 發起角色站位答題「"+state.lesson.title+"」");save();return state.lesson;
 }
@@ -307,10 +346,10 @@ function openOfflineRewardPicker(){
 function zoneBoardHtml(){
   const l=state.lesson||{},letters=["A","B","C","D"],correct=l.reveal?String(l.correct||"").toUpperCase():"";
   const counts=letters.map(k=>state.students.filter(s=>{const z=s.liveAnswer||{};return z.questionId===l.questionId&&z.confirmed&&z.answer===k;}).length);
-  const zones=letters.map((k,i)=>'<div class="zone-area '+k.toLowerCase()+(correct===k?' correct':'')+'"><b>'+k+'</b><span class="zone-option-bg">'+quizImageHtml((l.optionImages||[])[i],"zone-option-img",k+" 選項圖片")+'<span>'+(l.visualSvg?quizGeometryOptionHtml((l.options||[])[i]):'')+esc((l.options||[])[i]||"")+'</span></span></div>').join("");
+  const zones=zoneAnswerZonesHtml(null,l,true),correctIdx="ABCD".indexOf(correct),answerReveal=l.reveal&&correctIdx>=0?'<div class="zone-public-answer">✅ 正解 '+correct+'：'+esc((l.options||[])[correctIdx]||"")+'</div>':'';
   const avatars=state.students.map(s=>{const z=zoneAnswerState(s,l),hp=Math.round(z.quizHp/z.quizMaxHp*100),streak=Number(s.quizFeverStreak)||0,fever=streak>=3?' zone-fever':'',lightning=streak>=10?' zone-lightning':'';return '<div class="zone-avatar '+(z.confirmed?'confirmed ':'')+(z.quizHp<=0?'zone-ko':'')+fever+lightning+'" style="left:'+z.x+'%;top:'+z.y+'%;--fever-speed:'+Math.max(.24,1.1-Math.min(streak,12)*.07)+'s" title="'+esc(s.name)+'・'+(z.answer||"待命")+'・HP '+Math.round(z.quizHp)+'">'+dollSVG(s,76)+'<span class="zone-hp"><i style="width:'+hp+'%"></i></span><span class="name">'+esc(s.name)+(z.confirmed?' ✓':'')+(streak>=3?' 🔥'+streak:'')+'</span></div>';}).join("");
   const timerText=l.quizMode==="buzzer"&&l.buzzerWinner?(Math.max(0,Number(l.buzzerRemainingMs)||0)/1000).toFixed(1):Number(l.durationSec||30).toFixed(1);
-  return '<div class="zone-quiz-shell"><div class="zone-question'+(l.visualSvg?' has-geometry':'')+'"><b>'+esc(l.prompt||l.title)+'</b>'+quizGeometryHtml(l.visualSvg,"zone-geometry")+quizImageHtml(l.questionImage,"zone-question-img","題目圖片")+'<div class="zone-timer"><span>'+timerText+' 秒</span></div></div>'
+  return '<div class="zone-quiz-shell"><div class="zone-question'+(l.visualSvg?' has-geometry':'')+'"><b>'+esc(l.prompt||l.title)+'</b>'+quizGeometryHtml(l.visualSvg,"zone-geometry")+quizImageHtml(l.questionImage,"zone-question-img","題目圖片")+answerReveal+'<div class="zone-timer"><span>'+timerText+' 秒</span></div></div>'
     +'<div class="zone-stage"><div class="zone-cross-v"></div><div class="zone-cross-h"></div>'+zones+(l.quizMode==="offline"?'':zoneObjectsHtml(null,l))+'<div class="zone-wait">中央待命區</div>'+avatars+'<div class="zone-start-countdown">3</div>'+(l.buzzerWinner?'<div class="zone-buzzer-winner">🚨 '+esc(l.buzzerWinner.name)+' 搶到 '+esc(l.buzzerWinner.answer)+'</div>':'')+'</div>'
     +offlineAnswerBoardHtml(l)+'<div class="zone-quiz-controls"><span class="mini">'+zoneModeLabel(l.quizMode)+'・'+(l.locked?'🔒 已鎖定':'🟢 作答中')+'・已確認 '+counts.reduce((a,b)=>a+b,0)+' / '+state.students.length+'</span>'
     +'<button class="btn" id="zoneLock">'+(l.locked?'🔓 重新開放':'🔒 鎖定答案')+'</button><button class="btn gold" id="zoneReveal">'+(l.reveal?'🙈 隱藏答案':'👁 公布答案')+'</button><button class="btn gold" id="zoneSettle"'+(l.settled?' disabled':'')+'>✨ 結算獎勵</button>'+(l.bankRef?'<button class="btn course-next" id="zoneNext"'+(!l.settled?' disabled':'')+'>下一題 ▶</button>':'')+'<button class="btn danger" id="zoneEnd">結束本題</button></div>'
@@ -318,13 +357,13 @@ function zoneBoardHtml(){
 }
 
 function zoneStudentHtml(s,l){
-  const z=zoneAnswerState(s,l),letters=["A","B","C","D"],zones=letters.map((k,i)=>'<div class="zone-area '+k.toLowerCase()+'"><b>'+k+'</b><span class="zone-option-bg">'+quizImageHtml((l.optionImages||[])[i],"zone-option-img",k+" 選項圖片")+'<span>'+(l.visualSvg?quizGeometryOptionHtml((l.options||[])[i]):'')+esc((l.options||[])[i]||"")+'</span></span></div>').join(""),ko=z.quizHp<=0,hp=Math.round(z.quizHp/z.quizMaxHp*100),preparing=Date.now()<(l.readyUntil||0),streak=Number(s.quizFeverStreak)||0;
+  const z=zoneAnswerState(s,l),zones=zoneAnswerZonesHtml(s,l,false),ko=z.quizHp<=0,hp=Math.round(z.quizHp/z.quizMaxHp*100),preparing=Date.now()<(l.readyUntil||0),streak=Number(s.quizFeverStreak)||0;
   const status=l.settled?(z.answer===l.correct?'🎉 答對了！':'📖 正解是 '+l.correct+'，一起訂正吧'):(ko?(z.answer?'💫 體力歸零，固定在 '+z.answer+' 區，可確認目前答案':'💫 倒在中央待命區，本題無法作答'):(z.confirmed?'✅ 已確認 '+z.answer+'，等待老師公布':z.answer?'目前位於 '+z.answer+' 區，請確認答案':'位於中央待命區，請移動到答案區'));
   if(l.quizMode==="offline")return '<div class="panel zone-student"><h3>🙋 無裝置答題進行中</h3><div class="zone-touch-guide">請看教室大屏，以舉牌、站位或口頭方式回答；老師會替你登記。</div><div class="zone-start-countdown">3</div></div>';
   return '<div class="panel zone-student"><h3>🧭 '+esc(l.title||"角色站位答題")+'・'+zoneModeLabel(l.quizMode)+'</h3><div class="zone-touch-guide">☝️ 請按住場地並滑動角色；單點不會移動。確認答案後即鎖定，不能再更改位置。</div>'
     +'<div class="zone-student-map'+(z.confirmed?' answer-locked':'')+'"><div class="zone-cross-v"></div><div class="zone-cross-h"></div>'+zones+zoneObjectsHtml(s,l)+'<div class="zone-wait">待命</div><div class="zone-avatar '+(z.confirmed?'confirmed ':'')+(ko?'zone-ko':'')+(streak>=3?' zone-fever':'')+(streak>=10?' zone-lightning':'')+'" style="left:'+z.x+'%;top:'+z.y+'%;--fever-speed:'+Math.max(.24,1.1-Math.min(streak,12)*.07)+'s">'+dollSVG(s,72)+'<span class="zone-hp"><i style="width:'+hp+'%"></i></span><span class="name">'+esc(s.name)+' HP '+Math.round(z.quizHp)+(streak>=3?' 🔥'+streak:'')+'</span></div><div class="zone-start-countdown">3</div>'+(l.buzzerWinner?'<div class="zone-buzzer-winner">🚨 '+esc(l.buzzerWinner.name)+' 搶答</div>':'')+'</div>'
     +'<div class="zone-status">'+status+'</div>'+(l.reveal&&l.solution?'<div class="zone-solution" style="margin-top:8px"><b>📖 解題解析：</b>'+esc(l.solution)+'</div>':'')
-    +(l.quizMode==="buzzer"?'<div class="zone-confirm"><button class="btn zone-buzz-button zone-submit-progress" id="zoneBuzz" style="--quiz-time:100%"'+(!z.answer||l.locked||ko||preparing?' disabled':'')+'><span class="zone-submit-label">🚨 搶答！'+(z.answer?'（'+z.answer+'）':'')+'</span></button></div>':'<div class="zone-confirm"><button class="btn gold zone-submit-progress" id="zoneConfirm" style="--quiz-time:100%"'+(!z.answer||l.locked||preparing||z.confirmed?' disabled':'')+'>'+zoneConfirmButtonContent(z,l)+'</button></div>')+'<div class="mini" style="text-align:center;margin-top:8px">'+(l.quizMode==="buzzer"?'站好答案區後按搶答；第一位成功者會鎖定全場。':'送出前請確認位置；按下確定後，本題不能再移動或更改答案。')+'</div></div>';
+    +(l.quizMode==="buzzer"?'<div class="zone-confirm"><div class="zone-submit-actions"><button class="btn zone-buzz-button zone-submit-progress" id="zoneBuzz" style="--quiz-time:100%"'+(!z.answer||l.locked||ko||preparing?' disabled':'')+'><span class="zone-submit-label">🚨 搶答！'+(z.answer?'（'+z.answer+'）':'')+'</span></button><button class="btn zone-recover" id="zoneRecover" title="操作卡住時重新載入本題，不會清除位置或答案">↻</button></div></div>':'<div class="zone-confirm"><div class="zone-submit-actions"><button class="btn gold zone-submit-progress" id="zoneConfirm" style="--quiz-time:100%"'+(!z.answer||l.locked||preparing||z.confirmed?' disabled':'')+'>'+zoneConfirmButtonContent(z,l)+'</button><button class="btn zone-recover" id="zoneRecover" title="操作卡住時重新載入本題，不會清除位置或答案">↻</button></div></div>')+'<div class="mini" style="text-align:center;margin-top:8px">'+(l.quizMode==="buzzer"?'站好答案區後按搶答；第一位成功者會鎖定全場。':'送出前請確認位置；按下確定後，本題不能再移動或更改答案。')+'</div></div>';
 }
 
 function zoneConfirmButtonContent(z,l){const notice=(l.quizMode==="item"||l.quizMode==="battle")&&z.event&&Date.now()<(z.eventUntil||0)?'<span class="zone-item-notice">🎁 '+esc(z.event)+'</span>':'';return notice+'<span class="zone-submit-label">'+(z.confirmed?'🔒 已送出答案 '+esc(z.answer):'✅ 確定答案 '+esc(z.answer||''))+'</span>';}
@@ -346,10 +385,11 @@ function paintZonePointerState(s,map){
 
 function bindZonePointerMovement(s){
   const map=document.querySelector(".student-zone-screen .zone-student-map");if(!map)return;
-  let active=false,moved=false,lastX=0,lastY=0,pointerId=null;
+  let active=false,moved=false,lastX=0,lastY=0,pointerId=null,pendingX=0,pendingY=0,moveFrame=0;
+  const flushMove=()=>{moveFrame=0;if(!active||(!pendingX&&!pendingY))return;const dx=pendingX,dy=pendingY;pendingX=0;pendingY=0;if(zoneMoveStudent(s,dx,dy)){moved=true;paintZonePointerState(s,map);}};
   map.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;e.preventDefault();const z=zoneAnswerState(s,state.lesson);if(z.confirmed){toast("🔒 本題答案已送出，不能再移動",true);return;}active=true;moved=false;pointerId=e.pointerId;lastX=e.clientX;lastY=e.clientY;map.classList.add("is-dragging");try{map.setPointerCapture(pointerId);}catch(_){}});
-  map.addEventListener("pointermove",e=>{if(!active||e.pointerId!==pointerId)return;e.preventDefault();const r=map.getBoundingClientRect(),dx=(e.clientX-lastX)/Math.max(1,r.width)*100,dy=(e.clientY-lastY)/Math.max(1,r.height)*100;if(Math.hypot(dx,dy)<.7)return;lastX=e.clientX;lastY=e.clientY;if(zoneMoveStudent(s,dx,dy)){moved=true;paintZonePointerState(s,map);}});
-  const finish=e=>{if(!active||e.pointerId!==pointerId)return;e.preventDefault();active=false;map.classList.remove("is-dragging");try{map.releasePointerCapture(pointerId);}catch(_){}pointerId=null;if(!moved)toast("請按住場地並滑動角色；單點不會移動");};
+  map.addEventListener("pointermove",e=>{if(!active||e.pointerId!==pointerId)return;e.preventDefault();const r=map.getBoundingClientRect(),dx=(e.clientX-lastX)/Math.max(1,r.width)*100,dy=(e.clientY-lastY)/Math.max(1,r.height)*100;lastX=e.clientX;lastY=e.clientY;pendingX+=dx;pendingY+=dy;if(Math.hypot(pendingX,pendingY)<.35)return;if(!moveFrame)moveFrame=requestAnimationFrame(flushMove);});
+  const finish=e=>{if(!active||e.pointerId!==pointerId)return;e.preventDefault();if(moveFrame){cancelAnimationFrame(moveFrame);moveFrame=0;}flushMove();active=false;map.classList.remove("is-dragging");try{map.releasePointerCapture(pointerId);}catch(_){}pointerId=null;if(moved)syncZoneStudent(s,true);else toast("請按住場地並滑動角色；單點不會移動");};
   map.addEventListener("pointerup",finish);map.addEventListener("pointercancel",()=>{active=false;pointerId=null;map.classList.remove("is-dragging");});map.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();});
 }
 
@@ -364,4 +404,5 @@ function renderStudentZoneInterface(s,l){
   app.querySelectorAll("[data-zbattle]").forEach(b=>b.onclick=()=>{if(b.disabled)return;if(zoneBattleAction(s,b.dataset.zbattle==="skill"?"skill":"attack"))render();});
   const confirmBtn=document.getElementById("zoneConfirm");if(confirmBtn)confirmBtn.onclick=()=>{const current=state.lesson,z=zoneAnswerState(s,current);if(!current||current.locked||z.confirmed||!z.answer)return;z.confirmed=true;z.updatedAt=Date.now();syncZoneStudent(s,true);render();toast("🔒 已送出答案 "+z.answer+"，本題不能再移動");};
   const buzzBtn=document.getElementById("zoneBuzz");if(buzzBtn)buzzBtn.onclick=()=>zoneBuzz(s);
+  const recoverBtn=document.getElementById("zoneRecover");if(recoverBtn)recoverBtn.onclick=()=>{const now=Date.now(),last=Number(sessionStorage.getItem("zoneRecoverAt")||0);if(now-last<5000){toast("重新同步冷卻中，請稍候 "+Math.ceil((5000-(now-last))/1000)+" 秒",true);return;}sessionStorage.setItem("zoneRecoverAt",String(now));recoverBtn.disabled=true;const z=zoneAnswerState(s,state.lesson),snapshot=JSON.parse(JSON.stringify(z));clearInterval(zoneCountdownTimer);s.liveAnswer=snapshot;syncZoneStudent(s,true);renderStudentZoneInterface(s,state.lesson);toast("↻ 已重新載入本題，位置與答案均已保留");};
 }

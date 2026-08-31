@@ -4802,6 +4802,12 @@ function importData(file){
 const app = document.getElementById("app");
 const modalHost = document.getElementById("modalHost");
 let view = {page:"home", sid:null, tab:"stats", shopFilter:"all", tview:"board", role:null};
+function uiCooldownRemaining(key,durationMs){const last=Number(sessionStorage.getItem("rpgCooldown:"+key)||0);return Math.max(0,Number(durationMs||0)-(Date.now()-last));}
+function claimUiCooldown(key,durationMs,label){const left=uiCooldownRemaining(key,durationMs);if(left>0){toast((label||"此操作")+"冷卻中，請稍候 "+Math.ceil(left/1000)+" 秒",true);return false;}sessionStorage.setItem("rpgCooldown:"+key,String(Date.now()));return true;}
+if(app&&!app.dataset.adjustCooldownBound){
+  app.dataset.adjustCooldownBound="1";
+  app.addEventListener("click",e=>{const b=e.target.closest("[data-bagequip],[data-cosmeticwear],[data-legendwear],[data-petequip],[data-petunequip],[data-skequip],[data-picktitle]");if(!b||b.disabled)return;const kind=b.hasAttribute("data-skequip")?"技能裝備":b.hasAttribute("data-picktitle")?"稱號調整":"裝備調整",sid=view.sid||"student";if(!claimUiCooldown("adjust:"+sid+":"+kind,3000,kind)){e.preventDefault();e.stopImmediatePropagation();}},true);
+}
 function updateSyncStatus(){
   const el=document.getElementById("syncStatus");if(!el)return;
   let status="offline",text="● 本機備份";
@@ -4816,6 +4822,15 @@ function updateSyncStatus(){
 }
 let renderFramePending=false;
 let topDrawerTimer=0;
+function bindTopDrawerDrag(button){
+  if(!button||button.dataset.dragBound)return;button.dataset.dragBound="1";
+  const saved=Number(sessionStorage.getItem("rpgTopDrawerX"));if(Number.isFinite(saved)&&saved>0)button.style.left=Math.max(30,Math.min(innerWidth-30,saved))+"px";
+  let drag=null;
+  button.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;drag={id:e.pointerId,startX:e.clientX,moved:false};try{button.setPointerCapture(e.pointerId);}catch(_){}});
+  button.addEventListener("pointermove",e=>{if(!drag||drag.id!==e.pointerId)return;const x=Math.max(30,Math.min(innerWidth-30,e.clientX));if(Math.abs(e.clientX-drag.startX)>5)drag.moved=true;if(drag.moved){button.style.left=x+"px";sessionStorage.setItem("rpgTopDrawerX",String(Math.round(x)));e.preventDefault();}});
+  const stop=e=>{if(!drag||drag.id!==e.pointerId)return;button._drawerDragged=drag.moved;drag=null;try{button.releasePointerCapture(e.pointerId);}catch(_){}};
+  button.addEventListener("pointerup",stop);button.addEventListener("pointercancel",stop);
+}
 function setTopDrawer(open,autoClose){
   const enabled=view.page==="teacher"||view.page==="student";
   document.body.classList.toggle("top-drawer-open",enabled&&!!open);
@@ -4831,7 +4846,7 @@ function syncTopDrawer(){
   document.body.classList.toggle("role-drawer-mode",enabled);
   if(!enabled)document.body.classList.remove("top-drawer-open");
   const button=document.getElementById("topDrawerToggle"),header=document.getElementById("appTopbar");
-  if(button&&!button.dataset.bound){button.dataset.bound="1";button.onclick=()=>setTopDrawer(!document.body.classList.contains("top-drawer-open"),true);}
+  if(button&&!button.dataset.bound){button.dataset.bound="1";bindTopDrawerDrag(button);button.onclick=()=>{if(button._drawerDragged){button._drawerDragged=false;return;}setTopDrawer(!document.body.classList.contains("top-drawer-open"),true);};}
   if(header&&!header.dataset.drawerBound){header.dataset.drawerBound="1";header.addEventListener("pointerdown",()=>{if(document.body.classList.contains("top-drawer-open"))setTopDrawer(true,true);});header.addEventListener("focusin",()=>setTopDrawer(true,true));}
   setTopDrawer(document.body.classList.contains("top-drawer-open"),false);
 }
@@ -6015,210 +6030,6 @@ function teacherRank(){
     + world
     + '</div>';
 }
-function bossBanner(){
-  const b = state.boss; if(!b) return "";
-  if(!b.standby) b.standby = {};
-  const pct = Math.round(b.hp/b.maxHp*100);
-  const g = nextAttackGroup();
-  const order = [...new Set(state.students.map(x=>x.group))]
-    .filter(gr=>state.students.some(x=>x.group===gr))
-    .sort((a,c)=>groupAvgAgi(c)-groupAvgAgi(a));
-  const orderStr = order.map(gr=>{
-    const done = !state.students.some(x=>x.group===gr && x.currentHp>0 && !b.standby[x.id]);
-    return (gr===g?'▶':'')+gr+(done?'✓':'');
-  }).join(' → ');
-  return '<div class="panel"><div class="goal-wrap">'
-    + '<b style="color:var(--hp)" data-bossanchor="1">🐉 '+esc(b.name)+'</b>'
-    + '<div class="goal-bar boss-bar"><i style="width:'+pct+'%"></i><span class="num">'+b.hp+' / '+b.maxHp+' HP</span></div></div>'
-    + '<div style="margin-top:8px;font-weight:700;color:#141414">出手順序:'+esc(orderStr||"—")+'</div>'
-    + '<div class="inline-form" style="margin-top:10px">'
-    + '<button class="btn gold" id="bsGroupAtk"'+(g?"":" disabled")+'>⚔️ '+(g?g+' 組攻擊':'全部打完')+'</button>'
-    + '<button class="btn" id="bsSkip"'+(g?"":" disabled")+'>⏭ 跳過本組</button>'
-    + '<button class="btn danger" data-bscounter="1">🐉 Boss 反擊</button>'
-    + '<button class="btn" id="bsRestBoard">全員休息</button></div>'
-    + '</div>';
-}
-/* 每日閘門進度列(大屏頂部) */
-function progBannerHtml(){
-  const pg = progCheck();
-  const pct = Math.min(100, Math.round(pg.exploreXp / Math.max(1,pg.exploreGoal) * 100));
-  const stages = [
-    pg.stage===0 ? '🗺 <b>探索中</b>' : '🗺 ✅',
-    pg.stage===0 ? '<span style="opacity:.4">⚔️ 魔王</span>' : (pg.stage===1 ? '⚔️ <b>魔王討伐中</b>' : '⚔️ ✅'),
-    pg.stage<2 ? '<span style="opacity:.4">🏟 競技場</span>' : '🏟 <b>已開放</b>'
-  ];
-  const castleTag = state.castle && state.castle.owner
-    ? '<span style="background:linear-gradient(135deg,#f5c518,#e2a500);border:2px solid #141414;border-radius:8px;padding:2px 10px;font-weight:900;font-size:13px">👑 榮耀之城・'+esc(state.castle.owner)+' 組</span>'
-    : '<span class="mini" style="opacity:.6">👑 榮耀之城・無人佔領</span>';
-  return '<div class="panel" style="padding:8px 14px;margin-bottom:10px">'
-    + '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
-    + '<b class="mini">今日冒險</b>'
-    + '<span style="font-size:14px">'+stages.join(' <span style="opacity:.35">→</span> ')+'</span>'
-    + (pg.stage===0
-       ? '<span style="flex:1;min-width:120px;height:12px;background:#eee;border:2px solid #141414;border-radius:6px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--gold)"></i></span>'
-         + '<span class="num mini">'+pg.exploreXp+' / '+pg.exploreGoal+' XP</span>'
-         + '<a href="#" id="progGoalEdit" class="mini" style="color:#888">⚙</a>'
-       : '')
-    + (pg.stage<2 ? ' <button class="btn" id="progUnlock" style="padding:2px 10px;font-size:12px">🔓 教師直接解鎖</button>' : '')
-    + '<span class="hsp"></span>' + castleTag
-    + '</div></div>';
-}
-function castingBanner(){
-  const b = state.boss;
-  if(!b || !b.casting) return "";
-  return '<div class="cast-banner">⚠️ 「'+esc(b.name)+'」正在詠唱【烈焰隕石】!下一次「Boss 反擊」將對全體造成無視防禦傷害 ⚠️</div>';
-}
-let boardFitFrame=0;
-function bestBoardMemberLayout(memberCount, cardWidth, cardHeight){
-  const n=Math.max(1,memberCount||1), gap=4, innerW=Math.max(24,cardWidth-14), innerH=Math.max(20,cardHeight-38);
-  let best={cols:1,rows:n,score:0};
-  for(let cols=1;cols<=n;cols++){
-    const rows=Math.ceil(n/cols);
-    const cellW=(innerW-gap*(cols-1))/cols, cellH=(innerH-gap*(rows-1))/rows;
-    const score=Math.min(cellW,cellH/1.32);
-    if(score>best.score) best={cols,rows,score};
-  }
-  return best;
-}
-function fitTeacherBoard(){
-  if(view.page!=="teacher" || view.tview!=="board") return;
-  const wall=app.querySelector(".board-focus"), quick=app.querySelector(".board-quickbar");
-  if(!wall) return;
-  const cards=[...wall.querySelectorAll(".group-card")], header=document.querySelector("body>header");
-  const headerVisible=document.body.classList.contains("top-drawer-open");
-  document.body.style.setProperty("--board-header-height",Math.ceil(header&&headerVisible?header.getBoundingClientRect().height:0)+"px");
-  if(!cards.length) return;
-  const top=wall.getBoundingClientRect().top;
-  const bottom=quick ? quick.getBoundingClientRect().top-5 : window.innerHeight-7;
-  const availableH=Math.max(72,Math.floor(bottom-top));
-  const availableW=Math.max(180,Math.floor(wall.clientWidth));
-  const groupGap=availableH<500?5:7, count=cards.length;
-  let best=null;
-  for(let cols=1;cols<=count;cols++){
-    const rows=Math.ceil(count/cols);
-    const cardW=(availableW-groupGap*(cols-1))/cols;
-    const cardH=(availableH-groupGap*(rows-1))/rows;
-    const layouts=cards.map(card=>bestBoardMemberLayout(+card.dataset.memberCount||0,cardW,cardH));
-    const minScore=Math.min(...layouts.map(x=>x.score));
-    const balancePenalty=Math.abs((cardW/Math.max(1,cardH))-1.15)*.35;
-    const score=minScore-balancePenalty;
-    if(!best || score>best.score) best={cols,rows,cardW,cardH,layouts,score,minScore};
-  }
-  wall.style.setProperty("--board-cols",best.cols);
-  wall.style.setProperty("--board-rows",best.rows);
-  wall.style.setProperty("--board-wall-height",availableH+"px");
-  wall.style.setProperty("--board-gap",groupGap+"px");
-  wall.style.setProperty("--board-card-pad",(best.cardH<175?4:7)+"px");
-  wall.style.setProperty("--board-member-gap",(best.minScore<42?2:4)+"px");
-  wall.style.setProperty("--board-group-font",Math.max(9,Math.min(14,Math.round(best.minScore*.22)))+"px");
-  wall.style.setProperty("--board-action-font",Math.max(8,Math.min(11,Math.round(best.minScore*.18)))+"px");
-  wall.style.setProperty("--board-name-font",Math.max(8,Math.min(13,Math.round(best.minScore*.2)))+"px");
-  wall.style.setProperty("--board-title-font",Math.max(7,Math.min(10,Math.round(best.minScore*.15)))+"px");
-  cards.forEach((card,i)=>{
-    card.style.setProperty("--member-cols",best.layouts[i].cols);
-    card.style.setProperty("--member-rows",best.layouts[i].rows);
-  });
-}
-function scheduleTeacherBoardFit(){
-  cancelAnimationFrame(boardFitFrame);
-  boardFitFrame=requestAnimationFrame(fitTeacherBoard);
-}
-window.addEventListener("resize",scheduleTeacherBoardFit,{passive:true});
-function teacherBoard(){
-  const lesson=state.lesson||{};
-  const courseBtn='<a class="btn board-course-link" href="'+COURSE_CATALOG_URL+'" target="_blank" rel="noopener" title="開啟課後複習課程">📚 課程目錄</a>';
-  if(lesson.active&&lesson.mode==="zone")return zoneBoardHtml()+'<button class="btn zone-back-floating" id="zoneBack">← 返回大屏</button>'+courseBtn;
-  const walls = state.groups.map(gn=>{
-    const members = state.students.filter(s=>s.group===gn);
-    const mm = members.map(s=>{
-      const bd = s.title ? "【"+esc(s.title)+"】" : "";
-      const effMax = s.maxHp + skillMaxHpBonus(s);
-      const hpPct = Math.max(0, Math.round(s.currentHp/effMax*100));
-      const down = s.currentHp<=0;
-      const hpColor = hpPct>50?"#5cc47a":hpPct>25?"#f0b429":"#e05252";
-      const picked = view.multiSel && view.multiSel.includes(s.id);
-      const answered=lesson.active && lesson.answered && lesson.answered[s.id];
-      const boss=state.boss,gb=boss&&boss.groupBuffs&&boss.groupBuffs[s.group]||{};
-      const bossTags=[];
-      if(boss){
-        if(down) bossTags.push("💤 休整中");
-        else if(boss.standby&&boss.standby[s.id]) bossTags.push("✓ 已行動");
-        else if(s.group===nextAttackGroup()) bossTags.push("⚔️ 準備出手");
-        else bossTags.push("⏳ 等待回合");
-        if(gb.atk) bossTags.push("🔥 攻擊+"+Math.round(gb.atk*100)+"%");
-        if(gb.def) bossTags.push("🛡 減傷+"+Math.round(gb.def*100)+"%");
-      }
-      return '<button class="member'+(down?" downed":"")+(picked?" msel":"")+(answered?" msel":"")+'" data-award="'+s.id+'" data-charwall="'+s.id+'">'
-        + (picked?'<span class="msel-badge">✓</span>':'')
-        + '<span class="member-doll"'+(down?' style="filter:grayscale(1) brightness(.6)"':'')+'>'+dollSVG(s, 180)+'</span>'
-        + '<span class="mname"><span class="mlv-in num">Lv.'+s.level+'</span> '+esc(s.name)+(down?' 💀':'')+'</span>'
-        + '<div class="member-hp" style="width:76%;min-width:72px;height:9px;background:#2a3350;border:1px solid rgba(0,0,0,.45);border-radius:5px;overflow:hidden;margin:3px auto 1px"><i style="display:block;height:100%;width:'+hpPct+'%;background:'+hpColor+'"></i></div>'
-        + (boss?'<span class="mtitle" style="display:block;font-weight:900;color:'+(down?'#b83232':'#24324a')+'">HP '+Math.max(0,s.currentHp)+' / '+effMax+'</span><span class="mtitle" style="display:block;line-height:1.35">'+bossTags.join('・')+'</span>':(answered?'<span class="mtitle" style="color:#b8860b">✓ 已回答</span>':(lesson.active?'<span class="mtitle" style="color:#1f6fa8">💡 點此判定回答</span>':(bd?'<span class="mtitle">'+bd+'</span>':''))))+'</button>';
-    }).join("") || '<div class="mini" style="grid-column:1/-1">尚無成員——到名冊管理加入學生</div>';
-    return '<div class="group-card" data-member-count="'+members.length+'">'
-      + '<div class="group-head"><span class="gname">'+esc(gn)+' 組</span>'
-      + '<span class="gscore num">'+groupScore(gn)+' XP</span><span class="hsp"></span>'
-      + '<button class="gaward" data-gaward="'+esc(gn)+'">整組 +10 XP</button></div>'
-      + '<div class="member-grid">'+mm+'</div></div>';
-  }).join("");
-  const hint=lesson.active ? '📣 '+esc(lesson.title||"知識挑戰")+'：點回答的角色發放 +'+(lesson.xp||0)+' XP' : '點學生角色即可快速加分';
-  const b=state.boss;
-  let bossTop="";
-  if(b){
-    if(!b.standby)b.standby={};
-    const pct=Math.max(0,Math.round(b.hp/Math.max(1,b.maxHp)*100)),ng=nextAttackGroup();
-    const order=[...new Set(state.students.map(x=>x.group))].filter(gr=>state.students.some(x=>x.group===gr)).sort((a,c)=>groupAvgAgi(c)-groupAvgAgi(a));
-    const orderStr=order.map(gr=>{const done=!state.students.some(x=>x.group===gr&&x.currentHp>0&&!b.standby[x.id]);return(gr===ng?'▶ ':'')+gr+(done?' ✓':'');}).join(' → ');
-    bossTop='<div class="board-boss-top" data-bossanchor="1"><div class="goal-wrap"><span class="boss-name">🐉 '+esc(b.name)+'</span><div class="goal-bar boss-bar"><i style="width:'+pct+'%"></i><span class="num">'+b.hp+' / '+b.maxHp+' HP</span></div><span class="boss-order">出手順序：'+esc(orderStr||'—')+'</span></div></div>';
-  }
-  return bossTop+'<div class="group-wall board-focus">'+walls+'</div>'+floatConsole(hint)+courseBtn;
-}
-/* ── 浮動控制台:可拖曳,收合成圓鈕仍可拖 ── */
-function floatConsole(toolbar){
-  const pg = progCheck();
-  const pct = Math.min(100, Math.round(pg.exploreXp/Math.max(1,pg.exploreGoal)*100));
-  const stageTxt = pg.stage===0 ? "🗺 探索" : (pg.stage===1 ? "⚔️ 魔王" : "🏟 競技場");
-  const b = state.boss;
-  let bossCtl = "";
-  if(b){
-    if(!b.standby) b.standby = {};
-    const ng = nextAttackGroup();
-    const order = [...new Set(state.students.map(x=>x.group))]
-      .filter(gr=>state.students.some(x=>x.group===gr))
-      .sort((a,c)=>groupAvgAgi(c)-groupAvgAgi(a));
-    const orderStr = order.map(gr=>{
-      const done = !state.students.some(x=>x.group===gr && x.currentHp>0 && !b.standby[x.id]);
-      return (gr===ng?'▶':'')+gr+(done?'✓':'');
-    }).join(' → ');
-    const bpct = Math.round(b.hp/b.maxHp*100);
-    bossCtl = '<div class="fc-boss">'
-      + '<div class="fc-bossbar"><span>🐉 '+esc(b.name)+'</span><span class="num">'+b.hp+'/'+b.maxHp+'</span></div>'
-      + '<div class="goal-bar boss-bar" style="margin:4px 0"><i style="width:'+bpct+'%"></i></div>'
-      + '<div style="font-size:12px;font-weight:700;margin:4px 0">出手:'+esc(orderStr||"—")+'</div>'
-      + '<div class="fc-btns">'
-      + '<button class="btn gold" id="bsGroupAtk"'+(ng?"":" disabled")+'>⚔️ '+(ng?ng+'組攻擊':'全部打完')+'</button>'
-      + '<button class="btn" id="bsSkip"'+(ng?"":" disabled")+'>⏭ 跳過</button>'
-      + '<button class="btn danger" data-bscounter="1">🐉 反擊</button>'
-      + '<button class="btn" id="bsRestBoard">💤 休息</button></div></div>';
-  }
-  return '<div id="float-console" class="fc-open">'
-    + '<div class="fc-bar" id="fcDrag"><span class="fc-title">🎮 老師控制台</span>'
-    + '<button class="fc-min" id="fcMin" title="收合">—</button></div>'
-    + '<div class="fc-body">'
-    + '<div class="fc-goal">'+stageTxt+' <b class="num">'+(pg.stage===0 ? pg.exploreXp+'/'+pg.exploreGoal+'('+pct+'%)' : (pg.stage===1?'討伐中':'已開放'))+'</b>'
-    + (pg.stage===0 ? '<button class="btn" id="goalEdit" style="margin-left:6px;padding:2px 10px">設定</button>' : '')+'</div>'
-    + bossCtl
-    + '<div class="fc-btns" style="margin-top:8px">'
-    + '<button class="btn'+(view.locked?" gold":"")+'" id="btnLock">'+(view.locked?"🔒 投影中":"🔓 投影模式")+'</button>'
-    + '<button class="btn'+(view.multiSel?" gold":"")+'" id="btnMulti">'+(view.multiSel?"☑ 已選 "+view.multiSel.length+" 人(點角色勾選)":"☑ 批次加分")+'</button>'
-    + '<button class="btn'+(state.lesson&&state.lesson.active?" gold":"")+'" id="btnLesson">'+(state.lesson&&state.lesson.active?"🏁 結束答題":"📣 發起答題")+'</button>'
-    + (CLOUD.on() ? '<button class="btn" id="btnQr">📱 登入 QR</button>' : "")
-    + (view.multiSel && view.multiSel.length ? '<button class="btn gold" id="btnMultiGo">💰 發獎勵給 '+view.multiSel.length+' 人</button>' : "")
-    + (pendingSubs().length?'<span class="stat-chip">📌 待審 '+pendingSubs().length+'</span>':"")
-    + '</div></div>'
-    + '<button id="fcBubble" class="fc-bubble" title="展開控制台">🎮</button>'
-    + '</div>';
-}
 /* ── 平時成績結算(#7):XP快照差值 → 線性換算 → CSV ── */
 function gradeCalc(){
   const ti = state.termInfo;
@@ -6803,69 +6614,6 @@ function teacherLog(){
     + todayStats
     + '<div class="panel"><h3>📜 重大事件(最近 40 筆)</h3><div class="mini" style="margin-bottom:8px">一般加分、購物、技能裝卸與逐回合戰鬥訊息已省略；學生個人學習紀錄仍會保留。</div><ul class="log-list" style="max-height:40vh">'+logs+'</ul></div>';
 }
-/* 浮動控制台:拖曳(滑鼠+觸控)、收合成圓鈕(圓鈕也可拖) */
-let _fcPos = null;      // 記住位置
-let _fcCollapsed = false; // 記住收合狀態
-function bindFloatConsole(){
-  const fc = document.getElementById("float-console");
-  if(!fc) return;
-  // 套用記住的位置
-  if(_fcPos){
-    fc.style.left = _fcPos.left + "px";
-    fc.style.top = _fcPos.top + "px";
-    fc.style.right = "auto";
-    fc.style.bottom = "auto";
-  }
-  // 收合狀態記憶
-  if(_fcCollapsed){ fc.classList.remove("fc-open"); fc.classList.add("fc-collapsed"); }
-
-  const clampPos = (left, top, el)=>{
-    const w = el.offsetWidth, h = el.offsetHeight;
-    left = Math.max(4, Math.min(window.innerWidth - w - 4, left));
-    top  = Math.max(4, Math.min(window.innerHeight - h - 4, top));
-    return {left, top};
-  };
-  const startDrag = (handle)=>{
-    let dragging=false, sx=0, sy=0, ox=0, oy=0, moved=false;
-    const onDown = (e)=>{
-      dragging=true; moved=false;
-      const p = e.touches ? e.touches[0] : e;
-      const r = fc.getBoundingClientRect();
-      sx=p.clientX; sy=p.clientY; ox=r.left; oy=r.top;
-      fc.style.right="auto"; fc.style.bottom="auto";
-      fc.style.left=r.left+"px"; fc.style.top=r.top+"px";
-      e.preventDefault();
-    };
-    const onMove = (e)=>{
-      if(!dragging) return;
-      const p = e.touches ? e.touches[0] : e;
-      const dx=p.clientX-sx, dy=p.clientY-sy;
-      if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
-      const pos = clampPos(ox+dx, oy+dy, fc);
-      fc.style.left=pos.left+"px"; fc.style.top=pos.top+"px";
-      _fcPos = pos;
-      e.preventDefault();
-    };
-    const onUp = ()=>{ dragging=false; };
-    handle.addEventListener("mousedown", onDown);
-    handle.addEventListener("touchstart", onDown, {passive:false});
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("touchmove", onMove, {passive:false});
-    window.addEventListener("mouseup", onUp);
-    window.addEventListener("touchend", onUp);
-    return ()=>moved;   // 回傳「是否拖動過」判斷
-  };
-  const dragBar = document.getElementById("fcDrag");
-  if(dragBar) startDrag(dragBar);
-  const bubble = document.getElementById("fcBubble");
-  let bubbleMoved;
-  if(bubble) bubbleMoved = startDrag(bubble);
-  // 收合
-  const minBtn = document.getElementById("fcMin");
-  if(minBtn) minBtn.onclick = (e)=>{ e.stopPropagation(); fc.classList.remove("fc-open"); fc.classList.add("fc-collapsed"); _fcCollapsed=true; };
-  // 圓鈕:沒拖動才展開(拖動就只是移動)
-  if(bubble) bubble.addEventListener("click", ()=>{ if(bubbleMoved && bubbleMoved()) return; fc.classList.remove("fc-collapsed"); fc.classList.add("fc-open"); _fcCollapsed=false; });
-}
 function bindTeacher(){
   app.querySelectorAll("[data-roster-section]").forEach(button=>button.onclick=()=>{
     view.rosterSection=button.dataset.rosterSection||"import";render();
@@ -7081,6 +6829,7 @@ function bindTeacher(){
   const zoneBack=document.getElementById("zoneBack");if(zoneBack)zoneBack.onclick=()=>{const l=state.lesson;if(!l)return;const leave=()=>{l.active=false;addLog("-","↩ 返回大屏並結束角色站位答題");save();render();};if(l.settled)leave();else modalConfirm("這題尚未結算，返回大屏會結束本題。",leave,"返回大屏");};
   app.querySelectorAll("[data-offline-answer]").forEach(b=>b.onclick=()=>{const l=state.lesson;if(!l||l.locked||Date.now()<(l.readyUntil||0))return;const [sid,answer]=b.dataset.offlineAnswer.split("|"),s=stu(sid);if(!s)return;const z=zoneAnswerState(s,l),spots={A:[25,25],B:[75,25],C:[25,75],D:[75,75]};z.answer=answer;z.confirmed=true;z.x=spots[answer][0];z.y=spots[answer][1];z.updatedAt=Date.now();save();render();});
   const offlineClear=document.getElementById("offlineClear");if(offlineClear)offlineClear.onclick=()=>{const l=state.lesson;if(!l||l.locked)return;state.students.forEach(s=>{const z=zoneAnswerState(s,l),p=zoneSpawn(s);z.answer="";z.confirmed=false;z.x=p.x;z.y=p.y;});save();render();};
+  if(zoneSettle)setTimeout(maybeAutoSettleConfirmedZone,0);
   const teacherBankImport=document.getElementById("teacherBankImport");if(teacherBankImport)teacherBankImport.onchange=()=>importTeacherQuestionBank(teacherBankImport.files&&teacherBankImport.files[0]);
   app.querySelectorAll("[data-bankdel]").forEach(b=>b.onclick=()=>modalConfirm("刪除這一題？",()=>{state.teacherQuestions=(state.teacherQuestions||[]).filter(q=>q.id!==b.dataset.bankdel);save();render();},"刪除"));
   const teacherBankClear=document.getElementById("teacherBankClear");if(teacherBankClear)teacherBankClear.onclick=()=>modalConfirm("清除全部自訂題庫？內建題庫不受影響。",()=>{state.teacherQuestions=[];save();render();},"全部清除");
@@ -8255,7 +8004,7 @@ function openBaseTuneEditor(s){
   document.getElementById("baseTuneReset").onclick=()=>{ tune.x=0;tune.y=0;tune.s=1;draw(); };
   document.getElementById("baseTuneCancel").onclick=()=>{ modalHost.innerHTML=""; };
   document.getElementById("baseTuneOverlay").onclick=e=>{ if(e.target.id==="baseTuneOverlay") modalHost.innerHTML=""; };
-  document.getElementById("baseTuneSave").onclick=()=>{ s.baseTune=Object.assign({},tune); save(); modalHost.innerHTML=""; toast("已套用素體位置調整"); render(); };
+  document.getElementById("baseTuneSave").onclick=()=>{const now=Date.now(),persisted=Math.max(0,30000-(now-Number(s.baseTuneUpdatedAt||0))),local=uiCooldownRemaining("baseTune:"+s.id,30000),left=Math.max(persisted,local);if(left>0){toast("位置調整冷卻中，請稍候 "+Math.ceil(left/1000)+" 秒",true);return;}sessionStorage.setItem("rpgCooldown:baseTune:"+s.id,String(now));s.baseTune=Object.assign({},tune);s.baseTuneUpdatedAt=now;save();modalHost.innerHTML="";toast("已套用素體位置調整；30 秒後可再次儲存");render();};
   const reopen=document.getElementById("baseVariantReopen");if(reopen)reopen.onclick=()=>{
     modalHost.innerHTML="";
     renderJobPick(s,(FB.user&&FB.user.email)||s.email||"",{selectedJob:s.job,selectedBase:s.baseVariant,selectedTune:Object.assign({},s.baseTune||{}),birth:s.birth||"",repairMode:true,returnToStudent:true});

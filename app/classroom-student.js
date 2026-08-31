@@ -1279,8 +1279,10 @@ function renderStudent(){
   if(readDone) readDone.onclick = ()=>{
     s.readDate = todayStr();
     addLog(s.id, "看完今日公告,解鎖命運卡包");
-    save(); toast("已簽到!抽卡解鎖 🃏");
-    view.tab = "wheel"; render();
+    save();
+    if(classFeatureUnlocked("wheel")){view.tab="wheel";toast("已簽到！抽卡解鎖 🃏");}
+    else{view.tab="announce";toast("已記錄公告閱讀；命運卡包尚待班級進度解鎖");}
+    render();
   };
   const goWheel = document.getElementById("goWheel");
   if(goWheel) goWheel.onclick = ()=>{
