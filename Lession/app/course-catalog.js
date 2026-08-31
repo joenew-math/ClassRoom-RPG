@@ -121,6 +121,7 @@ async function open_(m){
     box.appendChild(fr);
     const d=fr.contentDocument||fr.contentWindow.document;
     d.open(); d.write(CH[m.key]); d.close();
+    installCourseSideDrawer(d);
     document.getElementById('crumb').textContent=`第 ${m.vol} 冊 ${volOf(m).short} · ${m.title}`;
   }catch(error){
     box.innerHTML='';
@@ -131,6 +132,21 @@ async function open_(m){
     fail.append(title,note,retry);box.appendChild(fail);
     document.getElementById('crumb').textContent=`第 ${m.vol} 冊 · 載入失敗`;
   }
+}
+function installCourseSideDrawer(d){
+  const install=()=>{
+    const nav=d.getElementById('sidenav');
+    if(!nav||d.getElementById('courseSideDrawerToggle'))return;
+    const style=d.createElement('style');
+    style.id='course-side-drawer-style';
+    style.textContent='body,#sidenav{transition:padding-left .24s ease,transform .24s ease!important}#sidenav{overflow:visible!important}#courseSideDrawerToggle{position:absolute;right:-42px;top:12px;width:42px;height:48px;border:3px solid #14161C;border-left:0;border-radius:0 12px 12px 0;background:#FFC93C;color:#14161C;font-size:21px;font-weight:1000;box-shadow:3px 3px 0 rgba(0,0,0,.55);cursor:pointer;z-index:80}body.course-side-collapsed{padding-left:0!important}body.course-side-collapsed #sidenav{transform:translateX(-100%)}@media(prefers-reduced-motion:reduce){body,#sidenav{transition:none!important}}';
+    d.head.appendChild(style);
+    const button=d.createElement('button');button.id='courseSideDrawerToggle';button.type='button';button.textContent='‹';button.title='收合課程目錄';button.setAttribute('aria-expanded','true');
+    button.onclick=()=>{const closed=d.body.classList.toggle('course-side-collapsed');button.textContent=closed?'›':'‹';button.title=closed?'展開課程目錄':'收合課程目錄';button.setAttribute('aria-expanded',closed?'false':'true');};
+    nav.appendChild(button);
+    setTimeout(()=>button.click(),1200);
+  };
+  install();setTimeout(install,0);
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.body.classList.contains('reading'))

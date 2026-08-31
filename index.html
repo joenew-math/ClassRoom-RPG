@@ -217,6 +217,27 @@ header .sp{flex:1}
   body.teacher-board-mode .board-quickbar .btn{padding:4px 8px;font-size:11px}
   @media(max-width:560px){body.teacher-board-mode .board-focus{grid-template-columns:repeat(var(--board-cols,1),minmax(0,1fr));grid-template-rows:repeat(var(--board-rows,1),minmax(0,1fr))}}
 
+  /* 教師／學生頂欄抽屜：進入角色介面後自動往上收合，只保留中央箭頭。 */
+  #topDrawerToggle{display:none;position:fixed;top:0;left:50%;z-index:1002;transform:translateX(-50%);width:54px;height:28px;padding:0;border:3px solid #141414;border-top:0;border-radius:0 0 12px 12px;background:var(--gold);color:#141414;font-size:18px;font-weight:1000;line-height:24px;box-shadow:3px 3px 0 rgba(0,0,0,.65);cursor:pointer}
+  body.role-drawer-mode>header{position:fixed;left:0;right:0;top:0;z-index:1001;transition:transform .24s ease;transform:translateY(calc(-100% - 5px));box-shadow:0 5px 16px rgba(0,0,0,.35)}
+  body.role-drawer-mode.top-drawer-open>header{transform:translateY(0)}
+  body.role-drawer-mode #topDrawerToggle{display:block}
+  body.role-drawer-mode.top-drawer-open #topDrawerToggle{top:var(--top-drawer-height,54px)}
+  body.role-drawer-mode main#app{padding-top:34px}
+  body.role-drawer-mode.teacher-board-mode main#app{height:100vh;height:100dvh;padding-top:31px}
+  @media(prefers-reduced-motion:reduce){body.role-drawer-mode>header,#topDrawerToggle{transition:none!important}}
+
+  /* 大屏 BOSS 放在最上方；功能與小組攻擊集中到可收合的浮動控制面板。 */
+  .board-boss-top{position:relative;z-index:12;margin:0 0 5px;padding:7px 12px!important;background:linear-gradient(135deg,#2a1639,#4b1830)!important;color:#fff!important;border:3px solid #141414!important;border-radius:12px!important;box-shadow:4px 4px 0 rgba(0,0,0,.72)!important}
+  .board-boss-top .goal-wrap{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:10px;align-items:center}
+  .board-boss-top .boss-name{font-size:clamp(14px,1.6vw,22px);font-weight:1000;color:#ffe08a;white-space:nowrap}
+  .board-boss-top .boss-order{font-size:clamp(10px,1vw,13px);font-weight:900;text-align:right;color:#fff}
+  .board-boss-top .goal-bar{margin:0;min-width:160px}
+  body.teacher-board-mode #float-console{right:14px;bottom:12px;z-index:220;width:min(390px,calc(100vw - 24px))}
+  body.teacher-board-mode #float-console .fc-body{max-height:min(56vh,430px);overflow:auto}
+  body.teacher-board-mode #float-console .fc-goal{display:none}
+  @media(max-width:620px){.board-boss-top .goal-wrap{grid-template-columns:1fr}.board-boss-top .boss-order{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.board-boss-top{padding:5px 8px!important}body.teacher-board-mode #float-console{right:8px;bottom:8px}.fc-btns .btn{font-size:11px!important;padding:5px 7px!important}}
+
   /* 加分彈窗(觸控大按鈕) */
   .overlay{position:fixed;inset:0;background:rgba(10,13,22,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
   .modal{background:var(--panel);border:1px solid var(--gold-dim);border-radius:16px;padding:20px;width:100%;max-width:440px;text-align:center;animation:pop .18s}
@@ -1152,7 +1173,7 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 <script src="./app/classroom-auth.js?v=61"></script>
 <script src="./app/classroom-quiz.js?v=61"></script>
 <script src="./app/classroom-battle.js?v=61"></script>
-<header>
+<header id="appTopbar">
   <h1>⚔ 班級 RPG</h1><span class="tag">班級經營公會 v1.0</span>
   <span class="sp"></span>
   <span id="who" class="mini"></span>
@@ -1160,6 +1181,7 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
   <button class="btn" id="btnHome" style="display:none">切換身分</button>
   <button class="btn" id="btnLogout" style="display:none">🚪 登出</button>
 </header>
+<button id="topDrawerToggle" type="button" aria-controls="appTopbar" aria-expanded="false" title="展開上方功能列">⌄</button>
 <main id="app"></main>
 <div class="toast-wrap" id="toasts"></div>
 <div id="modalHost"></div>
@@ -1168,7 +1190,7 @@ body.teacher-arena-battle-mode .arena-stage::after{bottom:3px}
 <script src="./app/classroom-parent.js?v=61"></script>
 <script src="./app/classroom-teacher.js?v=61"></script>
 <script src="./app/classroom-student.js?v=61"></script>
-<script src="./app/classroom-rpg.js?v=61" data-runtime-check="render" data-runtime-label="班級經營系統"></script>
+<script src="./app/classroom-rpg.js?v=62" data-runtime-check="render" data-runtime-label="班級經營系統"></script>
 <script>
 /* 📱 PWA:正式 service worker 必須是同源檔案；Blob URL 在多數瀏覽器不可註冊。 */
 (function(){

@@ -4815,6 +4815,26 @@ function updateSyncStatus(){
   el.dataset.state=status;el.textContent=text;
 }
 let renderFramePending=false;
+let topDrawerTimer=0;
+function setTopDrawer(open,autoClose){
+  const enabled=view.page==="teacher"||view.page==="student";
+  document.body.classList.toggle("top-drawer-open",enabled&&!!open);
+  const header=document.getElementById("appTopbar"),button=document.getElementById("topDrawerToggle");
+  if(header)document.body.style.setProperty("--top-drawer-height",Math.ceil(header.getBoundingClientRect().height)+"px");
+  if(button){button.textContent=open?"⌃":"⌄";button.setAttribute("aria-expanded",open?"true":"false");button.title=open?"收合上方功能列":"展開上方功能列";}
+  clearTimeout(topDrawerTimer);
+  if(enabled&&open&&autoClose!==false)topDrawerTimer=setTimeout(()=>setTopDrawer(false,false),6000);
+  if(view.page==="teacher"&&view.tview==="board")requestAnimationFrame(scheduleTeacherBoardFit);
+}
+function syncTopDrawer(){
+  const enabled=view.page==="teacher"||view.page==="student";
+  document.body.classList.toggle("role-drawer-mode",enabled);
+  if(!enabled)document.body.classList.remove("top-drawer-open");
+  const button=document.getElementById("topDrawerToggle"),header=document.getElementById("appTopbar");
+  if(button&&!button.dataset.bound){button.dataset.bound="1";button.onclick=()=>setTopDrawer(!document.body.classList.contains("top-drawer-open"),true);}
+  if(header&&!header.dataset.drawerBound){header.dataset.drawerBound="1";header.addEventListener("pointerdown",()=>{if(document.body.classList.contains("top-drawer-open"))setTopDrawer(true,true);});header.addEventListener("focusin",()=>setTopDrawer(true,true));}
+  setTopDrawer(document.body.classList.contains("top-drawer-open"),false);
+}
 function scheduleRender(){
   if(renderFramePending)return;renderFramePending=true;
   requestAnimationFrame(()=>{renderFramePending=false;render();});
@@ -4832,6 +4852,7 @@ function render(){
   document.body.classList.toggle("student-zone-mode", !!studentZoneMode);
   document.body.classList.toggle("teacher-arena-battle-mode", !!teacherArenaBattleMode);
   document.body.classList.toggle("home-menu-mode", view.page==="home");
+  syncTopDrawer();
   if((CLOUD.role==="teacher"||!CLOUD.on())&&typeof runAnnouncementSchedules==="function")runAnnouncementSchedules();
   if(view.page!=="home") app.style.removeProperty("height");
   if(!teacherBoardMode){ document.body.style.removeProperty("--board-header-height"); }
@@ -6064,7 +6085,8 @@ function fitTeacherBoard(){
   const wall=app.querySelector(".board-focus"), quick=app.querySelector(".board-quickbar");
   if(!wall) return;
   const cards=[...wall.querySelectorAll(".group-card")], header=document.querySelector("body>header");
-  document.body.style.setProperty("--board-header-height",Math.ceil(header?header.getBoundingClientRect().height:54)+"px");
+  const headerVisible=document.body.classList.contains("top-drawer-open");
+  document.body.style.setProperty("--board-header-height",Math.ceil(header&&headerVisible?header.getBoundingClientRect().height:0)+"px");
   if(!cards.length) return;
   const top=wall.getBoundingClientRect().top;
   const bottom=quick ? quick.getBoundingClientRect().top-5 : window.innerHeight-7;
@@ -6140,13 +6162,16 @@ function teacherBoard(){
       + '<div class="member-grid">'+mm+'</div></div>';
   }).join("");
   const hint=lesson.active ? '📣 '+esc(lesson.title||"知識挑戰")+'：點回答的角色發放 +'+(lesson.xp||0)+' XP' : '點學生角色即可快速加分';
-  return '<div class="group-wall board-focus">'+walls+'</div>'
-    + '<div class="board-quickbar"><span class="mini">'+hint+'</span>'
-    + '<button class="btn'+(view.multiSel?" gold":"")+'" id="btnMulti">'+(view.multiSel?"☑ "+view.multiSel.length+" 人":"☑ 批次")+'</button>'
-    + '<button class="btn'+(lesson.active?" gold":"")+'" id="btnLesson">'+(lesson.active?"🏁 結束答題":"📣 出題")+'</button>'
-    + (CLOUD.on()?'<button class="btn" id="btnQr">📱 QR</button>':'')
-    + (view.multiSel&&view.multiSel.length?'<button class="btn gold" id="btnMultiGo">發獎勵</button>':'')
-    + '<button class="btn'+(view.locked?" gold":"")+'" id="btnLock">'+(view.locked?"🔒":"🔓")+'</button></div>'+courseBtn;
+  const b=state.boss;
+  let bossTop="";
+  if(b){
+    if(!b.standby)b.standby={};
+    const pct=Math.max(0,Math.round(b.hp/Math.max(1,b.maxHp)*100)),ng=nextAttackGroup();
+    const order=[...new Set(state.students.map(x=>x.group))].filter(gr=>state.students.some(x=>x.group===gr)).sort((a,c)=>groupAvgAgi(c)-groupAvgAgi(a));
+    const orderStr=order.map(gr=>{const done=!state.students.some(x=>x.group===gr&&x.currentHp>0&&!b.standby[x.id]);return(gr===ng?'▶ ':'')+gr+(done?' ✓':'');}).join(' → ');
+    bossTop='<div class="board-boss-top" data-bossanchor="1"><div class="goal-wrap"><span class="boss-name">🐉 '+esc(b.name)+'</span><div class="goal-bar boss-bar"><i style="width:'+pct+'%"></i><span class="num">'+b.hp+' / '+b.maxHp+' HP</span></div><span class="boss-order">出手順序：'+esc(orderStr||'—')+'</span></div></div>';
+  }
+  return bossTop+'<div class="group-wall board-focus">'+walls+'</div>'+floatConsole(hint)+courseBtn;
 }
 /* ── 浮動控制台:可拖曳,收合成圓鈕仍可拖 ── */
 function floatConsole(toolbar){
