@@ -5212,4 +5212,9 @@ startClassroomScheduleGuard();
 if(grantTestMonsterTeam())saveChar();
 loadCampus();
 syncZones();
-if(!startDungeonHealthGuard())introScreen();
+const TEACHER_FINAL_SIMULATION=new URLSearchParams(location.search).get('teacherFinalTest')==='1';
+if(!startDungeonHealthGuard()){
+  if(TEACHER_FINAL_SIMULATION){
+    setTimeout(()=>overlay(`<div class="kicker">TEACHER FINAL TEST</div><h1>🧪 隱藏戰模擬模式</h1><div class="desc">此入口只用來測試五張傳說卡的正確出牌順序。<br>不需要先通關六區，勝負也不會寫入正式角色紀錄。</div><button class="go" id="teacherSimulationGo">開始模擬</button>`,null,el=>{if(el.id!=='teacherSimulationGo')return false;setTimeout(()=>hiddenTeacherBattle(0,100,100),20);return true;}),30);
+  }else introScreen();
+}

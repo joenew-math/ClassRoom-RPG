@@ -21,9 +21,187 @@ function waypointScreen(p){
     });
 }
 
+function firstDungeonPrologueActive(){
+  return (S.zone||0)===0&&fl===0&&!(S.meta&&S.meta.prologueCleared);
+}
+
+function prepareFirstDungeonPrologue(){
+  S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
+  const showcase=['gaussC','pythaC','euclidC','fermatC','pascalC'];
+  showcase.forEach(id=>{if(CARDS[id]&&!S.deck.some(o=>o.id===id))S.deck.push({id,gem:null});});
+  S.gold=Math.max(999,Number(S.gold)||0);
+  S.maxhp=Math.max(180,Number(S.maxhp)||100);S.hp=S.maxhp;
+  S.mana=Math.max(20,Number(S.mana)||6);S.armor=Math.max(60,Number(S.armor)||0);
+  S.pot=normalizePot(S.pot);['heal','freeze','firebomb','luck','medkit'].forEach(k=>S.pot[k]=Math.max(3,S.pot[k]||0));
+  saveChar();
+}
+
+function paintPrologueTeacher(id){
+  const cv=$(id);if(!cv)return;
+  cv.width=cv.height=64;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+  const src=npcArt('guide');g.clearRect(0,0,64,64);g.drawImage(src,0,0,src.width,src.height,4,4,56,56);
+}
+
+function prologueSupplyScreen(){
+  running=false;
+  overlay(`<div class="kicker">PROLOGUE · 1F</div><h1>🎁 新手補給爆滿！</h1>
+    <div class="rank">◉ 999 金幣　❤ 180　◆ 20　護甲 60</div>
+    <div class="desc">試作傳說卡、裝備卡與道具全部開放。這一層的怪物也特別弱，先放心體驗連擊、裝備和戰鬥節奏。<br><br>
+    <b>提醒：</b>這些是序章借給你的力量；真正能帶進地城深處的，是你練習後留下的理解。</div>
+    <button class="go" id="prologueSupplyOk">開始探索教學一樓</button>`,null,el=>{
+      if(el.id!=='prologueSupplyOk')return false;
+      S.meta.prologueSupplySeen=1;saveChar();running=true;return true;
+    });
+}
+
+function teacherPrologueEncounter(){
+  running=false;
+  overlay(`<div class="kicker">STORY ENCOUNTER</div><div class="teacher-alert">！</div>
+    <div class="teacher-dialogue"><canvas id="prologueTeacher" class="teacher-pixel"></canvas><div>
+      <h1>數學老師擋住了樓梯</h1><p>「先等等。卡牌、裝備和金幣看起來很強，但它們還不是你真正的力量。」</p>
+      <p>「想走進真正的地下城，先讓我看看你面對未知題目時，是否願意重新思考。」</p></div></div>
+    <button class="go" id="teacherChallenge">📘 接受課本試煉</button>`,null,el=>{
+      if(el.id!=='teacherChallenge')return false;
+      setTimeout(teacherPrologueBattle,20);return true;
+    });
+  paintPrologueTeacher('prologueTeacher');
+}
+
+function teacherPrologueBattle(){
+  overlay(`<div class="kicker">FORCED LESSON BATTLE</div><h1>數學老師・課本試煉</h1>
+    <div class="teacher-battle" id="teacherBattleScene">
+      <canvas id="teacherBattleSprite" class="teacher-pixel battle"></canvas>
+      <div class="teacher-book b1">📘</div><div class="teacher-book b2">📗</div><div class="teacher-book b3">📙</div>
+      <div class="teacher-battle-line">「這場不是比裝備，是練習如何面對不會的題目。」</div>
+    </div>
+    <div class="teacher-player-hp"><span>你的生命</span><i><b id="teacherHpDrain"></b></i><em id="teacherHpText">${S.hp}/${S.maxhp}</em></div>
+    <button class="go" id="teacherBattleGo">準備好了</button>`,null,el=>{
+      if(el.id!=='teacherBattleGo')return false;
+      const scene=$('teacherBattleScene'),btn=$('teacherBattleGo');btn.disabled=true;btn.textContent='課本連擊！';scene.classList.add('active');
+      const bar=$('teacherHpDrain'),txt=$('teacherHpText');bar.style.width='0%';
+      setTimeout(()=>{txt.textContent='0/'+S.maxhp;S.hp=0;},2100);
+      setTimeout(()=>teacherPrologueFallen(0),2900);return false;
+    });
+  paintPrologueTeacher('teacherBattleSprite');
+}
+
+const TEACHER_PROLOGUE_LINES=[
+  {title:'失敗不是終點',text:'「先別急著站起來。遇到不會的題目而倒下，不代表你不擅長數學；它只是告訴你，下一次可以從哪裡開始練習。」'},
+  {title:'輪迴會留下學習',text:'「每一輪答對的題目都會化成知識點。卡牌與金幣會重置，但你理解過的方法、錯題紀錄與輪迴強化會留下。」'},
+  {title:'不停練習才能變強',text:'「把不會的題目拆小、再做一次、說出理由。真正的變強，不是一次全對，而是每次都比上次多懂一點。」'},
+  {title:'享受探索數學',text:'「最後，當你好奇規律、願意驗算，也真心享受找到答案的過程，原本困難的關卡就會變得輕鬆。」'}
+];
+
+function teacherPrologueFallen(index){
+  const line=TEACHER_PROLOGUE_LINES[index],last=index===TEACHER_PROLOGUE_LINES.length-1;
+  overlay(`<div class="fallen-view step-${index}"><div class="fallen-vignette"></div>
+      <canvas id="fallenTeacher" class="fallen-teacher"></canvas><div class="fallen-floor"></div></div>
+    <div class="kicker">GROUND VIEW · ${index+1}/${TEACHER_PROLOGUE_LINES.length}</div><h1>${hesc(line.title)}</h1>
+    <div class="desc teacher-lesson">${line.text}</div>
+    <button class="go" id="teacherLessonNext">${last?'接受真正的地下城規則':'聽老師繼續說'}</button>`,null,el=>{
+      if(el.id!=='teacherLessonNext')return false;
+      setTimeout(()=>last?teacherPrologueConfiscation():teacherPrologueFallen(index+1),20);return true;
+    });
+  paintPrologueTeacher('fallenTeacher');
+}
+
+function teacherPrologueConfiscation(){
+  overlay(`<div class="kicker">PROLOGUE RESET</div><h1>📘 老師收回序章補給</h1>
+    <div class="confiscation-list"><span>◉ 999 金幣 <b>收回</b></span><span>🛡 借用裝備 <b>收回</b></span><span>🌟 試作傳說卡 <b>收回</b></span><span>🧪 額外道具 <b>收回</b></span></div>
+    <div class="desc">「我拿走的是借給你的捷徑，不是你學會的東西。」<br><br>正式冒險只留下<b>${hesc((JOBS[S.job]||{}).n||'目前職業')}的基礎牌組</b>與一份基本藥品。答題紀錄、知識點、寵物圖鑑和已理解的內容仍會保留。</div>
+    <button class="go" id="teacherResetConfirm">重新開始真正的冒險</button>`,null,el=>{
+      if(el.id!=='teacherResetConfirm')return false;setTimeout(finishTeacherPrologue,20);return true;
+    });
+}
+
+function finishTeacherPrologue(){
+  S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
+  S.meta.prologueCleared=1;S.meta.prologueSupplySeen=1;
+  markRebirthFloor(1,0);
+  const keepZone=0;resetRun();
+  const base=(S.job&&JOBS[S.job]&&JOBS[S.job].deck)||['knife','knife','dagger','blank','clock','wand','wand','garlic','whip','imelda'];
+  S.deck=mkDeck(base);S.gold=0;S.gems=[];S.tomes=0;S.ups={};S.mana=6;S.handSize=5;S.handCap=5;
+  S.pot=normalizePot({heal:1,elixir:0,freeze:0,firebomb:0,luck:0,medkit:0});
+  S.zone=keepZone;S.zoneProgress=S.zoneProgress||{};S.zoneProgress[zoneOf().k]=1;
+  loadFloor(1);saveChar();backToDungeon();
+  toast('序章完成：借用資源已歸還，真正的地下城從 2F 開始',3600);
+}
+
+const TEACHER_LEGEND_ORDER=['pascalC','gaussC','euclidC','pythaC','fermatC'];
+const TEACHER_ZONE_CLUES=[
+  {card:'pascalC',title:'第一線索・從零開始',text:'第一張牌不消耗魔力；新的路徑從 0 展開。'},
+  {card:'gaussC',title:'第二線索・依序累積',text:'接著用 1，把分散的數字整理成總和。'},
+  {card:'euclidC',title:'第三線索・建立規則',text:'再用 2，從公理與規則建立推理。'},
+  {card:'pythaC',title:'第四線索・看見關係',text:'接上 3，用圖形關係連起兩條已知邊。'},
+  {card:'fermatC',title:'第五線索・最後證明',text:'最後用 4，完成看似不可能的證明。'},
+  {card:null,title:'終極線索・五步解題',text:'真正的順序是 0 → 1 → 2 → 3 → 4；每一步都建立在前一步之上。'}
+];
+
+function grantTeacherClue(zoneIndex){
+  const clue=TEACHER_ZONE_CLUES[Math.max(0,Math.min(5,zoneIndex))];
+  S.meta=S.meta||{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}};
+  S.meta.teacherClues=Array.isArray(S.meta.teacherClues)?S.meta.teacherClues:[];
+  S.meta.legendary=Array.isArray(S.meta.legendary)?S.meta.legendary:[];
+  if(!S.meta.teacherClues.includes(zoneIndex))S.meta.teacherClues.push(zoneIndex);
+  if(clue.card&&CARDS[clue.card]&&!S.meta.legendary.includes(clue.card))S.meta.legendary.push(clue.card);
+  saveChar();return clue;
+}
+
+function hiddenTeacherReady(){
+  const clues=(S.meta&&S.meta.teacherClues)||[],cards=(S.meta&&S.meta.legendary)||[];
+  return TEACHER_ZONE_CLUES.every((_,i)=>clues.includes(i))&&TEACHER_LEGEND_ORDER.every(id=>cards.includes(id));
+}
+
+function hiddenTeacherGate(){
+  const clues=(S.meta&&S.meta.teacherClues)||[];
+  overlay(`<div class="kicker">HIDDEN FLOOR · FINAL</div><div class="teacher-alert">！</div><h1>數學老師在隱藏樓層等你</h1>
+    <div class="teacher-clue-grid">${TEACHER_ZONE_CLUES.map((c,i)=>`<div class="${clues.includes(i)?'found':''}"><b>${clues.includes(i)?'✓':'？'} ${hesc(c.title)}</b><span>${clues.includes(i)?hesc(c.text):'尚未取得'}</span></div>`).join('')}</div>
+    <div class="desc">「這一次我不會收走你的成果。請把六區找到的線索化成正確的出牌順序，證明你已經能自己思考。」</div>
+    <button class="go" id="hiddenTeacherStart">📚 進入最後試煉</button>`,null,el=>{
+      if(el.id!=='hiddenTeacherStart')return false;setTimeout(()=>hiddenTeacherBattle(0,100,100),20);return true;
+    });
+}
+
+function hiddenTeacherBattle(step=0,teacherHp=100,playerHp=100,message='依六區線索，依序打出五張傳說卡。'){
+  const expected=TEACHER_LEGEND_ORDER[step],cards=TEACHER_LEGEND_ORDER.slice().sort(()=>Math.random()-.5);
+  overlay(`<div class="kicker">THE FINAL LESSON</div><h1>數學老師・隱藏大魔王</h1>
+    <div class="teacher-final-stage"><canvas id="finalTeacherSprite" class="teacher-pixel battle"></canvas>
+      <div class="teacher-final-hp"><span>老師的推理護盾</span><i><b style="width:${teacherHp}%"></b></i><em>${teacherHp}%</em></div>
+      <div class="teacher-final-hp player"><span>你的專注力</span><i><b style="width:${playerHp}%"></b></i><em>${playerHp}%</em></div>
+      <div class="teacher-sequence">${TEACHER_LEGEND_ORDER.map((id,i)=>`<span class="${i<step?'done':i===step?'now':''}">${i<step?'✓':i}</span>`).join('')}</div></div>
+    <div class="desc teacher-battle-message">${hesc(message)}<br><b>目前進度 ${step}/5</b></div>
+    <div class="teacher-card-hand">${cards.map(id=>{const c=CARDS[id];return `<button data-teacher-card="${id}"><small>費用 ${c.c}</small><b>${hesc(c.n)}</b><span>${hesc(c.d||'傳說數學卡')}</span></button>`;}).join('')}</div>`,null,el=>{
+      const id=el.dataset&&el.dataset.teacherCard;if(!id)return false;
+      if(id===expected){const ns=step+1,nh=Math.max(0,100-ns*20);setTimeout(()=>ns>=TEACHER_LEGEND_ORDER.length?hiddenTeacherVictory():hiddenTeacherBattle(ns,nh,playerHp,'正確！前一步已成為下一步的基礎。'),260);}
+      else{const hp=playerHp-20;setTimeout(()=>hp<=0?hiddenTeacherRetry():hiddenTeacherBattle(0,100,hp,'順序中斷。老師提醒：別急著猜，回想 0 → 1 → 2 → 3 → 4。'),260);}
+      return true;
+    });
+  paintPrologueTeacher('finalTeacherSprite');
+}
+
+function hiddenTeacherRetry(){
+  overlay(`<div class="kicker">TRY AGAIN</div><h1>推理順序中斷了</h1><div class="desc">老師沒有拿走你的卡牌，也不會把這次記成死亡。<br>「看一次線索、說出每一步的理由，再重新排列。」</div>
+    <button class="go" id="hiddenTeacherRetry">重新挑戰</button><button class="go muted" id="hiddenTeacherLeave">先回營地整理</button>`,null,el=>{
+      if(el.id==='hiddenTeacherRetry'){setTimeout(()=>hiddenTeacherBattle(0,100,100),20);return true;}
+      if(el.id==='hiddenTeacherLeave'){nameEntry(true);return true;}return false;
+    });
+}
+
+function hiddenTeacherVictory(){
+  const simulation=typeof TEACHER_FINAL_SIMULATION!=='undefined'&&TEACHER_FINAL_SIMULATION;
+  if(!simulation){S.meta=S.meta||{};S.meta.hiddenEnding=1;S.meta.teacherDefeatedAt=Date.now();saveChar();}
+  overlay(`<div class="kicker">TRUE ENDING</div><h1>✨ 最後隱藏結局・真正的數學冒險者</h1>
+    <div class="teacher-dialogue"><canvas id="endingTeacher" class="teacher-pixel"></canvas><div><p>「你沒有靠序章借來的力量，而是靠線索、練習與正確順序走到這裡。」</p><p>「真正的通關不是再也不會答錯，而是你已經懂得在錯誤後重新推理，也開始享受找出規律。」</p></div></div>
+    <div class="rank">🏆 隱藏稱號「真心享受數學的人」${simulation?'（模擬模式不寫入紀錄）':'已記錄'}</div><button class="go" id="hiddenEndingDone">${simulation?'返回地下城首頁':'完成六冊冒險'}</button>`,null,el=>{
+      if(el.id!=='hiddenEndingDone')return false;simulation?campusScreen('隱藏戰模擬完成，正式紀錄沒有變更。'):nameEntry(true);return true;
+    });paintPrologueTeacher('endingTeacher');
+}
+
 function loadFloor(i){
   const Z=zoneOf();
   fl=i;
+  const prologue=firstDungeonPrologueActive();
+  if(prologue)prepareFirstDungeonPrologue();
   applyTheme(S.zone||0,i);   // 區域主題會隨樓層升高切換到雲海／空中花園
   const isLast=(i>=Z.floors-1);
   const rooms=Z.rooms&&Z.rooms.length?Z.rooms:null;
@@ -93,7 +271,7 @@ function loadFloor(i){
   const zs=[...Z.squads.slice(0,Math.min(Z.squads.length,2+stage)),...floorSquads,...regionalSquads];
   // 大地圖等比補怪，密度才不會被稀釋
   const sizeMul=(TN*TN)/9;
-  const squadKeys=Array.from({length:Math.round((4+Math.min(3,i))*sizeMul)},()=>zs[rand(zs.length)]);
+  const squadKeys=Array.from({length:prologue?2:Math.round((4+Math.min(3,i))*sizeMul)},()=>zs[rand(zs.length)]);
   // 每層至少出現一種專屬新怪；取代既有隊伍，因此總隊伍數不增加。
   const special=floorSpecies.length?floorSpecies[i%floorSpecies.length]:null;
   const specialSlot=special&&squadKeys.length?rand(squadKeys.length):-1;
@@ -140,7 +318,7 @@ function loadFloor(i){
   // 地面陷阱：隨機撒在通道上（避開起點與重要道具）
   traps={};
   const trapKeys=Object.keys(TRAPS);
-  const nTraps=Math.round((4+rand(3))*((TN*TN)/9));
+  const nTraps=prologue?0:Math.round((4+rand(3))*((TN*TN)/9));
   for(let t=0,tries=0;t<nTraps&&tries<300;tries++){
     const c=cells[rand(cells.length)];
     if(!isFree(c))continue;                    // 佔用表已含怪物與所有道具
@@ -170,6 +348,7 @@ function loadFloor(i){
   if(FB.ready&&FB.room){ fbWatchWorld(); fbPush({floor:i}); fbPushDeck(); }
   markSeen();
   toast(F.n+'　先找到鑰匙',2600);
+  if(prologue&&!S.meta.prologueSupplySeen)setTimeout(prologueSupplyScreen,180);
 }
 
 function bfsStep(sx,sy,tx,ty){
@@ -368,6 +547,9 @@ function afterMove(){
     else if(p.t==='shop'){running=false;shopPuzzle(p);return;}
     else if(p.t==='stair'){
       if(!S.key){ toast('樓梯被封印了 — 先找到這一層的鑰匙',2000); continue; }
+      if(firstDungeonPrologueActive()){
+        teacherPrologueEncounter();return;
+      }
       const nextFloor=fl+1;
       /* 目前輪迴只允許完成一個新樓層；成功抵達樓梯即完成本輪，
          下一層會在結算後永久解鎖，避免第一次進場一路衝完整區域。 */
@@ -868,8 +1050,9 @@ function deploySquad(m,animate){
     const fr=[[1,4],[1,3],[2,5]][rand(3)];
     const eliteMul=m.elite?1.35:1;
     const floorVitality=1+Math.min(.90,Math.max(0,fl)*.075);
-    const bh=Math.max(8,Math.round(base.hp*DIFFS[diff].hp*eliteMul*floorVitality));
-    const f={...base,kind,squad:m.id,max:bh,hp:bh,atk:Math.round(base.atk*(m.elite?1.18:1)),burn:0,dead:false,shield:0,act:'atk',
+    const prologue=firstDungeonPrologueActive();
+    const bh=prologue?Math.max(6,Math.round(base.hp*.22)):Math.max(8,Math.round(base.hp*DIFFS[diff].hp*eliteMul*floorVitality));
+    const f={...base,kind,squad:m.id,max:bh,hp:bh,atk:prologue?1:Math.round(base.atk*(m.elite?1.18:1)),burn:0,dead:false,shield:0,act:'atk',
       expr:hpExpr(bh,fl),
       fracNum:fr[0],fracDen:fr[1],
       fresh:true,delay:i*110,uid:'f'+m.id+'_'+i,row:0,intent:0};
@@ -3007,6 +3190,8 @@ function winGame(){
   const cur={floor:Z.floors,chain:Math.max(...(S.allChains||[0]),0),turns:turnNo};
   if(!best||cur.chain>best.chain) S.zoneBest[Z.k]=cur;
   S.zoneProgress=S.zoneProgress||{};S.zoneProgress[Z.k]=0;
+  const teacherClue=grantTeacherClue(zi);
+  const finalTeacher=zi===5&&hiddenTeacherReady()&&!(S.meta&&S.meta.hiddenEnding);
   saveChar();
   const nextZ=ZONES[zi+1];
   overlay(`<div class="kicker">ZONE CLEAR</div><h1 style="color:${Z.col}">${Z.ic} ${Z.n} 通關！</h1>
@@ -3017,8 +3202,9 @@ function winGame(){
       ${first&&nextZ?`<br><b style="color:${nextZ.col}">🔓 新區域開啟：${nextZ.ic} ${nextZ.n}（${nextZ.floors} 層）</b><br>
         解鎖新卡牌 ${nextZ.cards.length} 種${nextZ.gems.length?'、新寶石 '+nextZ.gems.length+' 種':''}`
         :first?'<br><b>🏆 六大區域全數通關！</b>':'（本區已通關過，這次是複習）'}
+      <div class="teacher-clue-award"><b>📜 ${hesc(teacherClue.title)}</b><span>${hesc(teacherClue.text)}</span>${teacherClue.card?`<em>獲得：${hesc(CARDS[teacherClue.card].n)}</em>`:''}</div>
     </div>
-    <button class="go" id="ok">記錄成績</button>`,()=>nameEntry(true));
+    <button class="go" id="ok">${finalTeacher?'開啟最後隱藏樓層':'記錄成績'}</button>`,()=>finalTeacher?hiddenTeacherGate():nameEntry(true));
 }
 
 function resetRun(){
