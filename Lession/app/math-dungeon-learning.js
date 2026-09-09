@@ -406,6 +406,21 @@ function figTriangle(A,B,C,askLabel){
   </svg>`;
 }
 
+function figTriangleExterior(A,B,C){
+  const P1=[34,108],P2=[154,108],P3=[111,30],ext=[83,3];
+  return `<svg viewBox="0 0 200 132" width="100%" height="132" role="img" aria-label="三角形 C 點的一邊向外延伸，標示 C 的外角">
+    <polygon points="${P1.join(',')} ${P2.join(',')} ${P3.join(',')}" fill="${FIGC.fill}" stroke="${FIGC.line}" stroke-width="2.5"/>
+    <line x1="${P2[0]}" y1="${P2[1]}" x2="${ext[0]}" y2="${ext[1]}" stroke="${FIGC.ang}" stroke-width="2.5"/>
+    <path d="M111 30 A25 25 0 0 0 88 18" fill="none" stroke="${FIGC.mark}" stroke-width="3" stroke-dasharray="4 3"/>
+    <text x="48" y="101" fill="${FIGC.ang}" font-size="12" font-weight="900">${A}°</text>
+    <text x="132" y="101" fill="${FIGC.ang}" font-size="12" font-weight="900">${B}°</text>
+    <text x="67" y="20" fill="${FIGC.mark}" font-size="15" font-weight="900">?</text>
+    <text x="23" y="126" fill="${FIGC.txt}" font-size="11">A</text><text x="158" y="126" fill="${FIGC.txt}" font-size="11">B</text>
+    <text x="114" y="27" fill="${FIGC.txt}" font-size="11">C</text>
+    <text x="100" y="128" fill="${FIGC.txt}" font-size="10" text-anchor="middle">外角 = ${A}° + ${B}°</text>
+  </svg>`;
+}
+
 function figCircleAngle(deg,inscribed){
   const cx=100,cy=68,r=46;
   const a1=-90, a2=-90+deg;
@@ -587,14 +602,24 @@ function visualizeGeometryQuestion(q){
   let fig='',short='';
   const coord=key.match(/[（(]\s*([-−]?\d+)\s*[,，]\s*([-−]?\d+)\s*[)）]/);
   if(/座標|象限|坐標/.test(key)){fig=figCoordinate(coord?Number(coord[1].replace('−','-')):3,coord?Number(coord[2].replace('−','-')):2);short='觀察點 P，選出正確判斷。';}
-  else if(/畢氏|直角三角/.test(key)){const t=nums.length>=3?nums.slice(-3):[3,4,5];fig=figRightTriangle(Math.abs(t[0])||3,Math.abs(t[1])||4,Math.abs(t[2])||5,/斜邊|求.*邊/.test(key)?'c':'');short='觀察直角三角形，求圖中的 ?。';}
-  else if(/平行|同位角|內錯角|同側內角|截角/.test(key)&&!/立體圖形|柱體|錐體|球|多面體|展開圖/.test(key)){fig=figParallel(nums.find(n=>n>0&&n<180)||65);short='觀察平行線標記，選出正確關係。';}
+  else if(/畢氏|直角三角/.test(key)){
+    const answer=Number(String(q.ans||'').replace('−','-'));
+    let a=3,b=4,c=5,unknown='c';
+    if(/斜邊/.test(qtext)&&/一股/.test(qtext)&&nums.length>=2&&Number.isFinite(answer)){
+      c=Math.abs(nums[0]);a=Math.abs(nums[1]);b=Math.abs(answer);unknown='b';
+    }else if(/兩股/.test(qtext)&&nums.length>=2){
+      a=Math.abs(nums[0]);b=Math.abs(nums[1]);c=Number.isFinite(answer)?Math.abs(answer):Math.hypot(a,b);unknown='c';
+    }else if(nums.length>=3){[a,b,c]=nums.slice(-3).map(Math.abs);unknown=/斜邊/.test(key)?'c':'';}
+    fig=figRightTriangle(a||3,b||4,c||5,unknown);short='觀察直角三角形，求圖中的 ?。';
+  }
+  else if(/平行四邊形|菱形|梯形|箏形|四邊形/.test(key)){const kind=(key.match(/平行四邊形|菱形|梯形|箏形/)||['四邊形'])[0];fig=figQuadrilateral(kind);short='觀察四邊形標記，選出正確判斷。';}
+  else if(/外角/.test(key)&&/三角形|∠/.test(key)){const A=nums[0]||55,B=nums[1]||65;fig=figTriangleExterior(A,B,180-A-B);short='觀察三角形的延長線，求標示的外角。';}
+  else if(/平行線|兩平行|同位角|內錯角|同側內角|截角/.test(key)&&!/立體圖形|柱體|錐體|球|多面體|展開圖/.test(key)){fig=figParallel(nums.find(n=>n>0&&n<180)||65);short='觀察平行線標記，選出正確關係。';}
   else if(/全等|SSS|SAS|ASA|AAS|RHS/.test(key)&&!/立體圖形|柱體|錐體|球|多面體|展開圖/.test(key)){fig=figCongruence();short='比較兩個三角形，選出正確判斷。';}
   else if(/相似|比例線段|縮放/.test(key)){fig=figSimilar(nums.find(n=>n>1&&n<10)||2);short='比較兩個相似圖形，選出正確答案。';}
   else if(/圓周角|圓心角|弦|切線|圓內接/.test(key)){fig=figCircleAngle(nums.find(n=>n>0&&n<=360)||80,true);short='觀察圓上的標記，選出正確判斷。';}
   else if(/扇形|弧長/.test(key)){fig=figSector(nums.find(n=>n>0&&n<30)||5,nums.find(n=>n>=30&&n<=360)||90);short='觀察扇形，選出正確答案。';}
   else if(/圓柱|圓錐|柱體|錐體|球體|立體圖形|正方體|多面體|展開圖/.test(key)){fig=figSolid(qtext);short='觀察立體圖形，選出正確判斷。';}
-  else if(/平行四邊形|菱形|梯形|箏形|四邊形/.test(key)){const kind=(key.match(/平行四邊形|菱形|梯形|箏形/)||['四邊形'])[0];fig=figQuadrilateral(kind);short='觀察四邊形標記，選出正確判斷。';}
   else if(/三角形|內角|外角|角平分線|中線|垂直平分線/.test(key)){let A=nums.find(n=>n>10&&n<150)||55,B=nums.find((n,i)=>i>0&&n>10&&n<150)||65;if(A+B>=170)B=55;fig=figTriangle(A,B,180-A-B,'?');short='觀察三角形標記，選出正確答案。';}
   return fig?{...q,q:qtext.length<=38?q.q:(short||q.q),fig,visualized:true}:q;
 }
@@ -946,7 +971,7 @@ function genChestQ(){
   const v=zVol();
   if(v<=2) return genHCF();
   if(v<=4){
-    const k=2+rand(7), m2=2+rand(11), n=k*k*m2;
+    const k=2+rand(7), m2=DUNGEON_SQUAREFREE_RADICANDS[rand(DUNGEON_SQUAREFREE_RADICANDS.length)], n=k*k*m2;
     const mm=shuf4(`${k}√${m2}`,[`${m2}√${k}`,`${k*m2}`,`${k+1}√${m2}`],g=>`${k+g}√${m2}`);
     return {q:`化簡 √${n}`,opts:mm.opts,ans:mm.ans,
       sol:`${n} = ${k*k}×${m2}，√${k*k} = ${k} → ${k}√${m2}`,tag:'最簡根式'};
@@ -1065,7 +1090,9 @@ function genFactorAdv(){
 
 function genCompare(){
   const base=100+rand(150), per=2+rand(4), flat=per+1+rand(3);
-  const cross=Math.ceil(base/(flat-per));
+  /* 題意是「A 嚴格小於 B」。若交會點剛好是整數，必須再多 1 分鐘，
+   * 不能把兩方案同價的分鐘數當成 A 較便宜。 */
+  const cross=Math.floor(base/(flat-per))+1;
   const m=shuf4(String(cross),[String(cross+5),String(Math.floor(base/flat)),String(cross-3)],g=>cross+g*3);
   return {q:`A 方案：月租 ${base} 元，每分鐘 ${per} 元。B 方案：無月租，每分鐘 ${flat} 元。<br>講幾分鐘以上時 A 才比較划算？`,
     opts:m.opts,ans:m.ans,

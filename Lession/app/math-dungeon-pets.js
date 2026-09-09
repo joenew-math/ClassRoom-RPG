@@ -26,7 +26,9 @@ function monsterNameHash(v){let h=2166136261;for(const ch of String(v||'')){h^=c
 
 function monsterIdentity(kind){
   const f=FOES[kind]||{},name=String(f.n||kind),hash=monsterNameHash(kind+name);
-  const species=MONSTER_SPECIES_SIGNATURES.find(s=>s.keys.some(k=>name.includes(k)))||
+  /* 複合名稱以最長關鍵字決定種族，避免「芽獸」被通用的「獸」搶先分類。 */
+  const rankedSpecies=MONSTER_SPECIES_SIGNATURES.map((s,index)=>({s,index,score:Math.max(0,...s.keys.filter(k=>name.includes(k)).map(k=>k.length))})).filter(x=>x.score).sort((a,b)=>b.score-a.score||a.index-b.index);
+  const species=(rankedSpecies[0]&&rankedSpecies[0].s)||
     [{id:'spirit',n:'靈體族',trait:'漂浮靈焰與柔光核心'},{id:'beast',n:'奇獸族',trait:'獸耳、尾部與利爪'},{id:'construct',n:'構裝族',trait:'護甲、核心與重足'}][hash%3];
   const theme=MONSTER_THEME_SIGNATURES.find(s=>s.keys.some(k=>name.includes(k)))||
     [{id:'rune',n:'符印',trait:'獨立編號符印'},{id:'crystal',n:'晶光',trait:'彩色晶核'},{id:'wind',n:'流風',trait:'環繞氣流'}][(hash>>>3)%3];
@@ -114,6 +116,8 @@ function companionDef(kind){
 
 function cleanCompanions(){
   S.monsterDex=[...new Set((Array.isArray(S.monsterDex)?S.monsterDex:[]).filter(k=>FOES[k]))];
+  S.meta=(S.meta&&typeof S.meta==='object')?S.meta:{};
+  S.meta.defeatedMonsters=[...new Set((Array.isArray(S.meta.defeatedMonsters)?S.meta.defeatedMonsters:[]).filter(k=>FOES[k]&&FOES[k].art))];
   S.followers=[...new Set((Array.isArray(S.followers)?S.followers:[]).filter(k=>S.monsterDex.includes(k)))].slice(0,MAX_FOLLOWERS);
   S.monsterTraits=(S.monsterTraits&&typeof S.monsterTraits==='object')?S.monsterTraits:{};
   S.monsterDex.forEach(k=>{if(!PERSONALITY_BY_ID[S.monsterTraits[k]])S.monsterTraits[k]=randomMonsterPersonality();});
@@ -335,32 +339,48 @@ function fusionBookScreen(pr){
 }
 
 function petCodexScreen(filter='all'){
-  cleanCompanions();filter=String(filter||'all');const owned=new Set(S.monsterDex||[]);
+  cleanCompanions();filter=String(filter||'all');const owned=new Set(S.monsterDex||[]),defeated=new Set(S.meta.defeatedMonsters||[]),preview=monsterCodexPreviewMode();
   const all=Object.keys(FOES).filter(k=>FOES[k]&&FOES[k].art).sort((a,b)=>monsterTier(b)-monsterTier(a)||String(FOES[a].n).localeCompare(String(FOES[b].n),'zh-Hant'));
   const shown=filter==='all'?all:all.filter(k=>monsterTier(k)===Number(filter));
   const counts=Array.from({length:7},(_,i)=>all.filter(k=>monsterTier(k)===i+1).length);
   const filters=[['all','全部 '+all.length],...[1,2,3,4,5,6,7].map(t=>[String(t),['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'][t-1]+'階 '+counts[t-1]])];
-  const cards=shown.map(k=>{const f=FOES[k],d=companionDef(k),tier=monsterTier(k),g=d.groupMeta||monsterSkillGroupMeta(d.group),has=owned.has(k),identity=monsterIdentity(k);return `<div class="pet-dex-card tier-${tier}${has?' owned':''}" data-pet-dex="${hesc(k)}"><em>${has?'✓ 已收服':'未收服'}</em><img loading="lazy" src="${petCardArtData(k)}" alt="${hesc(f.n)}"><b>${hesc(f.n)}</b><strong>${hesc(identity.theme.n)}・${hesc(identity.species.n)}</strong><small>${hesc(FUSION_TIER_LABEL[tier]||'Ⅰ 一階原生')}・${g.ic}${hesc(g.n)}${f.boss?'・👑BOSS':''}</small></div>`;}).join('');
+  const discovered=new Set([...defeated,...owned]);
+  const cards=shown.map(k=>{
+    const has=owned.has(k),seen=preview||discovered.has(k);
+    if(!seen)return `<div class="pet-dex-card locked" data-pet-locked="1" aria-label="尚未擊敗的未知怪物"><em>未解鎖</em><div class="pet-dex-unknown" aria-hidden="true"><span>?</span></div><b>？？？</b><strong>尚未遭遇</strong><small>擊敗後公開圖鑑</small></div>`;
+    const f=FOES[k],d=companionDef(k),tier=monsterTier(k),g=d.groupMeta||monsterSkillGroupMeta(d.group),identity=monsterIdentity(k);
+    return `<div class="pet-dex-card tier-${tier}${has?' owned':''}" data-pet-dex="${hesc(k)}" data-motion="${monsterMotionProfile(k)}"><em>${preview&&!discovered.has(k)?'教師預覽':has?'✓ 已收服':'✓ 已擊敗'}</em><img loading="lazy" src="${petCardArtData(k)}" alt="${hesc(f.n)}"><b>${hesc(f.n)}</b><strong>${hesc(identity.theme.n)}・${hesc(identity.species.n)}</strong><small>${hesc(FUSION_TIER_LABEL[tier]||'Ⅰ 一階原生')}・${g.ic}${hesc(g.n)}${f.boss?'・👑BOSS':''}</small></div>`;
+  }).join('');
   overlay(`<div class="kicker">PET CODEX</div><h1>🐾 完整寵物圖鑑</h1>
-    <div class="pet-dex-summary"><span>物種 ${all.length}</span><span>已收服 ${owned.size}</span><span>六階 ${counts[5]}</span><span>七階終極 ${counts[6]}</span></div>
-    <div class="desc">所有圖像皆為地城實際戰鬥與寵物卡使用的像素圖。點擊任一寵物可查看技能、能力與取得類型。</div>
+    <div class="pet-dex-summary"><span>物種 ${all.length}</span><span>已發現 ${preview?all.length:discovered.size}</span><span>已收服 ${owned.size}</span><span>七階終極 ${counts[6]}</span></div>
+    <div class="desc">${preview?'本機教師預覽已開啟，可檢查全部怪物美術。正式版只會在學生擊敗怪物後公開名稱、圖像、能力與取得方式。':'未擊敗的怪物會保持隱藏；擊敗後才會公開圖像與能力，收服後再標記為夥伴。'}</div>
     <div class="pet-dex-filter">${filters.map(x=>`<button data-pet-tier="${x[0]}" class="${filter===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>
+    ${preview?'<button class="pet-dex-anim" id="petDexAnimate">⚔ 播放本頁攻擊動畫</button>':''}
     <div class="pet-dex-grid">${cards||'<div class="pempty">此階目前沒有寵物。</div>'}</div>
     <button class="go" id="petDexBack">返回選單</button>`,null,el=>{
       const tierBtn=el.closest('[data-pet-tier]');if(tierBtn){setTimeout(()=>petCodexScreen(tierBtn.dataset.petTier),10);return true;}
+      if(el.id==='petDexAnimate'){
+        const grid=document.querySelector('.pet-dex-grid');if(grid){grid.classList.remove('preview-attack');void grid.offsetWidth;grid.classList.add('preview-attack');setTimeout(()=>grid.classList.remove('preview-attack'),760);}return true;
+      }
       const card=el.closest('[data-pet-dex]');if(card){setTimeout(()=>petCodexDetail(card.dataset.petDex,filter),10);return true;}
       if(el.id==='petDexBack'){setTimeout(menuScreen,10);return true;}return false;
     });
 }
 
 function petCodexDetail(kind,filter='all'){
-  const f=FOES[kind];if(!f){petCodexScreen(filter);return;}const d=companionDef(kind),tier=monsterTier(kind),g=d.groupMeta||monsterSkillGroupMeta(d.group),has=(S.monsterDex||[]).includes(kind),p=has?monsterPersonality(kind):null,identity=monsterIdentity(kind);
+  cleanCompanions();const f=FOES[kind],has=(S.monsterDex||[]).includes(kind),seen=has||(S.meta.defeatedMonsters||[]).includes(kind)||monsterCodexPreviewMode();
+  if(!f||!seen){petCodexScreen(filter);return;}const d=companionDef(kind),tier=monsterTier(kind),g=d.groupMeta||monsterSkillGroupMeta(d.group),p=has?monsterPersonality(kind):null,identity=monsterIdentity(kind);
   const source=f.fusionOnly?FUSION_TIER_LABEL[tier]+'融合物種'+(f.boss?'・終極 BOSS':''):f.boss?'地城頭目（擊敗後 1% 邀請）':'地城原生物種（擊敗後 3% 邀請）';
   overlay(`<div class="kicker">PET PROFILE</div><h1>${hesc(f.n)}</h1><div class="pet-dex-title">${hesc(identity.title)}</div><div class="pet-dex-hero"><img src="${petCardArtData(kind)}" alt="${hesc(f.n)}"></div>
     <div class="rank">${hesc(FUSION_TIER_LABEL[tier]||'Ⅰ 一階原生')}・${g.ic} ${hesc(g.n)}${f.boss?'・👑 BOSS':''}・${has?'✓ 已收服':'尚未收服'}</div>
     <div class="pet-dex-identity"><div><b>外觀識別</b>${hesc(identity.visual)}</div><div><b>物種小傳</b>${hesc(identity.lore)}</div></div>
     <div class="mathbox"><div class="mh">${hesc(d.skill||f.abilityName||'同行支援')}</div><div class="ml">主技能時機：${hesc(followerTriggerLabel(d.baseGroup))}・效果：${hesc(d.detail||'同行時提供支援')}</div>${d.special?`<div class="ml">🌟 專屬特技：<b>${hesc(d.special.n)}</b>（${hesc(followerTriggerLabel(d.special.trigger))}・每場最多一次）</div>`:''}<div class="ml">野生能力：${hesc(f.abilityName||MONSTER_BATTLE_DESC[f.battleType]||'物種戰鬥特性')}</div><div class="ml">取得方式：${hesc(source)}</div>${p?`<div class="ml">性格：${p.icon}${hesc(p.n)}・${hesc(p.desc||'')}</div>`:''}</div>
     <button class="go" id="petDexDetailBack">返回完整圖鑑</button>`,null,el=>{if(el.id==='petDexDetailBack'){setTimeout(()=>petCodexScreen(filter),10);return true;}return false;});
+}
+
+function monsterCodexPreviewMode(){
+  const host=String(location&&location.hostname||'').toLowerCase(),local=location.protocol==='file:'||host==='127.0.0.1'||host==='localhost'||host==='::1';
+  return local&&new URLSearchParams(location.search).get('monsterPreview')==='1';
 }
 
 function applyOneFollowerEffect(e){

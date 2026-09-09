@@ -67,7 +67,10 @@ function prologueSupplyScreen(){
     <b>提醒：</b>這些是序章借給你的力量；真正能帶進地城深處的，是你練習後留下的理解。</div>
     <button class="go" id="prologueSupplyOk">開始探索教學一樓</button>`,null,el=>{
       if(el.id!=='prologueSupplyOk')return false;
-      S.meta.prologueSupplySeen=1;saveChar();running=true;return true;
+      S.meta.prologueSupplySeen=1;saveChar();
+      /* 首次說明關閉後要明確恢復地城畫面與動畫迴圈；只把 running
+       * 設回 true 會讓部分手機停在沒有下一個 animation frame 的狀態。 */
+      setTimeout(backToDungeon,20);return true;
     });
 }
 
@@ -674,8 +677,9 @@ function drawMonsterNameSignature(g,R,kind,phase,fm){
 
 function drawUltimateFoe(g,kind,R){
   const m=String(kind||'').match(/^fusion_t7_([1-6])$/);if(!m)return false;
-  const n=Number(m[1]),ink='#170f25',gold='#ffd85a',white='#fff7d1';
-  g.globalAlpha=.22;R(3,5,26,23,n===1?'#ff553c':n===2?'#7658ff':n===3?'#ff9d36':n===4?'#3ee1db':n===5?'#d83cff':'#62a8ff');g.globalAlpha=1;
+  const n=Number(m[1]),ink='#170f25',gold='#ffd85a',white='#fff7d1',aura=n===1?'#ff553c':n===2?'#7658ff':n===3?'#ff9d36':n===4?'#3ee1db':n===5?'#d83cff':'#62a8ff';
+  /* 七階光環改成離散實色像素，不鋪半透明矩形，縮圖時仍維持俐落輪廓。 */
+  R(5,3,22,2,aura);R(2,7,3,15,aura);R(27,7,3,15,aura);R(5,27,22,2,aura);
   if(n===1){ /* 創世數理神龍：雙翼、龍角、紅金胸甲、長尾 */
     R(1,8,8,4,ink);R(2,6,6,3,'#f04c38');R(23,8,8,4,ink);R(24,6,6,3,'#f04c38');
     R(5,12,7,10,'#8f2435');R(20,12,7,10,'#8f2435');R(2,14,5,5,'#f04c38');R(25,14,5,5,'#f04c38');
@@ -767,6 +771,117 @@ function addHighTierPixelDetails(g,kind,tier,fm){
   g.restore();
 }
 
+/*
+ * 全圖鑑原生 64px 程序像素美術。
+ * 每個名稱由「種族輪廓 × 主題徽記 × 名稱雜湊特徵 × 階級飾件」組合，
+ * 不再先縮成 32px，讓一至七階在手機圖鑑與戰鬥畫面都有六階等級的清晰度。
+ */
+function drawMonsterTheme64(g,kind,id,pal){
+  const R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);},h=id.hash,
+    x=26+((h>>>5)%5)*2,y=31+((h>>>9)%3)*2,ink=pal.ink,a=pal.accent,white=pal.white;
+  if(id.theme.id==='star'){R(x+4,y-5,2,12,a);R(x-1,y,12,2,a);R(x+3,y-1,4,4,white);}
+  else if(id.theme.id==='rune'){R(x,y-3,3,12,ink);R(x+8,y-3,3,12,ink);R(x+2,y-1,7,2,a);R(x+2,y+5,7,2,a);R(x+4,y+1,3,4,white);}
+  else if(id.theme.id==='crystal'){R(x+3,y-5,6,3,white);R(x,y-2,12,7,ink);R(x+2,y-2,8,7,a);R(x+4,y+5,4,3,pal.light);}
+  else if(id.theme.id==='flame'){R(x+4,y-6,4,6,a);R(x+1,y-2,10,8,ink);R(x+3,y-3,6,8,a);R(x+5,y,3,4,white);}
+  else if(id.theme.id==='water'){R(x+4,y-5,4,4,white);R(x+1,y-2,10,9,ink);R(x+3,y-2,6,7,a);R(x+5,y+1,3,3,white);}
+  else if(id.theme.id==='wind'){R(x-1,y-3,12,2,white);R(x+3,y+1,11,2,a);R(x-2,y+5,11,2,a);R(x+9,y+3,3,2,ink);}
+  else if(id.theme.id==='earth'){R(x,y,4,7,pal.shadow);R(x+4,y-4,5,11,a);R(x+9,y+1,3,6,pal.shadow);R(x+3,y+2,7,2,white);}
+  else if(id.theme.id==='shadow'){R(x+1,y-5,10,12,a);R(x+5,y-5,8,8,ink);R(x+9,y+2,3,3,white);}
+  else if(id.theme.id==='geometry'){R(x+4,y-5,3,3,white);R(x+1,y-2,2,10,a);R(x+10,y-2,2,10,a);R(x+3,y-2,7,2,a);R(x+3,y+6,7,2,a);}
+  else{R(x,y-3,12,12,ink);R(x+2,y-1,3,3,a);R(x+7,y+4,3,3,a);R(x+5,y+1,2,2,white);}
+}
+
+function drawMonsterTierRegalia64(g,kind,tier,id,pal){
+  if(tier<2)return;
+  const R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);},h=id.hash,ink=pal.ink,a=pal.accent,w=pal.white;
+  /* 二、三階開始出現穩定的大形飾件；不使用零碎單像素雜訊。 */
+  if(tier>=2){R(8,26,8,5,ink);R(10,27,5,3,a);R(48,26,8,5,ink);R(49,27,5,3,a);}
+  if(tier>=3){
+    if((h>>>11)%2){R(5,17,7,9,ink);R(7,18,4,6,pal.light);R(52,17,7,9,ink);R(53,18,4,6,pal.light);}
+    else{R(13,8,5,8,ink);R(15,7,3,7,a);R(46,8,5,8,ink);R(46,7,3,7,a);}
+  }
+  if(tier>=4){R(25,5,14,4,ink);R(27,4,10,4,a);R(30,3,4,3,w);}
+  if(tier>=5){R(6,10,8,4,ink);R(8,8,5,4,'#e7b84f');R(50,10,8,4,ink);R(51,8,5,4,'#e7b84f');}
+  if(tier>=6){
+    /* 六階標準：完整星環、中央大型核心與對稱肩光。 */
+    R(13,2,38,3,ink);R(17,2,30,2,pal.light);R(7,7,3,12,a);R(54,7,3,12,a);
+    R(24,30,16,16,ink);R(27,33,10,10,a);R(30,36,4,4,w);
+    R(4,20,8,4,pal.light);R(52,20,8,4,pal.light);
+  }
+}
+
+function drawNamedMonster64(g,kind,tier,fm){
+  const id=monsterIdentity(kind),v=monsterVividPalette(kind,fm||{}),h=id.hash,
+    ink='#1b1129',shadow=v.shade||'#3e315f',main=v.col||'#6d83c7',light=v.hi||'#cfeeff',
+    accent=MONSTER_THEME_ACCENTS[id.theme.id]||'#f0d66e',white='#fff6d6',eye='#5df0ff',
+    pal={ink,shadow,main,light,accent,white},R=(x,y,w,h2,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h2);},
+    s=id.species.id,form=(Number(fm&&fm.form)||h)%4;
+  g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+  /* 高階光環保持完全不透明的離散像素，避免縮圖時出現模糊毛邊。 */
+  if(tier>=4){R(8,15,48,3,ink);R(12,13,40,2,tier>=6?accent:light);R(5,24,4,16,accent);R(55,24,4,16,accent);}
+  if(s==='wing'){
+    R(3,15,20,6,ink);R(1,21,23,17,ink);R(5,17,16,5,light);R(4,23,18,12,main);R(8,25,12,7,shadow);
+    R(41,15,20,6,ink);R(40,21,23,17,ink);R(43,17,16,5,light);R(42,23,18,12,main);R(44,25,12,7,shadow);
+    R(25,12,14,13,ink);R(27,14,10,10,light);R(23,23,18,27,ink);R(26,24,12,23,main);R(29,43,6,14,shadow);
+    R(17,46,9,5,ink);R(38,46,9,5,ink);
+  }else if(s==='dragon'){
+    R(6,17,17,20,ink);R(8,19,14,14,shadow);R(41,17,17,20,ink);R(42,19,14,14,shadow);
+    R(22,9,20,19,ink);R(24,11,16,15,main);R(17,12,8,8,ink);R(18,9,5,8,light);R(39,12,8,8,ink);R(41,9,5,8,light);
+    R(18,25,28,26,ink);R(21,27,22,21,main);R(27,29,10,18,light);R(17,49,11,10,ink);R(36,49,11,10,ink);
+    R(44,42,15,6,ink);R(52,36,8,8,ink);R(46,42,11,4,main);
+  }else if(s==='horn'){
+    R(18,12,28,17,ink);R(21,14,22,13,main);R(16,7,7,12,ink);R(18,5,4,12,light);R(41,7,7,12,ink);R(42,5,4,12,light);
+    R(12,27,40,24,ink);R(15,29,34,19,main);R(20,31,24,8,light);R(13,47,10,13,ink);R(41,47,10,13,ink);R(16,49,6,9,shadow);R(42,49,6,9,shadow);
+    R(49,34,11,5,ink);R(56,29,5,8,light);
+  }else if(s==='shell'){
+    R(10,14,44,34,ink);R(13,16,38,29,shadow);R(18,18,28,22,main);R(22,20,20,7,light);
+    R(4,28,10,15,ink);R(6,30,7,10,main);R(50,28,10,15,ink);R(51,30,7,10,main);
+    R(13,46,10,11,ink);R(26,46,12,12,ink);R(41,46,10,11,ink);R(16,48,6,7,shadow);R(29,48,6,8,shadow);R(42,48,6,7,shadow);
+  }else if(s==='insect'){
+    R(25,10,14,13,ink);R(27,12,10,9,main);R(21,21,22,27,ink);R(24,23,16,22,main);R(27,27,10,7,light);R(27,44,10,13,shadow);
+    [22,31,40].forEach(y=>{R(8,y,15,3,ink);R(41,y,15,3,ink);R(5,y-3,7,3,shadow);R(52,y-3,7,3,shadow);});
+    R(24,5,3,8,light);R(37,5,3,8,light);if(form%2){R(31,50,3,10,accent);R(29,57,7,3,ink);}
+  }else if(s==='rabbit'){
+    R(17,3,10,24,ink);R(20,5,6,20,light);R(37,3,10,24,ink);R(38,5,6,20,light);R(19,18,26,22,ink);R(22,20,20,18,main);
+    R(16,37,32,18,ink);R(20,39,24,14,main);R(13,51,13,9,ink);R(38,51,13,9,ink);R(16,52,9,6,light);R(39,52,9,6,light);R(48,38,10,10,ink);R(50,39,7,7,white);
+  }else if(s==='fox'){
+    R(14,9,13,14,ink);R(17,12,9,10,main);R(37,9,13,14,ink);R(38,12,9,10,main);R(17,17,30,23,ink);R(20,19,24,19,main);R(25,28,14,9,light);
+    R(16,38,30,17,ink);R(20,40,22,13,main);R(13,51,12,9,ink);R(39,51,12,9,ink);
+    R(44,39,16,7,ink);R(51,33,10,8,ink);R(47,40,11,4,main);R(47,47,13,7,ink);R(53,43,8,7,light);
+  }else if(s==='aqua'){
+    R(13,15,38,24,ink);R(16,17,32,20,main);R(21,19,22,7,light);R(7,22,10,12,ink);R(9,24,8,8,accent);R(47,22,10,12,ink);R(48,24,8,8,accent);
+    R(20,35,28,18,ink);R(23,37,22,14,main);R(42,45,15,7,ink);R(52,39,9,9,ink);R(45,46,11,4,light);R(53,41,6,6,accent);R(19,51,10,8,ink);R(34,51,10,8,ink);
+  }else if(s==='serpent'){
+    R(22,8,22,20,ink);R(25,10,16,16,main);R(18,12,8,8,ink);R(20,10,5,8,light);R(41,12,8,8,ink);R(42,10,5,8,light);
+    R(16,25,31,13,ink);R(19,27,25,9,main);R(10,35,40,12,ink);R(13,37,34,8,shadow);R(17,45,34,11,ink);R(21,47,28,7,main);R(45,51,14,6,ink);R(54,47,7,7,accent);
+  }else if(s==='plant'){
+    R(20,5,8,16,ink);R(16,3,9,7,light);R(36,5,8,16,ink);R(39,3,9,7,light);R(9,10,12,7,ink);R(11,11,9,5,main);R(43,10,12,7,ink);R(44,11,9,5,main);
+    R(17,17,30,22,ink);R(20,19,24,18,main);R(23,36,18,20,ink);R(26,37,12,16,shadow);R(11,52,18,7,ink);R(35,52,18,7,ink);R(14,51,12,5,light);R(38,51,12,5,light);
+  }else if(s==='construct'){
+    R(18,8,28,21,ink);R(21,11,22,16,main);R(25,13,14,6,light);R(9,24,46,28,ink);R(13,27,38,21,shadow);R(20,29,24,16,main);
+    R(3,27,12,19,ink);R(6,30,8,13,main);R(49,27,12,19,ink);R(50,30,8,13,main);R(13,49,15,11,ink);R(36,49,15,11,ink);R(16,51,10,7,shadow);R(38,51,10,7,shadow);
+  }else if(s==='spirit'){
+    R(18,8,28,11,ink);R(21,10,22,8,light);R(12,14,40,25,ink);R(16,16,32,20,main);R(20,19,24,8,light);R(8,24,10,12,ink);R(10,26,7,8,main);R(46,24,10,12,ink);R(47,26,7,8,main);
+    R(19,36,26,13,ink);R(22,38,20,9,main);R(25,47,14,8,ink);R(29,53,8,7,ink);R(28,48,9,6,shadow);R(9,11,4,4,accent);R(52,8,4,4,accent);
+  }else{
+    R(16,12,32,27,ink);R(20,15,24,21,main);R(12,36,40,18,ink);R(16,38,32,14,shadow);R(15,51,13,9,ink);R(36,51,13,9,ink);
+  }
+  /* 全種族共用的亮眼與面部焦點，讓縮小後仍有角色感。 */
+  if(!['insect','construct'].includes(s)){R(24,24,6,5,ink);R(35,24,6,5,ink);R(26,25,2,2,eye);R(37,25,2,2,eye);R(30,31,6,3,ink);}
+  else{R(23,21,7,5,ink);R(35,21,7,5,ink);R(25,22,2,2,eye);R(37,22,2,2,eye);}
+  drawMonsterTheme64(g,kind,id,pal);
+  /* 名稱雜湊固定產生一項大型識別特徵，確保同族同色仍非複製品。 */
+  if(form===0){R(7,40,8,6,ink);R(9,41,5,4,accent);}
+  else if(form===1){R(49,40,8,6,ink);R(50,41,5,4,accent);}
+  else if(form===2){R(27,9,10,4,ink);R(29,8,6,4,accent);}
+  else{R(27,52,10,5,ink);R(29,53,6,3,accent);}
+  drawMonsterTierRegalia64(g,kind,tier,id,pal);
+  /* 六格名稱足印以雜湊四色編碼；它同時是角色腳邊飾紋，也保證 212 個名稱不共用完全相同的像素稿。 */
+  const runeCols=[shadow,main,accent,white];
+  for(let i=0;i<6;i++)R(20+i*4,57,3,2,runeCols[(h>>>(i*2))&3]);
+  return true;
+}
+
 const MONSTER_ATLAS_RUNTIME=window.CLASS_RPG_MONSTER_ATLAS||null;
 const MONSTER_ATLAS_IMAGE=MONSTER_ATLAS_RUNTIME?new Image():null;
 if(MONSTER_ATLAS_IMAGE){
@@ -782,7 +897,7 @@ if(MONSTER_ATLAS_IMAGE){
     });
     if(typeof B!=='undefined'&&B&&!B.over&&typeof renderFoes==='function')renderFoes();
   };
-  MONSTER_ATLAS_IMAGE.src='./assets/monsters/'+MONSTER_ATLAS_RUNTIME.image;
+  MONSTER_ATLAS_IMAGE.src='./assets/monsters/'+MONSTER_ATLAS_RUNTIME.image+'?v='+(MONSTER_ATLAS_RUNTIME.version||1);
 }
 function drawMonsterAtlasFrame(g,c,kind){
   const frame=MONSTER_ATLAS_RUNTIME&&MONSTER_ATLAS_RUNTIME.frames&&MONSTER_ATLAS_RUNTIME.frames[kind];
@@ -799,9 +914,9 @@ function drawMonsterAtlasFrame(g,c,kind){
  */
 const MONSTER_ATLAS_FAMILY_TEMPLATES={
   plant:['rm1_1'],fox:['rm3_1','rm2_2'],beast:['rm2_2','rm1_10','rm4_6'],
-  horn:['rm4_6'],rabbit:['rm1_10'],insect:['rm3_3','rm5_6','rm6_8'],shell:['rm6_8'],
-  serpent:['rm4_2'],dragon:['rm5_7'],aqua:['rm5_7'],wing:['rm5_7'],
-  construct:['rm1_6','rm6_5'],spirit:['rm1_1']
+  horn:['rm4_6'],rabbit:['rm6_3'],insect:['rm3_3','rm5_6','rm6_8'],shell:['rm6_8'],
+  serpent:['rm4_2'],dragon:['rm5_7'],aqua:['rm1_3'],wing:['rm3_8'],
+  construct:['rm1_6','rm6_5'],spirit:['rm3_4']
 };
 function monsterAtlasVariantBase(kind){
   if(MONSTER_ATLAS_RUNTIME&&MONSTER_ATLAS_RUNTIME.frames&&MONSTER_ATLAS_RUNTIME.frames[kind])return kind;
@@ -817,25 +932,34 @@ function monsterRgb(hex,fallback){
 function recolorMonsterVariant(g,c,kind){
   const fm=FLOOR_MONSTER_LOOK[kind]||{},pal=monsterVividPalette(kind,fm),
     main=monsterRgb(pal.col,[92,139,210]),shade=monsterRgb(pal.shade,[42,67,122]),hi=monsterRgb(pal.hi,[232,246,255]),
-    data=g.getImageData(0,0,c.width,c.height),p=data.data;
+    data=g.getImageData(0,0,c.width,c.height),p=data.data,mask=new Uint8Array(c.width*c.height),outline=[25,17,35];
   for(let i=0;i<p.length;i+=4){
-    if(p[i+3]<10)continue;
+    const px=i/4;
+    if(p[i+3]<88){p[i+3]=0;continue;}
+    p[i+3]=255;mask[px]=1;
     const lum=(p[i]*.299+p[i+1]*.587+p[i+2]*.114)/255;
-    if(lum<.16){p[i]=Math.round(shade[0]*.2);p[i+1]=Math.round(shade[1]*.2);p[i+2]=Math.round(shade[2]*.2);continue;}
-    const t=lum<.48?(lum-.16)/.32:(lum-.48)/.52,a=lum<.48?shade:main,b=lum<.48?main:hi;
-    p[i]=Math.round(a[0]+(b[0]-a[0])*t);p[i+1]=Math.round(a[1]+(b[1]-a[1])*t);p[i+2]=Math.round(a[2]+(b[2]-a[2])*t);
+    const glint=[247,242,218],tone=lum<.17?outline:lum<.34?shade:lum<.68?main:lum<.9?hi:glint;
+    p[i]=tone[0];p[i+1]=tone[1];p[i+2]=tone[2];
+  }
+  /* 把半透明抗鋸齒邊緣改成一像素硬描邊；連同母體原有內描邊，
+     顯示時形成一致的約二像素深紫輪廓。 */
+  for(let y=1;y<c.height-1;y++)for(let x=1;x<c.width-1;x++){
+    const at=y*c.width+x;if(mask[at])continue;
+    let near=false;
+    for(let oy=-1;oy<=1&&!near;oy++)for(let ox=-1;ox<=1;ox++)if(mask[(y+oy)*c.width+x+ox]){near=true;break;}
+    if(near){const i=at*4;p[i]=outline[0];p[i+1]=outline[1];p[i+2]=outline[2];p[i+3]=255;}
   }
   g.putImageData(data,0,0);
 }
-function drawMonsterVariantFeatures(g,kind){
+function drawMonsterVariantFeatures(g,kind,withSilhouette=true){
   const id=monsterIdentity(kind),accent=MONSTER_THEME_ACCENTS[id.theme.id]||'#fff18c',ink='#211631',h=id.hash,
     ax=21+(h%20),ay=9+((h>>>4)%10),R=(x,y,w,h2,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h2);};
   /* 四種可組合輪廓零件：雙角、耳羽、尾刺、肩晶；至少一項改變母體剪影。 */
-  switch((h>>>7)%4){
-    case 0:R(12,7,3,8,ink);R(49,7,3,8,ink);R(13,6,2,7,accent);R(49,6,2,7,accent);break;
-    case 1:R(6,23,7,3,ink);R(51,23,7,3,ink);R(5,20,6,3,accent);R(53,20,6,3,accent);break;
-    case 2:R(53,37,7,3,ink);R(58,34,3,3,ink);R(54,37,5,2,accent);break;
-    default:R(14,17,5,6,ink);R(45,17,5,6,ink);R(15,16,3,5,accent);R(46,16,3,5,accent);
+  if(withSilhouette)switch((h>>>7)%4){
+      case 0:R(12,7,3,8,ink);R(49,7,3,8,ink);R(13,6,2,7,accent);R(49,6,2,7,accent);break;
+      case 1:R(6,23,7,3,ink);R(51,23,7,3,ink);R(5,20,6,3,accent);R(53,20,6,3,accent);break;
+      case 2:R(53,37,7,3,ink);R(58,34,3,3,ink);R(54,37,5,2,accent);break;
+      default:R(14,17,5,6,ink);R(45,17,5,6,ink);R(15,16,3,5,accent);R(46,16,3,5,accent);
   }
   /* 名稱主題紋章使用大像素，不畫細線，64px 手機畫面仍看得見。 */
   if(id.theme.id==='geometry'){R(ax,ay+5,3,3,ink);R(ax+3,ay+2,3,3,ink);R(ax+6,ay+5,3,3,ink);R(ax+1,ay+5,7,2,accent);}
@@ -849,7 +973,9 @@ function drawMonsterVariantFeatures(g,kind){
 }
 function drawMonsterAtlasVariant(g,c,kind,baseKind){
   if(!baseKind||!drawMonsterAtlasFrame(g,c,baseKind))return false;
-  if(baseKind!==kind){recolorMonsterVariant(g,c,kind);drawMonsterVariantFeatures(g,kind);}
+  /* 母體與衍生怪物全部走同一套四色階＋重點色，避免圖鑑混入兩種畫風。 */
+  recolorMonsterVariant(g,c,kind);
+  drawMonsterVariantFeatures(g,kind,baseKind!==kind);
   return true;
 }
 
@@ -869,11 +995,16 @@ function foeArt(kind){
   const artTier=monsterTier(kind),hiRes=artTier>=4||!!(FOES[kind]&&FOES[kind].boss),
     atlasBase=monsterAtlasVariantBase(kind),
     c=document.createElement('canvas');
-  /* 圖集怪物直接保留 64×64 原生像素；未完成美術的程序怪仍維持 32px 輕量備援。 */
-  c.width=c.height=atlasBase?64:(hiRes?64:32);
+  const namedMonster=!!(FOES[kind]&&FOES[kind].art);
+  /* 所有有名稱怪物一律使用原生 64×64，不再把高解析母體壓成 32px。 */
+  c.width=c.height=namedMonster||atlasBase||hiRes?64:32;
   c.dataset.monsterKind=kind;
   const g=c.getContext('2d');g.imageSmoothingEnabled=false;
-  if(drawMonsterAtlasVariant(g,c,kind,atlasBase)){c.dataset.atlasReady='1';return c;}
+  if(/^fusion_t7_[1-6]$/.test(String(kind))){
+    g.save();g.scale(2,2);const U=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};drawUltimateFoe(g,kind,U);g.restore();
+    addHighTierPixelDetails(g,kind,7,FLOOR_MONSTER_LOOK[kind]);c.dataset.nativeMonster='1';return c;
+  }
+  if(namedMonster){drawNamedMonster64(g,kind,artTier,FLOOR_MONSTER_LOOK[kind]||{});c.dataset.nativeMonster='1';return c;}
   /* 圖集尚未下載完成時，先把 32px 程序備援完整放大到 64px，避免縮在左上角。 */
   if(c.width===64)g.scale(2,2);
   const R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};
@@ -2430,6 +2561,10 @@ function winBattle(){
   B.over=true;clearInterval(rTimer);
   const killed=new Set(B.foes.map(f=>f.squad));
   const bossDown=B.foes.some(f=>f.boss);
+  S.meta=(S.meta&&typeof S.meta==='object')?S.meta:{};
+  const defeatedMonsters=new Set(Array.isArray(S.meta.defeatedMonsters)?S.meta.defeatedMonsters:[]);
+  B.foes.forEach(f=>{if(!f.teacherBoss&&FOES[f.kind]&&FOES[f.kind].art)defeatedMonsters.add(f.kind);});
+  S.meta.defeatedMonsters=[...defeatedMonsters];
   const captureCandidate=rollCaptureCandidate();
   for(const m of mobs){if(killed.has(m.id))m.alive=0;m.inBattle=0;}
   fbMarkMobs([...killed]);

@@ -171,9 +171,9 @@ const MONSTER_SPECIES_SIGNATURES=[
   {keys:['神獅','聖獅','金獅','外角獅','獅','狼','犬','獵犬','貓','狸','熊','鼠','刺蝟','犀','獸'],id:'beast',n:'牙獸族',trait:'獸耳、利爪與動態長尾'},
   {keys:['魔鯨','星鯨','雲鯨','泥鯨','鯨','水獺','海馬','飛魚','魟','水母'],id:'aqua',n:'潮生族',trait:'側鰭、流線尾與水紋'},
   {keys:['翼蛇','蛇','蜥王','翠蜥','蜥'],id:'serpent',n:'鱗爬族',trait:'背棘、蛇尾與鱗片'},
-  {keys:['世界樹','古樹','樹精','樹','蘑菇','夜菇'],id:'plant',n:'森靈族',trait:'枝角、葉冠與根足'},
+  {keys:['世界樹','古樹','樹精','符號芽獸','芽獸','樹','芽','蘑菇','夜菇'],id:'plant',n:'森靈族',trait:'枝角、葉冠與根足'},
   {keys:['巨神','魔神','守護者','守望者','守衛','騎士','衛兵','石兵','機兵','魔像','巨像','傀儡','木偶','泥偶'],id:'construct',n:'構裝族',trait:'方形肩甲、核心與重足'},
-  {keys:['史萊姆','水滴','幽魂','夢靈','雲靈','燈靈','精靈','花妖','小鬼'],id:'spirit',n:'靈體族',trait:'漂浮下擺、靈火與透明核心'},
+  {keys:['史萊姆','水滴','幽魂','夢靈','雲靈','雲王','燈靈','精靈','花妖','小鬼'],id:'spirit',n:'靈體族',trait:'漂浮下擺、靈火與透明核心'},
 ];
 
 const MONSTER_THEME_SIGNATURES=[
@@ -189,14 +189,16 @@ const MONSTER_THEME_SIGNATURES=[
   {keys:['機率','命運','骰子','平均','樣本','統計','資料'],id:'chance',n:'機率',trait:'骰點核心與機率軌跡'},
 ];
 
+/* 統一怪物美術色盤：主色保持鮮明但不螢光，陰影固定低明度；
+   名稱主題只使用一個小面積重點色，避免整隻怪物變成發光雜訊。 */
 const MONSTER_SPECIES_PALETTES={
-  wing:['#d94c9d','#79255f'],dragon:['#e84b36','#84283a'],horn:['#32b86b','#176f58'],shell:['#18a99c','#166a70'],
-  insect:['#8851d6','#4d277f'],rabbit:['#f06eaa','#a73775'],fox:['#f07a32','#9b3d26'],beast:['#397bd8','#234884'],
-  aqua:['#20aee8','#176cb1'],serpent:['#31bd69','#177b47'],plant:['#54b83d','#276f32'],construct:['#607dc6','#34477b'],
-  spirit:['#9a57de','#54308d'],
+  wing:['#c95791','#713557'],dragon:['#d95a43','#78333b'],horn:['#45a968','#24664e'],shell:['#2b9b91','#23616a'],
+  insect:['#8060bd','#49366f'],rabbit:['#d96b9a','#873d68'],fox:['#dc7136','#86402e'],beast:['#477fbd','#2d4b72'],
+  aqua:['#319bc6','#255d83'],serpent:['#4aa664','#2b6747'],plant:['#62a849','#35643c'],construct:['#7184ad','#414e6f'],
+  spirit:['#9168bd','#543c78'],
 };
 
-const MONSTER_THEME_ACCENTS={star:'#fff05d',rune:'#67edff',crystal:'#9dffff',flame:'#ffb52e',water:'#5ce4ff',wind:'#e8ffff',earth:'#ffc469',shadow:'#e28aff',geometry:'#ffef86',chance:'#ff7fd1'};
+const MONSTER_THEME_ACCENTS={star:'#f2d768',rune:'#72cee2',crystal:'#91d8dc',flame:'#ee9a42',water:'#68c7df',wind:'#d6e6dc',earth:'#d5a565',shadow:'#bd83d6',geometry:'#e6d37b',chance:'#db7eaf'};
 
 const MONSTER_EPITHETS=['敏銳巡界者','堅毅守門者','靈巧探路者','沉著觀測者','勇氣共鳴者','星光引路者','古老刻印者','迅捷追跡者','靜謐護衛者','不屈破陣者','知識採集者','六域旅行者'];
 
@@ -331,4 +333,3 @@ const MONSTER_SKILL_VISUAL={
  regen:{glyph:'🌿',bit:'❧',color:'#74ef8d'},venom:{glyph:'☣',bit:'●',color:'#b879ff'},
  chorus:{glyph:'♫',bit:'♪',color:'#ff9fdd'},chaos:{glyph:'✧',bit:'◈',color:'#75e8ff'},
 };
-

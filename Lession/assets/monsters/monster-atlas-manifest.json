@@ -1,8 +1,9 @@
 {
-  "version": 3,
+  "version": 4,
   "cellSize": 64,
+  "pixelScale": 2,
   "columns": 4,
-  "padding": 3,
+  "padding": 6,
   "outputImage": "monster-atlas-foundation-v1.png",
   "outputData": "monster-atlas-foundation-v1.json",
   "outputScript": "monster-atlas-foundation-v1.js",
@@ -78,6 +79,30 @@
       "name": "整數泥偶",
       "family": "construct",
       "source": "art-source/monsters/integer-clay-golem-v1.png"
+    },
+    {
+      "id": "rm3_8",
+      "name": "直角戰燕",
+      "family": "wing",
+      "source": "art-source/monsters/wing-rune-moth-master-v1.png"
+    },
+    {
+      "id": "rm6_3",
+      "name": "機率月兔",
+      "family": "rabbit",
+      "source": "art-source/monsters/moon-rabbit-master-transparent-v1.png"
+    },
+    {
+      "id": "rm1_3",
+      "name": "分數水獺",
+      "family": "aqua",
+      "source": "art-source/monsters/water-otter-master-v1.png"
+    },
+    {
+      "id": "rm3_4",
+      "name": "因式花妖",
+      "family": "spirit",
+      "source": "art-source/monsters/cloud-flower-spirit-master-v1.png"
     }
   ]
 }

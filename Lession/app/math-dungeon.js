@@ -3775,7 +3775,7 @@ const QGEN={
      ...shuf4(sgn(r),[sgn(-r),sgn(x*x-a*x),sgn(r+a)],g=>sgn(r+g+1)),
      sol:`(${sgn(x)})² = ${x*x}（負數平方為正），${a}×(${sgn(x)}) = ${a*x} → ${x*x} + ${a*x} = ${sgn(r)}`,
      tag:'負數代入求值'};},
- ()=>{const k=rint(2,7),m=rint(2,9),n=k*k*m;
+ ()=>{const k=rint(2,7),m=DUNGEON_SQUAREFREE_RADICANDS[rand(5)],n=k*k*m;
    return {q:`${sgn(-1)} × √${n} 化簡後是多少？`,
      ...shuf4(`−${k}√${m}`,[`${k}√${m}`,`−${m}√${k}`,`−${k*m}`],g=>`−${k+g+1}√${m}`),
      sol:`√${n} = ${k}√${m}，前面的負號保留 → −${k}√${m}`,tag:'負根式化簡'};},
@@ -3818,7 +3818,7 @@ const QGEN={
      ...shuf4(`x = ${sgn(-a)} 或 ${sgn(-b)}`,[`x = ${a} 或 ${b}`,`x = ${sgn(-a)} 或 ${b}`,`x = ${sgn(-a-b)}`],
        g=>`x = ${sgn(-a-g-1)} 或 ${sgn(-b)}`),
      sol:`(x+${a})(x+${b}) = 0 → x = ${sgn(-a)} 或 ${sgn(-b)}`,tag:'二次方程（負根）'};},
- ()=>{const k=rint(2,9),m=rint(2,15),n=k*k*m;
+ ()=>{const k=rint(2,9),m=DUNGEON_SQUAREFREE_RADICANDS[rand(DUNGEON_SQUAREFREE_RADICANDS.length)],n=k*k*m;
    return {q:`化簡 √${n}`,...shuf4(`${k}√${m}`,[`${m}√${k}`,`${k*m}`,`${k+1}√${m}`],g=>`${k+g}√${m}`),
      sol:`${n} = ${k*k}×${m}，√${k*k} = ${k} → ${k}√${m}`,tag:'最簡根式'};},
  ()=>{const a=rint(1,12),b=rint(1,12);
@@ -3872,7 +3872,7 @@ const QGEN={
      fig:figTriangle(A,B,C,'?'),
      sol:`內角和 180°：180−${A}−${B} = ${C}°`,tag:'內角和'};},
  ()=>{const A=rint(30,80),B=rint(30,80);
-   return {fig:figTriangle(A,B,180-A-B,(A+B)+'°?'),
+   return {fig:figTriangleExterior(A,B,180-A-B),
      q:`三角形 ∠A=${A}°、∠B=${B}°，∠C 的外角是幾度？`,...shuf4((A+B)+'°',[(180-A-B)+'°',(180-A)+'°',(A+B+10)+'°'],g=>(A+B+g*5)+'°'),
      sol:`外角等於不相鄰兩內角和：${A}+${B} = ${A+B}°`,tag:'外角定理'};},
 ],
@@ -3964,10 +3964,13 @@ const QGEN={
    return {q:`每次成功機率 1/${n}，連做兩次都失敗的機率是多少？`,
      ...shuf4(fr((n-1)*(n-1),n*n),[fr(1,n*n),fr(n-1,n),fr(2*(n-1),n*n)],g=>fr((n-1)*(n-1)+g,n*n)),
      sol:`(${n-1}/${n}) × (${n-1}/${n}) = ${fr((n-1)*(n-1),n*n)}`,tag:'兩階段事件'};},
- ()=>{const V=rint(4,16),E=rint(V+2,V+20),F=2-V+E;
-   if(F<3) return QGEN[6][0]();
+ ()=>{const solids=[
+     {n:'三角柱',V:6,E:9,F:5},{n:'四角柱',V:8,E:12,F:6},{n:'五角柱',V:10,E:15,F:7},
+     {n:'四角錐',V:5,E:8,F:5},{n:'正四面體',V:4,E:6,F:4},{n:'正八面體',V:6,E:12,F:8},
+     {n:'正十二面體',V:20,E:30,F:12},{n:'正二十面體',V:12,E:30,F:20}
+   ],solid=solids[rand(solids.length)],{V,E,F}=solid;
    return {q:`多面體有 ${V} 個頂點、${E} 條稜，有幾個面？`,...shuf4(''+F,[''+(F+2),''+(E-V),''+(V+E)],g=>''+(F+g)),
-     sol:`歐拉公式 V−E+F=2 → F = 2−${V}+${E} = ${F}`,tag:'歐拉公式'};},
+     sol:`這組數據可對應${solid.n}。歐拉公式 V−E+F=2 → F = 2−${V}+${E} = ${F}`,tag:'歐拉公式'};},
  ()=>{const r=rint(2,15),h=rint(3,20);
    return {fig:figCylinder(r,h),q:`半徑 ${r}、高 ${h} 的圓柱體積是多少？`,...shuf4(`${r*r*h}π`,[`${2*r*h}π`,`${r*h}π`,`${Math.round(r*r*h/3)}π`],g=>`${r*r*h+g}π`),
      sol:`V = πr²h = π×${r*r}×${h} = ${r*r*h}π`,tag:'圓柱體積'};},
@@ -5072,7 +5075,11 @@ loadCampus();
 syncZones();
 const TEACHER_FINAL_SIMULATION=new URLSearchParams(location.search).get('teacherFinalTest')==='1';
 if(!startDungeonHealthGuard()){
-  if(TEACHER_FINAL_SIMULATION){
+  if(monsterCodexPreviewMode()){
+    /* 僅限 localhost／本機檔案的美術檢查入口；先開一階避免一次生成
+       212 張程序像素圖造成較舊電腦長時間停住，仍可由階級分頁查看全部。 */
+    setTimeout(()=>petCodexScreen('1'),30);
+  }else if(TEACHER_FINAL_SIMULATION){
     setTimeout(()=>overlay(`<div class="kicker">TEACHER FINAL TEST</div><h1>🧪 數學教師卡牌戰測試</h1><div class="desc">使用地下城原本的抽牌、魔力、連擊與回合戰鬥。<br>一般卡能攻擊與防禦；依序施放費用 <b>0 → 1 → 2 → 3 → 4</b> 的五張傳說數學卡，才能使出秒殺教師的「五步推理・全力一擊」。<br><br>模擬勝負不寫入正式角色紀錄。</div><button class="go" id="teacherSimulationGo">進入正常卡牌戰</button>`,null,el=>{if(el.id!=='teacherSimulationGo')return false;setTimeout(()=>hiddenTeacherBattle(),20);return true;}),30);
   }else introScreen();
 }
