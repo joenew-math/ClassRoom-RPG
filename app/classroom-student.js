@@ -252,8 +252,8 @@ function renderStudent(){
         + '<button class="swatch'+(ed.color===null?" on":"")+'" data-color="" title="橡皮擦">⌫</button>'
         + '<button class="btn" id="edClear" title="全部清空">清空</button>'
         + '<span class="mini">目前:<span id="edCur" style="display:inline-block;width:20px;height:20px;border-radius:5px;vertical-align:middle;border:1px solid var(--line);background:'+(ed.color||"transparent")+'">'+(ed.color?"":"⌫")+'</span></span>';
-      editorHtml = '<div class="panel"><h3>設計工坊</h3>'
-        + '<div class="inline-form" style="margin-bottom:10px">'
+      editorHtml = '<div class="panel student-forge"><h3>🎨 設計工坊</h3><nav class="forge-steps" aria-label="製作步驟"><span>① 選圖紙</span><span>② 繪製與試穿</span><span>③ 確認送審</span></nav>'
+        + '<details class="forge-settings"><summary>① 圖紙、等級與能力設定</summary><div class="inline-form" style="margin-bottom:10px">'
         + '<input type="text" id="edName" placeholder="裝備名稱" value="'+esc(ed.name)+'" style="width:140px">'
         + '<select id="edType">'
         + BASIC_SLOTS.map(t=>{
@@ -293,6 +293,7 @@ function renderStudent(){
               + '<div class="mini" style="margin-top:7px">'+(bounds?'稀有／傳說圖紙已鎖定能力區間；按下送審時由系統在各區間內完成鍛造，不能手動點滿。':'物品等級越高，可分配點數越多；四項總和不能超過上限。')+'</div>'
               + ((ed.bpTier==='rare'||ed.bpTier==='legend')?'<div class="forge-legend">'+(ed.bpTier==='legend'?'🌟 <b>傳說鍛造</b>':'📕 <b>稀有鍛造</b>')+'：詞條與能力區間在 Boss 掉落時已鎖定；傳說武器武技發動率固定 8%。</div>':'')+'</div>';
           })()
+        + '</details><h4 class="forge-work-heading">② 繪製與即時試穿</h4>'
         // 🎨 常用工具留在外面(復原/重做/平滑),其餘摺疊
         + '<div class="inline-form" style="margin-bottom:8px">'
         + (ed.img ? '' :
@@ -301,7 +302,7 @@ function renderStudent(){
           + '<button class="btn'+(ed.smooth?" gold":"")+'" id="edSmooth">'+(ed.smooth?"🫧 平滑:開":"🔲 平滑:關")+'</button>')
         + (ed.img ? '<button class="btn danger" id="edImgDel">✖ 移除圖片(回像素模式)</button>' : "")
         + '</div>'
-        + (ed.img ? '' : '<div style="margin:0 0 8px;padding:8px;background:rgba(240,180,41,.08);border:1px dashed var(--gold-dim);border-radius:8px">'
+        + (ed.img ? '' : '<details class="forge-seeds"><summary>套用像素草稿</summary><div style="padding:8px">'
           + '<b class="mini" style="color:var(--gold)">✨ GPT 像素裝備草稿</b><span class="mini">　縮圖就是套用後的輪廓，可再自由改色</span>'
           + '<div class="seed-gallery">'
           + (function(){
@@ -317,7 +318,7 @@ function renderStudent(){
               return (seeds[ed.type]||["crest|◆ 對稱徽記","frame|▣ 花紋邊框"])
                 .map(v=>{ const q=v.split("|"); return '<button class="btn seed-card" data-edseed="'+q[0]+'"><span class="seed-pixel">'+starterThumb(ed.type,q[0],ed.color||"#d0483e")+'</span><span class="seed-label">'+q[1]+'</span></button>'; }).join("");
             })()
-          + '</div><div class="mini" style="margin-top:5px">衣服、褲子與鞋子草稿已延伸到安全邊界，能覆蓋素體原本服裝；套用後仍可用「上一步」復原。</div></div>')
+          + '</div><div class="mini" style="margin-top:5px">衣服、褲子與鞋子草稿已延伸到安全邊界，能覆蓋素體原本服裝；套用後仍可用「上一步」復原。</div></div></details>')
         + '<details class="ed-fold"><summary>🛠 更多工具(AI 生成・匯入匯出・放真實圖片)</summary>'
         + '<div class="ed-fold-body"><div class="inline-form">'
         + (ed.img ? '' :
@@ -375,7 +376,7 @@ function renderStudent(){
           })()
         + '</aside></div>'
         + '<div class="inline-form" style="margin-top:12px">'
-        + '<button class="btn gold" id="edSubmit">送審上架</button>'
+        + '<button class="btn gold" id="edSubmit">③ 確認作品・送審 1💎</button>'
         + '<button class="btn" id="edCancel">取消</button></div>'
         + '<div class="mini" style="margin-top:6px">送審需支付 <b style="color:var(--gold)">'+SUBMIT_FEE+'💎</b>(你目前有 '+(s.diamonds||0)+'💎);被退回會退還圖紙與鑽石。你先依物品等級配置能力與詞條，老師審核時可做最後平衡；上架後每次有人購買，你抽 10% 版稅!</div>'
         + '<div class="panel" style="margin-top:10px;background:rgba(240,180,41,.08);border-color:var(--gold)">'
@@ -392,7 +393,7 @@ function renderStudent(){
       const bpSummary=bpTotal?'<div class="mini" style="margin-top:10px;padding:8px 10px;background:#f6f2e8;border:2px solid #141414;border-radius:8px"><b>🎟 可用圖紙 '+bpTotal+' 張</b>　'+bpByType.map(x=>TYPE_ICON[x.t]+x.n).join("　")+'<details style="margin-top:5px"><summary style="cursor:pointer">查看各部位圖紙</summary><div style="margin-top:4px">'+bpByType.map(x=>TYPE_ICON[x.t]+TYPE_NAME[x.t]+' ×'+x.n).join("　・　")+'</div></details></div>':'<div class="mini" style="margin-top:10px">還沒有設計圖紙——打倒魔王結算時，依貢獻度有機會獲得！</div>';
       editorHtml = '<div class="panel"><h3>設計工坊</h3>'
         + '<button class="btn gold" id="edNew"'+((s.diamonds||0)<SUBMIT_FEE?' style="opacity:.55"':'')+'>🎨 設計新裝備</button>'
-        + '<div class="mini" style="margin-top:6px;color:'+((s.diamonds||0)>=SUBMIT_FEE?'var(--parch)':'#c0392b')+'">💎 設計送審需 '+SUBMIT_FEE+' 顆鑽石(你有 '+(s.diamonds||0)+' 顆)'+((s.diamonds||0)<SUBMIT_FEE?' — 不足,請先累積鑽石':'')+'</div>'
+        + '<div class="mini" style="margin-top:6px;color:'+((s.diamonds||0)>=SUBMIT_FEE?'#403521':'#c0392b')+'">💎 設計送審需 '+SUBMIT_FEE+' 顆鑽石(你有 '+(s.diamonds||0)+' 顆)'+((s.diamonds||0)<SUBMIT_FEE?' — 不足,請先累積鑽石':'')+'</div>'
         + bpSummary
         + '<div class="mini" style="margin-top:8px;line-height:1.9">'
         + '每件作品消耗一張對應部位的圖紙(退回會退還)。可設計:帽子、衣服、褲子、武器、背飾、鞋子。<br>'
@@ -401,7 +402,7 @@ function renderStudent(){
         + '<b>②請AI畫</b>(進設計後按「🤖 AI指令」,把 AI 給的稿貼進「📥 匯入」)・'
         + '<b>③用圖片</b>(按「🖼 匯入圖片」放去背好的 PNG,細節最豐富)</div></div>';
     }
-    body = featuredHtml + editorHtml + '<div class="panel"><h3>我的作品</h3><div class="shop-grid">'+mineHtml+'</div></div>';
+    body = featuredHtml + editorHtml + '<details class="panel"><summary>🗂 我的作品（'+mine.length+'）</summary><div class="shop-grid">'+mineHtml+'</div></details>';
   }else if(view.tab==="skills"){
     body = skillTreePanel(s);
   }else if(view.tab==="announce"){
@@ -447,7 +448,7 @@ function renderStudent(){
       + '每次只能選一張；獎勵在選擇當下決定，五張卡的機率完全相同。</div></div>';
   }else if(view.tab==="shop"){
     const filterDefs = [["all","全部"],["hat","帽子"],["clothes","衣服"],["pants","褲子"],["weapon","武器"],["back","背飾"],["shoes","鞋子"],["consumable","道具"]];
-    const items = allShopItems()
+    const items = allShopItems().filter(it=>!it.pixelSet)
       .filter(i=> i.id!==13 && i.id!==14)                            // 💎 幸運草/智慧卷軸改到鑽石商店販售
       .filter(i=> !i.petCraft)                                      // 🐾 寵物卡製作品只在寵物商店顯示
       .filter(i=> i.rarity!=="Legendary" || s[i.type+"Id"]===i.id)   // 🔒 傳說裝備商店隱藏(神祕感);自己穿著的仍顯示
@@ -484,7 +485,7 @@ function renderStudent(){
     // 🏪 商店主分頁:冒險商店 / 鑽石商店 / 寵物商店
     const mainTab = view.shopMain || "gold";
     const shopMode=(mainTab==="gold"?(view.shopSub||"buy"):mainTab);
-    const mainTabs = '<label style="display:flex;align-items:center;gap:8px;font-weight:900;margin-bottom:10px">商店選單 <select id="studentShopMenu" style="flex:1;max-width:320px;font-size:16px"><option value="buy"'+(shopMode==="buy"?' selected':'')+'>💰 冒險商店・購買</option><option value="sell"'+(shopMode==="sell"?' selected':'')+'>🎒 冒險商店・販售</option><option value="gem"'+(shopMode==="gem"?' selected':'')+'>💎 鑽石商店</option><option value="pet"'+(shopMode==="pet"?' selected':'')+'>🐾 寵物商店</option></select></label>';
+    const mainTabs = '<label style="display:flex;align-items:center;gap:8px;font-weight:900;margin-bottom:10px">商店選單 <select id="studentShopMenu" style="flex:1;max-width:320px;font-size:16px"><option value="buy"'+(shopMode==="buy"?' selected':'')+'>💰 冒險商店・購買</option><option value="sell"'+(shopMode==="sell"?' selected':'')+'>🎒 冒險商店・販售</option><option value="gem"'+(shopMode==="gem"?' selected':'')+'>💎 鑽石商店</option><option value="pet"'+(shopMode==="pet"?' selected':'')+'>🐾 寵物商店</option><option value="guild"'+(shopMode==="guild"?' selected':'')+'>🏰 公會套裝</option></select></label>';
     // 冒險商店下的子分頁:購買 / 販售
     const sub = view.shopSub || "buy";
     const filterMenu='<label style="display:flex;align-items:center;gap:8px;font-weight:900;margin-bottom:10px">裝備類別 <select id="studentShopFilter" style="flex:1;max-width:240px">'+filterDefs.map(([k,n])=>'<option value="'+k+'"'+(view.shopFilter===k?' selected':'')+'>'+n+'</option>').join('')+'</select></label>';
@@ -499,7 +500,7 @@ function renderStudent(){
             + '<div class="istats">'+(stats||"")+'</div>'
             + '<div class="price num">賣出 +'+bagSellPrice(it)+'</div>'
             + '<button class="btn gold" data-bagequip="'+idx+'">裝備</button>'
-            + '<button class="btn danger" data-bagsell="'+idx+'"'+(it.petLegend?' disabled':'')+'>'+(it.petLegend?'唯一收藏':'賣出')+'</button></div>';
+            + '<button class="btn danger" data-bagsell="'+idx+'"'+((it.petLegend||it.pixelSet)?' disabled':'')+'>'+((it.petLegend||it.pixelSet)?'珍藏不可售':'賣出')+'</button></div>';
         }).join("")
       : '<div class="mini">背包沒有裝備——購買新裝備時,換下的舊裝備會自動收進這裡。</div>';
     const sellBody = '<div class="panel"><h3>🎒 背包裝備 <span class="mini">('+bag.length+' / '+BAG_MAX+')</span></h3>'
@@ -525,7 +526,7 @@ function renderStudent(){
     body = '<div class="panel">' + mainTabs + walletBar
       + (mainTab==="gem"
           ? gemBody
-          : mainTab==="pet"?petBody
+          : mainTab==="pet"?petBody : mainTab==="guild"?pixelSetGuildShop(s)
           : (sub==="sell"
               ? sellBody
               : (filterMenu+'<div class="shop-grid">'+items+'</div>')))
@@ -559,8 +560,8 @@ function renderStudent(){
         + '<button class="btn gold" id="buyPeakTicket"'+(s.gold>=500?"":" disabled")+'>購買</button></div></div>'
         + (PEAK.isOurs() && state.worldPeak.owner.group===s.group ?
           '<div class="panel" style="background:linear-gradient(135deg,#4a1a1a,#7a2a2a);color:#fff;border-color:#ff6b6b"><h3 style="color:#ffd0d0">🌏 世界城堡商店 <span class="tag" style="background:var(--gold)">💎 '+(s.diamonds||0)+'・💰 '+s.gold+'</span></h3>'
-          + '<div class="mini" style="color:#f5d0d0;margin-bottom:8px">世界霸主專屬!全身傳說套裝每套 500💎，只改變角色外觀、不增加能力值；一般六格裝備會完整保留。</div>'
-          + '<div class="legend-set-grid">'+LEGEND_SETS.map(set=>legendSetCardHtml(set,s,"shop")).join("")+'</div>'
+          + '<div class="mini" style="color:#f5d0d0;margin-bottom:8px">世界霸主專屬!六件式職業套裝請至商店的「公會套裝」選單，每件 50💎。</div>'
+          + '<div class="legend-set-grid">'+LEGEND_SETS.filter(set=>!set.retired).map(set=>legendSetCardHtml(set,s,"shop")).join("")+'</div>'
           + '<div style="height:12px"></div><div class="mini" style="color:#f5d0d0;margin-bottom:6px">傳說卡片與便利卡片</div>'
           + '<div class="inline-form" style="margin-bottom:6px"><span style="font-weight:900">🎴 寵物卡 100💎</span><span class="mini" style="color:#f5d0d0">隨機四聖獸,戰場機率發動寵物技(追擊/濺射/閃避/減傷)</span><button class="btn gold" data-peakbuy="33|d|100"'+((s.diamonds||0)>=100?"":" disabled")+'>購買</button></div>'
           + '<div class="inline-form" style="margin-bottom:6px"><span style="font-weight:900">🌠 流星卡 300💎</span><span class="mini" style="color:#f5d0d0">傳說轉生:自訂專屬職業名號</span><button class="btn gold" data-peakbuy="34|d|300"'+((s.diamonds||0)>=300?"":" disabled")+'>購買</button></div>'
@@ -583,7 +584,7 @@ function renderStudent(){
         + '<div class="istats">'+esc(it.effect||"")+'</div>'
         + '<button class="btn" data-use="'+id+'">使用</button></div>';
     }).join("") : '<div class="mini">背包是空的——去商店的「道具」分頁買點消耗品。</div>';
-    const ownedLegendSets=LEGEND_SETS.filter(set=>(s.legendSets||{})[set.id]);
+    const ownedLegendSets=LEGEND_SETS.filter(set=>!set.retired&&(s.legendSets||{})[set.id]);
     const legendBagHtml=ownedLegendSets.length
       ? '<div class="legend-set-grid">'+ownedLegendSets.map(set=>legendSetCardHtml(set,s,"bag")).join("")+'</div>'
       : '<div class="mini">尚未收藏全身傳說套裝；成為世界霸主後可到「世界城堡商店」以 500💎 購買。</div>';
@@ -601,11 +602,11 @@ function renderStudent(){
               return '<div class="item-card"><div class="iic" data-idetail="'+it.id+'" style="cursor:pointer">'+itemArtThumb(it,42)+'</div>'
                 + '<div class="inm" data-idetail="'+it.id+'" style="cursor:pointer;text-decoration:underline dotted">'+esc(it.name)+'</div><div class="istats">'+(st||"")+'</div>'
                 + '<button class="btn gold" data-bagequip="'+idx+'">裝備</button>'
-                + '<button class="btn danger" data-bagsell="'+idx+'"'+(it.petLegend?' disabled':'')+'>'+(it.petLegend?'唯一收藏':'賣 +'+bagSellPrice(it))+'</button></div>';
+                + '<button class="btn danger" data-bagsell="'+idx+'"'+((it.petLegend||it.pixelSet)?' disabled':'')+'>'+((it.petLegend||it.pixelSet)?'珍藏不可售':'賣 +'+bagSellPrice(it))+'</button></div>';
             }).join("")
           : '<div class="mini">還沒有收納的裝備——買新裝備時,換下的舊裝備會自動收進這裡(上限 '+BAG_MAX+' 件)。</div>')
       + '</div></div>'
-      + '<div class="panel"><h3>🌏 全身傳說套裝</h3><div class="mini">套裝只改變外觀；卸下後會恢復原本六格裝備。</div>'+legendBagHtml+'</div>'
+      + pixelSetReadout(s)
       + '<div class="panel"><h3>消耗品</h3><div class="shop-grid">'+consHtml+'</div></div>';
   }else{
     const bz = state.boss, bzEb = bz && bz.elem ? ELEM_BOSSES[bz.elem] : null;
@@ -811,7 +812,7 @@ function renderStudent(){
   });
   // 🌏 世界城堡全身傳說套裝：職業限定、每套 500 鑽石；購買後自動穿戴。
   app.querySelectorAll("[data-legendbuy]").forEach(b=>b.onclick=async()=>{
-    const set=legendSetInfo(b.dataset.legendbuy);if(!set)return;
+    const set=legendSetInfo(b.dataset.legendbuy);if(!set||set.retired)return;
     if(!(set.jobs||[]).includes(s.job)){toast("這套限定「"+legendSetJobText(set)+"」穿戴",true);return;}
     s.legendSets=s.legendSets||{};
     if(s.legendSets[set.id]){toast("已收藏「"+set.name+"」");return;}
@@ -909,6 +910,7 @@ function renderStudent(){
   if(studentShopFilter)studentShopFilter.onchange=()=>{view.shopFilter=studentShopFilter.value;render();};
   app.querySelectorAll("[data-buy]").forEach(b=> b.onclick = ()=> buyItem(s.id, +b.dataset.buy));
   app.querySelectorAll("[data-shopmain]").forEach(b=> b.onclick = ()=>{ view.shopMain = b.dataset.shopmain; render(); });
+  app.querySelectorAll("[data-pixelbuy]").forEach(b=>b.onclick=async()=>{if(b.disabled)return;const it=pixelItemOf(b.dataset.pixelbuy);if(!it||!confirm('購買「'+it.name+'」？花費 50 鑽石，放入背包。'))return;b.disabled=true;try{const r=await pixelSetBuy(s,it.id);toast(r.message||'已放入背包');render();}catch(e){toast(e.message||'購買失敗',true);b.disabled=false;}});
   const studentShopMenu=document.getElementById("studentShopMenu");
   if(studentShopMenu)studentShopMenu.onchange=()=>{const v=studentShopMenu.value;if(v==="buy"||v==="sell"){view.shopMain="gold";view.shopSub=v;}else view.shopMain=v;render();};
   app.querySelectorAll("[data-petequip]").forEach(b=>b.onclick=async()=>{try{const r=await petStoreAction(s,"petEquip",{kind:b.dataset.petequip});toast(r.message||"已裝備寵物");sfx("goal");render();}catch(e){toast(e.message||"寵物裝備失敗",true);}});
@@ -1263,6 +1265,8 @@ function renderStudent(){
     if(!ed.img && Object.keys(ed.pixels).length < 5){ toast("多畫幾格吧(至少 5 格),或用「🖼 匯入圖片」", true); return; }
     const used=(ed.atk||0)+(ed.def||0)+(ed.agi||0)+(ed.int||0),budget=levelStatBudget(ed.bpTier,ed.itemLevel,ed.type);
     if(used>budget){toast("能力值已用 "+used+" 點，但物品 Lv."+ed.itemLevel+" 只能分配 "+budget+" 點",true);return;}
+    if(edSubmit.disabled)return;
+    if(!confirm('確認送審「'+ed.name.trim()+'」？\n消耗對應圖紙 1 張與 '+SUBMIT_FEE+' 鑽石。\n教師審核後上架；不附加職業套裝效果。'))return;
     edSubmit.disabled=true;let made=null;
     try{made=await submitDesign(s.id,ed.name.trim(),ed.type,ed.bpTier,ed.price,ed.pixels,ed.fx,ed.smooth,ed.img,ed.imgT,ed.affix,ed.weaponSkill,ed.imgBox,ed.itemLevel,{atk:ed.atk,def:ed.def,agi:ed.agi,int:ed.int},ed.statCode||"");}
     catch(e){edSubmit.disabled=false;toast("送審失敗："+(e.message||e),true);return;}

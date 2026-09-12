@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>星曜騎士｜像素裝備試作</title><link rel="stylesheet" href="equipment-preview.css"><link rel="stylesheet" href="../Lession/app/math-dungeon-combat-art.css?v=80"></head>
+<body>
+<header><div><p class="eyebrow">CLASSROOM RPG · ART LAB 01</p><h1>星曜騎士 <span>像素裝備試作</span></h1><p>原創銀鋼 × 星金 × 深藍布料。獨立試穿，不會改動學生角色。</p></div><a href="../班級RPG-公會大廳v126.html">返回班級首頁 ↗</a></header>
+<main>
+<section id="battle" class="showcase" aria-label="紙娃娃對照預覽">
+<div class="stage-heading"><span>01 / PAPER DOLL</span><label>素體 <select id="bodySelect" aria-label="選擇素體"></select></label></div>
+<div class="comparison"><article><h2>原始素體</h2><canvas id="bare" width="400" height="488" aria-label="原始素體預覽"></canvas><p>保留原本短腿、大頭比例</p></article><article class="equipped"><h2>星曜騎士 <small>6 件分層</small></h2><canvas id="doll" width="400" height="488" aria-label="穿戴預覽，可拖曳選取的部位"></canvas><p>頭盔 · 鎧甲 · 護腿 · 戰靴 · 星劍 · 披風</p></article></div>
+<div class="stage-actions"><label><input type="checkbox" id="guides"> 顯示定位線</label><label><input type="checkbox" id="gear" checked> 穿戴整套</label><button id="autoFit">重新對齊此素體</button><button id="previewCombo">播放五連擊</button></div>
+<p id="status" role="status">正在載入裝備美術…</p>
+</section>
+<aside><p class="eyebrow">02 / FITTING STUDIO</p><h2>逐部位校正</h2><p class="muted">選取部位後拖曳人物上的裝備，或用下方滑桿微調。每款素體獨立保存試作設定。</p><div id="slots" class="slots"></div>
+<label class="field">左右位置<input id="x" type="range" min="-15" max="105" step="0.25"></label>
+<label class="field">上下位置<input id="y" type="range" min="-20" max="100" step="0.25"></label>
+<label class="field">寬度<input id="w" type="range" min="5" max="90" step="0.25"></label>
+<label class="field">高度<input id="h" type="range" min="5" max="110" step="0.25"></label>
+<label class="field check"><input id="visible" type="checkbox" checked> 顯示這件裝備</label>
+<div class="actions"><button id="save" class="primary">保存本機試作</button><button id="export">下載定位設定</button></div><p class="note">只保存到本機試作區，不連接 Firebase、不更動背包。確認美術後再整合正式系統。</p>
+</aside>
+<section class="collection"><div class="stage-heading"><span>03 / EQUIPMENT ATLAS</span><span>不透明裝備 · 獨立六圖層</span></div><div id="items" class="item-grid"></div></section>
+</main><script src="../Lession/app/math-dungeon-combat-art.js?v=80"></script><script src="equipment-preview.js"></script></body></html>

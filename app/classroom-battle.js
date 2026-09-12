@@ -362,25 +362,32 @@ function gaMobaQuizZones(team){
 function gaMobaQuizZoneAt(f){return gaMobaQuizZones(f.team).find(z=>z.x===f.x&&z.y===f.y)||null;}
 
 function gaMobaKnowledgePointValue(streak){return streak>=5?3:(streak>=3?2:1);}
+function gaMobaQuizNow(){return GARENA.paused?(GARENA.pausedAt||Date.now()):Date.now();}
+function gaMobaQuizSeconds(q){if(!q)return 0;const at=q.finished?q.nextAt:q.endsAt;if(!q.finished&&gaMobaQuizNow()<(q.startsAt||0))return Math.ceil((q.endsAt-q.startsAt)/1000);return Math.max(0,Math.ceil(((at||gaMobaQuizNow())-gaMobaQuizNow())/1000));}
+function gaMobaQuizShift(ms){const q=GARENA.mobaQuiz;if(!q)return;for(const k of ['startsAt','endsAt','nextAt'])if(q[k])q[k]+=ms;for(const team of ['red','blue'])if(q.freezeUntilAt?.[team])q.freezeUntilAt[team]+=ms;Object.values(GARENA.fighters||{}).forEach(f=>{if(f.quizChargeAt)f.quizChargeAt+=ms;});}
+function gaMobaQuizStatus(q){if(!q)return '';if(gaMobaQuizNow()<(q.startsAt||0))return '準備 '+Math.ceil((q.startsAt-gaMobaQuizNow())/1000)+'…';return q.lastResult||(q.finished?'本題已結束':'手動移動到敵方答案塔前，連續站滿 3 秒；AI 不代答');}
+function gaMobaQuizResetCharge(f){f.quizChargeT=0;f.quizChargeKey='';f.quizChargeAt=0;}
 
 function gaMobaKnowledgeTick(fs){
   const q=GARENA.mobaQuiz;if(!gaIsKnowledgeMoba()||!q||!q.active)return;
-  const tick=GARENA.ticks||0;
-  if(q.finished){if(tick>=(q.nextAtTick||Infinity))gaMobaKnowledgeNext();return;}
-  if(tick>=(q.roundEndsTick||Infinity)){
+  const tick=GARENA.ticks||0,now=gaMobaQuizNow();
+  if(q.finished){if(now>=(q.nextAt||Infinity))gaMobaKnowledgeNext();return;}
+  if(now>=(q.endsAt||Infinity)){
     GARENA.mobaKnowledgeStreak=GARENA.mobaKnowledgeStreak||{red:0,blue:0};
     ["red","blue"].forEach(team=>{if(!q.answeredTeams[team])GARENA.mobaKnowledgeStreak[team]=0;});
-    q.finished=true;q.reveal=true;q.lastResult="本題時間到，正確答案是 "+q.correct;q.nextAtTick=tick+6;Object.values(GARENA.fighters).forEach(f=>{f.quizChargeT=0;f.quizChargeKey="";});garenaLog("⏰ "+q.lastResult+"；未完成隊伍的 Combo 中斷");garenaPushLive(true);return;
+    q.finished=true;q.reveal=true;q.lastResult="本題時間到，正確答案是 "+q.correct;q.nextAt=now+3000;q.nextAtTick=tick+6;Object.values(GARENA.fighters).forEach(f=>{gaMobaQuizResetCharge(f);});garenaLog("⏰ "+q.lastResult+"；未完成隊伍的 Combo 中斷");garenaPushLive(true);return;
   }
-  const need=6; // 每拍 0.5 秒，6 拍 = 3 秒集氣
+  if(now<(q.startsAt||0))return;
+  const need=6; // 視覺仍用 0～6 格；實際固定連續站滿 3000ms，不受戰鬥加速影響
   fs.forEach(f=>{
-    if(f.ko||f.entering||(f.frozenT||0)>0||q.answeredTeams[f.team]){f.quizChargeT=0;f.quizChargeKey="";return;}
+    if(q.finished)return;
+    if(f.ko||f.entering||f.autoPilot||(stu(f.sid)||{}).isMobaAI||(f.frozenT||0)>0||now<(q.freezeUntilAt?.[f.team]||0)||q.answeredTeams[f.team]){gaMobaQuizResetCharge(f);return;}
     const z=gaMobaQuizZoneAt(f),wrong=q.wrong[f.team]||[];
-    if(!z||wrong.includes(z.answer)){f.quizChargeT=0;f.quizChargeKey="";return;}
-    const key=f.team+":"+z.answer;if(f.quizChargeKey!==key){f.quizChargeKey=key;f.quizChargeT=0;}
-    f.quizChargeT=(f.quizChargeT||0)+1;
+    if(!z||wrong.includes(z.answer)){gaMobaQuizResetCharge(f);return;}
+    const key=f.team+":"+z.answer;if(f.quizChargeKey!==key){f.quizChargeKey=key;f.quizChargeT=0;f.quizChargeAt=now;}
+    f.quizChargeT=Math.min(6,(now-f.quizChargeAt)/500);
     if(f.quizChargeT<need)return;
-    f.quizChargeT=0;f.quizChargeKey="";
+    gaMobaQuizResetCharge(f);
     const teamName=f.team==="red"?"紅隊":"藍隊",name=((stu(f.sid)||{}).name)||"英雄";
     if(z.answer===q.correct){
       q.answeredTeams[f.team]=true;
@@ -389,35 +396,36 @@ function gaMobaKnowledgeTick(fs){
       GARENA.mobaKnowledgeBestStreak[f.team]=Math.max(GARENA.mobaKnowledgeBestStreak[f.team]||0,streak);
       GARENA.mobaKnowledgeScore[f.team]=(GARENA.mobaKnowledgeScore[f.team]||0)+points;
       f.quizCorrect=(f.quizCorrect||0)+1;f.quizPoints=(f.quizPoints||0)+points;
-      q.lastResult=teamName+"由 "+name+" 答對，Combo ×"+streak+" 得 "+points+" 分！";
+      q.finished=true;q.reveal=true;q.nextAt=now+3000;q.nextAtTick=tick+6;
+      Object.values(GARENA.fighters).forEach(gaMobaQuizResetCharge);
+      q.lastResult=teamName+"由 "+name+" 答對，Combo ×"+streak+" 得 "+points+" 分！3 秒後換題";
       garenaLog("📚 "+q.lastResult);comicPop("COMBO ×"+streak+" +"+points+"！","boom",f.team==="red"?"#ff6666":"#62a5ff",'[data-gfighter="'+f.sid+'"]');skillFxPlay(streak>=5?"lightning":"holy",'[data-gfighter="'+f.sid+'"]');
     }
     else{
       if(!q.wrong[f.team].includes(z.answer))q.wrong[f.team].push(z.answer);
       GARENA.mobaKnowledgeStreak=GARENA.mobaKnowledgeStreak||{red:0,blue:0};GARENA.mobaKnowledgeStreak[f.team]=0;
-      q.freezeUntil[f.team]=(GARENA.ticks||0)+10;Object.values(GARENA.fighters).filter(o=>o.team===f.team&&!o.ko).forEach(o=>{o.frozenT=Math.max(o.frozenT||0,10);o.quizChargeT=0;o.quizChargeKey="";});q.lastResult=teamName+"選 "+z.answer+" 答錯，全隊凍結 5 秒，Combo 中斷！";garenaLog("🧊 "+q.lastResult);comicPop("答錯！COMBO 歸零","boom","#79d7ff",'[data-gfighter="'+f.sid+'"]');
+      q.freezeUntilAt=q.freezeUntilAt||{};q.freezeUntilAt[f.team]=now+5000;q.freezeUntil[f.team]=(GARENA.ticks||0)+10;Object.values(GARENA.fighters).filter(o=>o.team===f.team&&!o.ko).forEach(o=>{o.frozenT=Math.max(o.frozenT||0,1);gaMobaQuizResetCharge(o);});q.lastResult=teamName+"選 "+z.answer+" 答錯，全隊凍結 5 秒，Combo 中斷！";garenaLog("🧊 "+q.lastResult);comicPop("答錯！COMBO 歸零","boom","#79d7ff",'[data-gfighter="'+f.sid+'"]');
     }
     garenaRenderField();garenaPushLive(true);
   });
-  if(q.answeredTeams.red&&q.answeredTeams.blue&&!q.finished){q.finished=true;q.reveal=true;q.nextAtTick=tick+6;q.lastResult=(q.lastResult?q.lastResult+"　":"")+"兩隊完成，3 秒後自動下一題";garenaLog("📚 兩隊皆完成本題，準備自動抽下一題");garenaPushLive(true);}
 }
 
 function gaMobaKnowledgeNext(){
   const bank=GARENA.mobaKnowledgeBank;if(!bank||!bank.row||!bank.row.qs||!bank.row.qs.length)return;
   if(!bank.order.length){bank.order=bank.row.qs.map((_,i)=>i);for(let i=bank.order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bank.order[i],bank.order[j]]=[bank.order[j],bank.order[i]];}if(bank.order.length>1&&bank.order[0]===bank.last)[bank.order[0],bank.order[1]]=[bank.order[1],bank.order[0]];}
   const index=bank.order.shift();bank.last=index;bank.round=(bank.round||0)+1;const p=bankQuestionPayload(bank.row,index);if(!p)return;
-  GARENA.mobaQuiz={active:true,id:"MQ"+Date.now(),round:bank.round,prompt:p.prompt,originalPrompt:p.originalPrompt||p.prompt,visualSvg:quizGeometrySvgSafe(p.visualSvg),options:p.options,questionImage:p.questionImage||"",optionImages:(p.optionImages||[]).slice(0,4),correct:p.correct,wrong:{red:[],blue:[]},answeredTeams:{red:false,blue:false},freezeUntil:{red:0,blue:0},lastResult:"",bankRef:p.bankRef,roundEndsTick:(GARENA.ticks||0)+(bank.seconds||45)*2,finished:false,reveal:false};
-  Object.values(GARENA.fighters||{}).forEach(f=>{f.quizChargeT=0;f.quizChargeKey="";});garenaLog("📚 第 "+bank.round+" 題："+p.prompt);garenaPushLive(true);
+  GARENA.mobaQuiz={active:true,id:"MQ"+Date.now()+"-"+bank.round,round:bank.round,prompt:p.prompt,originalPrompt:p.originalPrompt||p.prompt,visualSvg:quizGeometrySvgSafe(p.visualSvg),options:p.options,questionImage:p.questionImage||"",optionImages:(p.optionImages||[]).slice(0,4),correct:p.correct,wrong:{red:[],blue:[]},answeredTeams:{red:false,blue:false},freezeUntil:{red:0,blue:0},lastResult:"",bankRef:p.bankRef,startsAt:gaMobaQuizNow()+3000,endsAt:gaMobaQuizNow()+3000+(bank.seconds||45)*1000,freezeUntilAt:{red:0,blue:0},roundEndsTick:(GARENA.ticks||0)+(bank.seconds||45)*2,finished:false,reveal:false};
+  Object.values(GARENA.fighters||{}).forEach(f=>{gaMobaQuizResetCharge(f);});garenaLog("📚 第 "+bank.round+" 題："+p.prompt);garenaPushLive(true);
   // 每題可能有不同高度的題目圖片；換題時重算可用空間，讓戰場永遠使用剩餘畫面的最大比例。
   GARENA._els={};render();requestAnimationFrame(garenaRenderField);
 }
 
-function gaMobaKnowledgeStartBank(row,seconds){GARENA.mobaKnowledgeBank={row,seconds:Math.max(20,Math.min(90,Number(seconds)||45)),order:[],last:-1,round:0};gaMobaKnowledgeNext();GARENA._els={};render();requestAnimationFrame(garenaRenderField);toast("📚 題庫已鎖定；每題結束後會自動隨機下一題");}
+function gaMobaKnowledgeStartBank(row,seconds){GARENA.mobaKnowledgeBank={row,seconds:Math.max(10,Math.min(180,Number(seconds)||45)),order:[],last:-1,round:0};gaMobaKnowledgeNext();GARENA._els={};render();requestAnimationFrame(garenaRenderField);toast("📚 題庫已鎖定；每題結束後會自動隨機下一題");}
 
 function openMobaKnowledgePicker(){
   const bank=lessonQuestionBank();if(!bank.length){toast("尚無可用題庫，請先到教師題庫匯入",true);return;}
   const opts=bank.map((r,i)=>'<option value="'+i+'">'+esc((r.custom?"【自訂】":"")+(r.unit||r.chap||"")+"｜"+(r.topic||""))+'</option>').join("");
-  modalHost.innerHTML='<div class="overlay"><div class="modal" style="max-width:680px"><h3>📚 知識攻塔・選擇本場題庫</h3><label>單元／主題<select id="mobaQuizUnit">'+opts+'</select></label><label style="margin-top:10px">每題時間<select id="mobaQuizSeconds"><option value="30">30 秒</option><option value="45" selected>45 秒</option><option value="60">60 秒</option><option value="90">90 秒</option></select></label><div id="mobaQuizPreview" class="lesson-bank-status" style="margin-top:10px"></div><div class="mini" style="margin-top:8px">只需選擇一次：系統會隨機抽未出過的題目；本主題全部用完後自動重新洗牌。</div><div class="inline-form" style="justify-content:center;margin-top:12px"><button class="btn gold" id="mobaQuizGo">鎖定題庫並開始</button><button class="btn" id="mobaQuizCancel">取消</button></div></div></div>';
+  modalHost.innerHTML='<div class="overlay"><div class="modal" style="max-width:680px"><h3>📚 知識攻塔・選擇本場題庫</h3><label>單元／主題<select id="mobaQuizUnit">'+opts+'</select></label><label style="margin-top:10px">每題時間<select id="mobaQuizSeconds"><option value="10">10 秒</option><option value="20">20 秒</option><option value="30">30 秒</option><option value="45" selected>45 秒</option><option value="60">60 秒</option><option value="90">90 秒</option><option value="120">120 秒</option><option value="180">180 秒</option></select></label><div id="mobaQuizPreview" class="lesson-bank-status" style="margin-top:10px"></div><div class="mini" style="margin-top:8px">只需選擇一次：系統會隨機抽未出過的題目；本主題全部用完後自動重新洗牌。</div><div class="inline-form" style="justify-content:center;margin-top:12px"><button class="btn gold" id="mobaQuizGo">鎖定題庫並開始</button><button class="btn" id="mobaQuizCancel">取消</button></div></div></div>';
   const unit=document.getElementById("mobaQuizUnit"),preview=document.getElementById("mobaQuizPreview"),refresh=()=>{const row=bank[Number(unit.value)||0];preview.textContent=(row.unit||row.chap||"")+"｜"+(row.topic||"")+"・共 "+((row.qs||[]).length)+" 題";};unit.onchange=refresh;refresh();
   document.getElementById("mobaQuizGo").onclick=()=>{const row=bank[Number(unit.value)||0],seconds=Number(document.getElementById("mobaQuizSeconds").value)||45;modalHost.innerHTML="";gaMobaKnowledgeStartBank(row,seconds);};document.getElementById("mobaQuizCancel").onclick=()=>modalHost.innerHTML="";
 }
@@ -478,13 +486,12 @@ function gaMobaRespawnTick(fs){
     if(!(f.respawnT>0)) f.respawnT=12;
     if(--f.respawnT>0) continue;
     const p=gaMobaOpenSpawn(f.team,f.sid);if(!p){f.respawnT=1;continue;}
-    f.x=p[0];f.y=p[1];f.spawnX=f.team==="red"?-2:GARENA.W+1;f.spawnY=p[1];f.entering=true;f.enterDelay=0;
-    f.hp=Math.max(1,Math.round(f.max*.7));f.ko=false;f.frozenT=0;f.chillT=0;f.silenceT=0;f.stealth=0;f.atb=50;
+    f.x=p[0];f.y=p[1];f.spawnX=p[0];f.spawnY=p[1];f.entering=false;f.enterDelay=0;f.respawnT=0;f._respawnFresh=true;
+    f.hp=Math.max(1,Math.round(f.max*.7));f.ko=false;f.frozenT=0;f.chillT=0;f.silenceT=0;f.stealth=0;f.atb=0;
+    gaMobaQuizResetCharge(f);delete GARENA.cmdQueue[f.sid];delete (GARENA.heldMoves||{})[f.sid];delete (GARENA.heldMoveUntil||{})[f.sid];
     garenaLog("✨ "+((stu(f.sid)||{}).name||"英雄")+" 已在基地復活！");
-    skillFxPlay("revive",'[data-gfighter="'+f.sid+'"]');
     garenaRenderField();
-    const tm=setTimeout(()=>{if(!GARENA.active||GARENA.over)return;f.entering=false;garenaRenderField();},520);
-    GARENA._entranceTimers=GARENA._entranceTimers||[];GARENA._entranceTimers.push(tm);
+    skillFxPlay("revive",'[data-gfighter="'+f.sid+'"]');
   }
 }
 
@@ -521,7 +528,7 @@ function gaMobaAttackStructure(f,att,forcedSkillId){
   const sk=forcedSkillId&&skillDef(att.job,forcedSkillId), mult=sk&&sk.kind==="atk"?Math.max(1,Math.min(3.2,+skillVal(att,forcedSkillId)||1.35)):1;
   const rawDmg=Math.max(3,Math.round((7+totalStats(att).atk*.32+totalStats(att).int*.18)*mult));
   const dmg=q.type==="core"?1:rawDmg;                       // 核心城堡只看成功攻擊次數，每次固定扣 1 點耐久
-  q.hp=Math.max(0,q.hp-dmg);f.dmgDealt=(f.dmgDealt||0)+dmg;f.cd=gaAtkCd(att)*(forcedSkillId?1.12:1);
+  q.hp=Math.max(0,q.hp-dmg);f.dmgDealt=(f.dmgDealt||0)+dmg;gaStartAttackCooldown(f,gaAtkCd(att)*(forcedSkillId?1.12:1));
   gaSwing(f.sid); skillFxPlay(forcedSkillId||"bash",'[data-gfighter="'+f.sid+'"]');
   garenaLog((sk?sk.icon+" ":"⚔️ ")+att.name+" "+(q.type==="core"?"命中【"+q.name+"】，城堡耐久 -1（剩 "+q.hp+"/"+q.max+" 擊）":"對【"+q.name+"】造成 "+dmg+" 傷害！"));
   if(q.hp<=0){q.alive=false;garenaLog("💥 "+q.name+" 已被摧毀！");comicPop(q.type==="core"?"核心崩解！":"防禦塔摧毀！","boom",q.team==="red"?"#e05252":"#5285e0",null);if(q.type==="core")garenaEnd(f.team);}
@@ -612,7 +619,12 @@ function gaLineBlocked(a,b){
   return path(true)&&path(false);
 }
 
-function gaAtkCd(att){ const x=Math.max(0,Math.min(190,totalStats(att).agi-10));return 3-x/190*1.5; }
+function gaAtkCd(att){ const x=Math.max(0,Math.min(190,totalStats(att).agi-10));return (3-x/190*1.5)*(1-pixelSetEffects(att).tempo); }
+function gaStartAttackCooldown(f,ticks){f.cd=Math.max(0,Number(ticks)||0);f.atkCdTotal=f.cd;}
+function gaAttackCooldownInfo(f){
+  const ticks=Math.max(0,Number(f&&f.cd)||0),total=Math.max(ticks,Number(f&&f.atkCdTotal)||0),step=Math.max(140,Math.round(500/(GARENA.speed||1)))/1000;
+  return {left:Math.ceil(ticks)*step,total:Math.ceil(total)*step,pct:total?Math.min(100,ticks/total*100):0};
+}
 
 function gaActionGain(s,f){
   const agi=Math.max(0,(totalStats(s).agi||0)-10);
@@ -785,7 +797,7 @@ function garenaStart(redIds, blueIds, aiMode, mode){
         enterIndex++;
         const startX=mobaSpot?mobaSpot[0]:x;
         GARENA.fighters[sid] = { sid, team, x:startX, y, face:(team==="red"?"right":"left"),
-          spawnX:team==="red"?-2:GARENA.W+1, spawnY, entering:true, enterDelay:queueDelay,
+          spawnX:mobaSpot?startX:(team==="red"?-2:GARENA.W+1), spawnY, entering:!mobaSpot, enterDelay:mobaSpot?0:queueDelay,
           hp:max, max, ko:false, ultUsed:false, cd:0, atb:0, // 隱藏行動條：100 才取得一次行動
           dmgDealt:0, kills:0, ultCount:0, healDone:0, tankDmg:0,   // 合作貢獻統計(輸出／治療／守護)
           stealth:0, tauntBy:null, tauntT:0, jobReadyAt:0, jobCdTotal:1, advUltReadyAt:0, advUltCdTotal:1 }; // 職業技／終極技改採實際秒數冷卻
@@ -855,6 +867,7 @@ function garenaStart(redIds, blueIds, aiMode, mode){
   render();
   // DOM 畫好後才依序開門入場；每次只更新要進場的角色，避免多人戰鬥時卡頓。
   Object.values(GARENA.fighters).forEach(f=>{
+    if(!f.entering)return;
     const tm=setTimeout(()=>{ if(!GARENA.active || GARENA.over) return; f.entering=false; garenaRenderField(); }, 90+(f.enterDelay||0));
     GARENA._entranceTimers.push(tm);
   });
@@ -945,8 +958,8 @@ function garenaAiStep(fs){
     const st = stu(f.sid); if(!st) continue;
     const range = weaponRange(st);
     const en = allFs.filter(o=>o.team!==f.team && !o.ko && (o.stealth||0)<=0);
-    // 知識攻城 AI 示範：每隊只派一名答題手前往正確領域，其餘成員維持護送與戰鬥。
-    const kq=GARENA.mobaQuiz;if(gaIsKnowledgeMoba()&&kq&&kq.active&&!kq.finished&&!kq.answeredTeams[f.team]&&(f.frozenT||0)<=0){const runner=allFs.filter(o=>o.team===f.team&&!o.ko).sort((a,b)=>String(a.sid).localeCompare(String(b.sid)))[0];if(runner&&runner.sid===f.sid){const goal=gaMobaQuizZones(f.team).find(z=>z.answer===kq.correct);if(goal&&f.x===goal.x&&f.y===goal.y)continue;const dir=goal&&gaMobaObjectiveDir(f,goal,0);if(dir){GARENA.cmdQueue[f.sid]={sid:f.sid,move:dir};continue;}}}
+    // AI 只護送與戰鬥，不讀取答案，也不代替學生作答。
+
     // 知識攻塔的護送者也必須先離開出生區再交戰，避免遠程角色出生後看似站樁攻擊。
     if(gaIsKnowledgeMoba()&&((f.team==="red"&&f.x<4)||(f.team==="blue"&&f.x>GARENA.W-5))){const dir=gaMobaObjectiveDir(f,gaMobaLaneWaypoint(f),0);if(dir){GARENA.cmdQueue[f.sid]={sid:f.sid,move:dir};continue;}}
     /* 牧師先照顧隊伍再追敵：主動靠近血量最低的隊友，進入兩格後立刻使用已裝備的群療。
@@ -1282,8 +1295,8 @@ function garenaTick(){
       else if(f.autoPilot&&Date.now()>=(f.autoUnlockAt||0)){f.autoPilot=false;f.autoUnlockAt=0;garenaLog("🎮 "+((stu(f.sid)||{}).name||"角色")+" 返回手動操作");}
       garenaPushLive(true);
     }
-    if(f.frozenT>0){                                       // 🧊 凍結:完全無法行動(移動/攻擊/技能)
-      f.frozenT--;
+    if(f.frozenT>0||(gaIsKnowledgeMoba()&&Date.now()<(GARENA.mobaQuiz?.freezeUntilAt?.[f.team]||0))){                                       // 🧊 凍結:完全無法行動(移動/攻擊/技能)
+      f.frozenT=Math.max(0,(f.frozenT||0)-1);
       delete GARENA.cmdQueue[f.sid];
       continue;
     }
@@ -1634,7 +1647,7 @@ function garenaAttack(f, isUlt, forcedSkillId){
   if(!isUlt && (f.blindT||0)>0 && Math.random()*100 < 55){    // 💨 致盲:攻擊55%落空
     garenaLog("💨 "+att.name+" 在煙霧中揮空了!");
     garenaFx(f.sid, "miss");
-    f.cd = gaAtkCd(att) * (f.chillT>0?1.5:1) * ((f.bAgiT||0)>0?0.85:1);
+    gaStartAttackCooldown(f,gaAtkCd(att) * (f.chillT>0?1.5:1) * ((f.bAgiT||0)>0?0.85:1));
     return true;
   }
   if(f.stealth>0){ f.stealth = 0; }                          // 攻擊破隱
@@ -1708,7 +1721,7 @@ function garenaAttack(f, isUlt, forcedSkillId){
     garenaLog(dfd.name+" 靈巧地閃過了 "+att.name+" 的攻擊!");
     comicPop("MISS!","cloud","#4a90d9", '[data-gfighter="'+tgt.sid+'"]');
     gaRogueCounterStep(att,dfd,f,tgt);
-    f.cd = Math.min(2, gaAtkCd(att));                      // 撲空小冷卻(高敏更快恢復)
+    gaStartAttackCooldown(f,Math.min(2, gaAtkCd(att)));                      // 撲空小冷卻(高敏更快恢復)
     return true;
   }
   let dmg = Math.max(1, Math.round(base * mult * advancementDamageMult(att) * arenaDefMult(dfd) * advancementWardMult(dfd) * GA_PACE * gaFrenzyDmg() * (f.underdogM||1) * rangeDmgMult(att, garenaDist(f, tgt))));
@@ -1748,7 +1761,7 @@ function garenaAttack(f, isUlt, forcedSkillId){
     comicPop("🐯 白虎疾步!","cloud","#e8e8e8",'[data-gfighter="'+tgt.sid+'"]');
     garenaLog("🐯 "+dfd.name+" 的白虎疾步閃避了攻擊!");
     garenaFx(tgt.sid, "miss");
-    f.cd = gaAtkCd(att) * (f.chillT>0?1.5:1) * ((f.bAgiT||0)>0?0.85:1);
+    gaStartAttackCooldown(f,gaAtkCd(att) * (f.chillT>0?1.5:1) * ((f.bAgiT||0)>0?0.85:1));
     return true;
   }
   if(!isUlt && dfd.petId===4 && Math.random()*100 < 12){       // 玄武堅甲:減傷50%
@@ -2068,7 +2081,7 @@ function garenaAttack(f, isUlt, forcedSkillId){
     allies.filter(o=>!o.ko&&garenaDist(f,o)<=3).forEach(o=>{const h=Math.min(9,o.max-o.hp);o.hp+=h;o.chillT=0;o.frozenT=0;o.silenceT=0;if(h){f.healDone=(f.healDone||0)+h;dmgPop(h,'[data-gfighter="'+o.sid+'"]','heal');}}); gaPlaceLegendField(f,'life_domain',9); garenaLog('🙏 永恆祈禱追加：範圍隊友淨化、回復，並留下不滅生命領域！');
   }
   }
-  f.cd = gaAtkCd(att) * advancementTempoMult(att) * (f.chillT>0 ? 1.5 : 1) * ((f.bAgiT||0)>0 ? 0.85 : 1);   // 敏捷影響攻速;冰緩更慢;疾風令更快
+  gaStartAttackCooldown(f,gaAtkCd(att) * advancementTempoMult(att) * (f.chillT>0 ? 1.5 : 1) * ((f.bAgiT||0)>0 ? 0.85 : 1));   // 敏捷影響攻速;冰緩更慢;疾風令更快
   if(advancementBonus(att,'tempo')>0) advancementFx(att,'tempo','[data-gfighter="'+f.sid+'"]');
   // 💚 支援技能:攻擊動作後獨立觸發(治療/群療/光環)
   if(on && !f.ko){
@@ -2320,7 +2333,7 @@ function garenaMvpHtml(){
 
 function garenaPushLive(force){
   if(!CLOUD.on()) return;
-  const fs = Object.values(GARENA.fighters).map(f=>{const jc=fighterCooldownInfo(f,'job');return {sid:f.sid,x:f.x,y:f.y,team:f.team,hp:f.hp,max:f.max,ko:f.ko,respawnT:f.respawnT||0,ultUsed:f.ultUsed,cd:f.cd,st:f.stealth||0,jc:+jc.left.toFixed(2),jct:+jc.total.toFixed(2),jcp:+jc.pct.toFixed(1),tt:f.tauntT||0,qc:f.quizChargeT||0,qk:f.quizChargeKey||"",ap:!!f.autoPilot,au:Math.max(0,Math.ceil(((f.autoUnlockAt||0)-Date.now())/1000)),sc:runtimeCooldownSnapshot('ga',f.sid)};});
+  const fs = Object.values(GARENA.fighters).map(f=>{const jc=fighterCooldownInfo(f,'job'),ac=gaAttackCooldownInfo(f);return {sid:f.sid,x:f.x,y:f.y,team:f.team,hp:f.hp,max:f.max,ko:f.ko,respawnT:f.respawnT||0,ultUsed:f.ultUsed,cd:f.cd,ac:ac.left,act:ac.total,acp:ac.pct,st:f.stealth||0,jc:+jc.left.toFixed(2),jct:+jc.total.toFixed(2),jcp:+jc.pct.toFixed(1),tt:f.tauntT||0,qc:f.quizChargeT||0,qk:f.quizChargeKey||"",ap:!!f.autoPilot,au:Math.max(0,Math.ceil(((f.autoUnlockAt||0)-Date.now())/1000)),sc:runtimeCooldownSnapshot('ga',f.sid)};});
   const structures=(GARENA.structures||[]).map(q=>({id:q.id,team:q.team,type:q.type,x:q.x,y:q.y,hp:q.hp,max:q.max,alive:q.alive!==false}));
   const snap = JSON.stringify(fs) + "|" + JSON.stringify(structures) + "|" + JSON.stringify(GARENA.mobaQuiz||null) + "|" + (GARENA.over?1:0);
   const now = Date.now();
@@ -2329,7 +2342,7 @@ function garenaPushLive(force){
   if(!force && now-(GARENA._lastPush||0) < minPush) return;                           // 多人戰降低 Firestore 寫入壓力
   GARENA._lastSnap = snap; GARENA._lastPush = now;
   const remaining=Math.max(0,GARENA.DURATION-(GARENA.elapsed||0));
-  const mq=gaIsKnowledgeMoba()&&GARENA.mobaQuiz?{active:true,round:GARENA.mobaQuiz.round,prompt:GARENA.mobaQuiz.prompt,visualSvg:quizGeometrySvgSafe(GARENA.mobaQuiz.visualSvg),options:GARENA.mobaQuiz.options,questionImage:GARENA.mobaQuiz.questionImage||"",optionImages:GARENA.mobaQuiz.optionImages||[],correct:GARENA.mobaQuiz.correct||"",reveal:!!GARENA.mobaQuiz.reveal,finished:!!GARENA.mobaQuiz.finished,lastResult:GARENA.mobaQuiz.lastResult||"",score:GARENA.mobaKnowledgeScore||{red:0,blue:0},streak:GARENA.mobaKnowledgeStreak||{red:0,blue:0},wrong:GARENA.mobaQuiz.wrong,answeredTeams:GARENA.mobaQuiz.answeredTeams,endsIn:Math.max(0,Math.ceil((((GARENA.mobaQuiz.finished?GARENA.mobaQuiz.nextAtTick:GARENA.mobaQuiz.roundEndsTick)||0)-(GARENA.ticks||0))*.5))}:null;
+  const mq=gaIsKnowledgeMoba()&&GARENA.mobaQuiz?{active:true,id:GARENA.mobaQuiz.id,round:GARENA.mobaQuiz.round,prompt:GARENA.mobaQuiz.prompt,visualSvg:quizGeometrySvgSafe(GARENA.mobaQuiz.visualSvg),options:GARENA.mobaQuiz.options,questionImage:GARENA.mobaQuiz.questionImage||"",optionImages:GARENA.mobaQuiz.optionImages||[],correct:GARENA.mobaQuiz.correct||"",reveal:!!GARENA.mobaQuiz.reveal,finished:!!GARENA.mobaQuiz.finished,lastResult:GARENA.mobaQuiz.lastResult||"",score:GARENA.mobaKnowledgeScore||{red:0,blue:0},streak:GARENA.mobaKnowledgeStreak||{red:0,blue:0},wrong:GARENA.mobaQuiz.wrong,answeredTeams:GARENA.mobaQuiz.answeredTeams,endsIn:gaMobaQuizSeconds(GARENA.mobaQuiz)}:null;
   const W = { active:GARENA.active && !GARENA.over, over:GARENA.over, winTeam:GARENA.winTeam||null,
     W:GARENA.W, H:GARENA.H, mode:GARENA.mode||"battle", mapKey:GARENA.mapKey||"plain", fighters:fs, structures,
     mobaQuiz:mq,
@@ -2561,14 +2574,14 @@ function mobaSimState(sid){
   const roster=mobaSimRosterData(),s=stu(sid),active=!!(GARENA.active&&gaIsMoba()),f=active?GARENA.fighters[sid]:null;
   const skills=s?normalizeSkillLoadout(s).map(id=>skillDef(s.job,id)).filter(Boolean).slice(0,5).map(sk=>{const ci=skillCooldownInfo('ga',sid,sk.id);return {id:sk.id,icon:sk.icon,name:sk.name,cd:ci.left,total:ci.total,pct:ci.pct};}):[];
   const js=s&&jobSkillAvailable(s)?(JOB_SKILL[s.job]||null):null;
-  const jobCi=f?fighterCooldownInfo(f,'job'):{left:0,total:0,pct:0};
+  const jobCi=f?fighterCooldownInfo(f,'job'):{left:0,total:0,pct:0},atkCi=gaAttackCooldownInfo(f);
   return {
     roster,active,over:!!GARENA.over,paused:!!GARENA.paused,valid:!!f,
     W:GARENA.W||18,H:GARENA.H||9,mode:GARENA.mode||"moba",remaining:Math.max(0,Math.ceil((GARENA.DURATION||300)-(GARENA.elapsed||0))),
-    me:f?{sid:f.sid,name:s?s.name:"?",team:f.team,hp:Math.max(0,Math.round(f.hp)),max:Math.max(1,Math.round(f.max)),ko:!!f.ko,respawnT:f.respawnT||0,x:f.x,y:f.y,atb:Math.max(0,Math.min(100,Math.round(f.atb||0))),atkCd:Math.max(0,f.cd||0),jobCd:jobCi.left,jobCdTotal:jobCi.total,jobCdPct:jobCi.pct,range:s?weaponRange(s):1,quizCharge:Math.min(100,Math.round((f.quizChargeT||0)/6*100)),autoPilot:!!f.autoPilot,autoUnlock:Math.max(0,Math.ceil(((f.autoUnlockAt||0)-Date.now())/1000))}:null,
+    me:f?{sid:f.sid,name:s?s.name:"?",team:f.team,hp:Math.max(0,Math.round(f.hp)),max:Math.max(1,Math.round(f.max)),ko:!!f.ko,respawnT:f.respawnT||0,x:f.x,y:f.y,atb:Math.max(0,Math.min(100,Math.round(f.atb||0))),atkCd:atkCi.left,atkCdTotal:atkCi.total,atkCdPct:atkCi.pct,jobCd:jobCi.left,jobCdTotal:jobCi.total,jobCdPct:jobCi.pct,range:s?weaponRange(s):1,quizCharge:Math.min(100,Math.round((f.quizChargeT||0)/6*100)),autoPilot:!!f.autoPilot,autoUnlock:Math.max(0,Math.ceil(((f.autoUnlockAt||0)-Date.now())/1000))}:null,
     fighters:active?Object.values(GARENA.fighters).map(q=>({sid:q.sid,name:(stu(q.sid)||{}).name||"?",team:q.team,x:q.x,y:q.y,ko:!!q.ko})):[],
     structures:active?(GARENA.structures||[]).map(q=>({team:q.team,type:q.type,x:q.x,y:q.y,hp:q.hp,max:q.max,alive:q.alive!==false})):[],
-    mobaQuiz:GARENA.mobaQuiz?{round:GARENA.mobaQuiz.round,prompt:GARENA.mobaQuiz.prompt,visualSvg:quizGeometrySvgSafe(GARENA.mobaQuiz.visualSvg),options:GARENA.mobaQuiz.options,questionImage:GARENA.mobaQuiz.questionImage||"",optionImages:GARENA.mobaQuiz.optionImages||[],wrong:GARENA.mobaQuiz.wrong,finished:!!GARENA.mobaQuiz.finished,score:GARENA.mobaKnowledgeScore||{red:0,blue:0},streak:GARENA.mobaKnowledgeStreak||{red:0,blue:0},endsIn:Math.max(0,Math.ceil(((((GARENA.mobaQuiz.finished?GARENA.mobaQuiz.nextAtTick:GARENA.mobaQuiz.roundEndsTick)||0)-(GARENA.ticks||0))*.5)))}:null,
+    mobaQuiz:GARENA.mobaQuiz?{round:GARENA.mobaQuiz.round,prompt:GARENA.mobaQuiz.prompt,visualSvg:quizGeometrySvgSafe(GARENA.mobaQuiz.visualSvg),options:GARENA.mobaQuiz.options,questionImage:GARENA.mobaQuiz.questionImage||"",optionImages:GARENA.mobaQuiz.optionImages||[],wrong:GARENA.mobaQuiz.wrong,finished:!!GARENA.mobaQuiz.finished,score:GARENA.mobaKnowledgeScore||{red:0,blue:0},streak:GARENA.mobaKnowledgeStreak||{red:0,blue:0},endsIn:gaMobaQuizSeconds(GARENA.mobaQuiz)}:null,
     skills,jobSkill:js?{icon:js.icon,name:js.name,desc:js.desc||""}:null
   };
 }

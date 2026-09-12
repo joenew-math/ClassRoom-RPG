@@ -3,43 +3,8 @@
  * 請保留為一般 script，不要直接改成 type=module，避免破壞既有 inline handlers。
  */
 "use strict";
-const $=id=>document.getElementById(id);
-const rand=n=>(Math.random()*n)|0;
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
-const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 
 /* 固定卡牌、寶石與內建補充題由 math-dungeon-data.js 預先載入。 */
-/* 依稀有度權重抽卡（luck 提高稀有度機率）*/
-function rollCard(pool,luck){
-  const bag=[];
-  for(const id of pool){
-    const r=CARDS[id].r||'C';
-    let w=RARITY[r].w;
-    if(luck){ if(r==='L')w*=3; else if(r==='E')w*=2; else if(r==='C')w*=0.5; }
-    for(let i=0;i<Math.max(1,Math.round(w));i++) bag.push(id);
-  }
-  return bag[rand(bag.length)];
-}
-/* 鑲嵌後的實際效果 */
-function effCard(o){
-  if(!o||!CARDS[o.id]) return {n:'—',t:'',c:0,r:'C'};   // 失效卡的安全預設
-  const b=CARDS[o.id], c={...b};
-  switch(o.gem){
-    case 'spinach': c.dmg=Math.round((c.dmg||0)*1.4); break;
-    case 'candel':  c.all=1; break;
-    case 'empty':   c.c=Math.max(0,c.c-1); break;
-    case 'bracer':  c.hits=(c.hits||1)+1; break;
-    case 'hollow':  c.block=(c.block||0)+8; break;
-    case 'dup':     c.back=1; break;
-    case 'wings':   c.draw=(c.draw||0)+1; break;
-    case 'armor':   c.block=(c.block||0)+6; break;
-  }
-  if(o.perfect&&c.dmg) c.dmg+=3;      // 因式分解答對的完美刻痕
-  return c;
-}
-function cardCostText(c){return c.wild?'✦ '+c.c:(c.c<0?'−'+Math.abs(c.c):String(c.c));}
-/* 每場戰鬥建立全新的牌物件並重新洗牌，避免上一次顯示狀態或固定順序滲入起手。 */
-function freshBattleDraw(){return shuffle(S.deck.filter(o=>o&&CARDS[o.id]).map(o=>({...o,_dealt:0})));}
 
 /* 地下城內建題型的課程單元索引。
    教師勾選課程目錄後，只追加相同「章節＋單元」的題目，不能只用冊別混抽。 */
@@ -4310,6 +4275,7 @@ function playFx(item,dur,done){
     setTimeout(()=>el.remove(),dur+700);
   };
   const col=RARITY[c.r||'C'].col;
+  if(window.DungeonCombatArt)DungeonCombatArt.playActorAttack(st,col,dur,rare,item.chain||1);
 
   const chainN=item.chain||1;
   // 投射物數量：基礎 + 命中次數 + 連擊加成，數量越多動畫自然越長
@@ -4478,7 +4444,7 @@ function playFx(item,dur,done){
   }
   shakeByChain(chainN);   // 連擊 3 起就開始晃，越高越劇烈
   // 連擊 5 起追加全畫面演出，10 與 15 再升級
-  if(chainN===2||chainN===4||chainN===5||chainN===6) cineCard(item.o,chainN);
+  if(chainN===2||chainN===4||chainN===6||(chainN===5&&!window.DungeonCombatArt)) cineCard(item.o,chainN);
   // 稀有卡疊加華麗層：衝擊波＋畫面閃光＋震動
   if(rare){
     const w=mkFx('fx-shock',{left:tx+'px',top:ty+'px',borderColor:col});
@@ -4630,71 +4596,6 @@ REGION_MONSTERS.flat().forEach(o=>{
     trait:o.battleType==='chaos'?'prime':o.battleType==='breaker'?'abs':null,
     roster:()=>[o.k,o.k].concat(Math.random()<.22?[o.k]:[])};
 });
-/* 牌組淨化：只保留真實存在的卡，並補齊欄位。
-   任何來源（存檔、匯入、連線）進來的牌組都必須先過這一關。 */
-const mkDeck=a=>a.map(id=>({id,gem:null}));
-/* ═══ 通用卡攜帶上限 ═══
-   通用卡能無視費用需求、維持連擊，帶太多會讓「接續費用」的核心機制失去意義。
-   限制最多 2 張：仍能解圍，但不能靠它硬接一整輪。 */
-const WILD_CAP=2;
-const isWild=id=>!!(CARDS[id]&&CARDS[id].wild);
-const wildCount=deck=>(deck||S.deck).filter(o=>o&&isWild(o.id)).length;
-const wildFull=()=>wildCount()>=WILD_CAP;
-/* 每副牌強制保留 0、1、2、3、4 費各至少一張，確保永遠能練完整五連。
-   萬用、負費、詛咒與暫時卡不算作該費用的核心卡。 */
-const REQUIRED_COSTS=[0,1,2,3,4];
-const REQUIRED_COST_FALLBACK={0:'knife',1:'wand',2:'whip',3:'axe',4:'bible'};
-function requiredCardCost(o){
-  if(!o||!CARDS[o.id])return null;
-  /* 牌組費用曲線看卡牌「原始費用」。空之書等寶石只改戰鬥實際消耗，
-     不應讓鑲嵌被誤判為刪掉最後一張該費用卡。 */
-  const c=CARDS[o.id],n=Number(c.c);
-  return c.wild||c.neg||c.CURSE||c.TEMP||!Number.isInteger(n)||n<0||n>4?null:n;
-}
-function deckCostCounts(deck){
-  const counts={0:0,1:0,2:0,3:0,4:0};
-  for(const o of (deck||[])){const c=requiredCardCost(o);if(c!==null)counts[c]++;}
-  return counts;
-}
-function missingDeckCosts(deck){const counts=deckCostCounts(deck);return REQUIRED_COSTS.filter(c=>!counts[c]);}
-function canRemoveDeckIndex(index,deck){
-  const src=deck||S.deck,o=src[index];if(!o||!CARDS[o.id]||effCard(o).EQUIP)return false;
-  return missingDeckCosts(src.filter((_,i)=>i!==index)).length===0;
-}
-function removableDeckIndexes(deck){const src=deck||S.deck;return src.map((_,i)=>i).filter(i=>canRemoveDeckIndex(i,src));}
-function fusionMissingCosts(i,j,result){
-  const next=S.deck.filter((_,idx)=>idx!==i&&idx!==j),counts=deckCostCounts(next);
-  let cost=null;
-  if(typeof result==='string'&&CARDS[result])cost=requiredCardCost({id:result,gem:null});
-  else if(result&&!result.wild&&Number.isInteger(Number(result.cost)))cost=Number(result.cost);
-  if(cost!==null&&cost>=0&&cost<=4)counts[cost]++;
-  return REQUIRED_COSTS.filter(c=>!counts[c]);
-}
-function sanitizeDeck(list,fallbackJob){
-  const out=[];
-  let dropped=0;
-  for(const o of (Array.isArray(list)?list:[])){
-    if(!o||typeof o!=='object'||!o.id||!CARDS[o.id]){ dropped++; continue; }
-    out.push({id:o.id, gem:(o.gem&&GEMS[o.gem])?o.gem:null, perfect:!!o.perfect});
-  }
-  if(dropped) console.warn('[牌組淨化] 移除 '+dropped+' 張失效卡');
-  // 舊存檔可能超過萬用卡上限 → 保留最前面的 2 張，其餘轉為同費用的一般卡
-  let wc=0, converted=0;
-  for(const o of out){
-    if(!isWild(o.id)) continue;
-    if(++wc<=WILD_CAP) continue;
-    o.id='wand'; converted++;                 // 換成 1 費攻擊卡，牌組張數不變
-  }
-  if(converted) console.warn('[牌組淨化] 超過萬用卡上限，'+converted+' 張已轉為一般卡');
-  const repaired=missingDeckCosts(out);     // 舊存檔或外部匯入缺費用 → 精準補足，不整副洗掉
-  for(const cost of repaired){const id=REQUIRED_COST_FALLBACK[cost];if(CARDS[id])out.push({id,gem:null});}
-  if(repaired.length)console.warn('[牌組淨化] 已補上必要費用：'+repaired.join('、')+' 費');
-  return out;
-}
-const S={hp:100,maxhp:100,lv:1,xp:0,xpNeed:3,
-  deck:mkDeck(['knife','knife','dagger','blank','clock','wand','wand','garlic','whip','imelda']),
-  gems:[],dmgMul:1,step:.35,handSize:5,armor:0,key:false,mana:6,tomes:0,handCap:5,chant:false,allChains:[],gold:0,ups:{},name:'',job:'',pot:{heal:1,elixir:0,freeze:0,firebomb:0,luck:0,medkit:0},luckChest:0,shrineUses:{},wrong:[],found:[],followers:[],monsterDex:[],monsterTraits:{},fusionBook:[],petCardCarry:[],petCardCarrySession:'',petCardSentSession:'',zone:0,cleared:-1,zoneBest:{},zoneProgress:{},meta:{souls:0,runs:0,totalQ:0,totalOk:0,perks:{}},extAbil:{}};
-
 /* ===================== 地圖 ===================== */
 const GEO=[
 "WWWWWWWWWWWWWWW","W.....WWW.....W","W.....WWW.....W","W.............W",

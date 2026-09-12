@@ -1,0 +1,24 @@
+/* Shared atlas renderer. No per-player image download, pixel decoding, RAF or timers. */
+"use strict";
+function pixelSetFit(s,slot,set){const id=s?.baseVariant||'male2',r={...(PIXEL_SET_ATLAS.fits[id]||PIXEL_SET_ATLAS.fits.male2)[slot]};
+ if(slot==='hat'&&set.job==='Mage')Object.assign(r,{x:21,y:-8,w:58,h:42});
+ if(slot==='hat'&&set.job==='Cleric')Object.assign(r,{x:24,y:5,w:52,h:29});
+ if(slot==='hat'&&set.job==='Rogue')Object.assign(r,{x:23,y:7,w:54,h:49});
+ if(slot==='weapon'&&set.job==='Rogue')Object.assign(r,{x:62,y:43,w:25,h:46});
+ if(slot==='weapon'&&['Mage','Cleric'].includes(set.job))Object.assign(r,{x:63,y:24,w:20,h:63});
+ const rec=PIXEL_SET_ATLAS.fits[id]||PIXEL_SET_ATLAS.fits.male2,d=rec.display;if(d){const sc=d.h/rec.base.h;r.x=d.x+(r.x-rec.base.x)*sc;r.y=d.y+(r.y-rec.base.y)*sc;r.w*=sc;r.h*=sc;}return r;
+}
+function pixelSetSprite(it,size){const set=pixelSetOf(it.pixelSet),data=PIXEL_SET_ATLAS.sets[set.atlas],b=data.pieces[it.type];return '<svg viewBox="'+[b.x,b.y,b.w,b.h].join(' ')+'" width="'+size+'" height="'+size+'" aria-label="'+it.name+'" style="image-rendering:pixelated"><image href="assets/pixel-sets/'+set.atlas+'-v1.webp" width="'+data.width+'" height="'+data.height+'"/></svg>';}
+function pixelSetLayer(s,it){const set=pixelSetOf(it.pixelSet);if(!set||set.job!==s.job)return '';const data=PIXEL_SET_ATLAS.sets[set.atlas],b=data.pieces[it.type],r=pixelSetFit(s,it.type,set),t=s.baseTune||{},scale=Math.max(.55,Math.min(1.65,Number(t.s)||1)),dx=Math.max(-18,Math.min(18,Number(t.x)||0)),dy=Math.max(-18,Math.min(18,Number(t.y)||0));
+ return '<g class="pixel-set-'+it.type+'" transform="translate('+dx+' '+dy+') translate(50 55) scale('+scale+') translate(-50 -55)">'+(it.type==='pants'?'<rect x="'+(r.x+2)+'" y="'+(r.y+1)+'" width="'+(r.w-4)+'" height="'+(r.h*.68)+'" fill="'+set.cloth+'"/>':'')+'<svg x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" viewBox="'+[b.x,b.y,b.w,b.h].join(' ')+'" preserveAspectRatio="none" overflow="hidden" style="image-rendering:pixelated"><image href="assets/pixel-sets/'+set.atlas+'-v1.webp" width="'+data.width+'" height="'+data.height+'"/></svg></g>';
+}
+function pixelSetReadout(s){const set=PIXEL_SETS.find(x=>x.job===s.job);if(!set)return '';const n=pixelSetCount(s,set);return '<div class="panel pixel-set-readout"><b>'+set.name+' · '+n+'／6 件</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+set.tiers.map(([name,desc],i)=>{const count=(i+1)*2,on=n>=count;return '<span style="padding:7px 10px;border:1px solid '+(on?'#9b762e':'#aaa')+';border-radius:8px;background:'+(on?'#fff1bd':'#eee')+';color:#222">'+(on?'✦':'◇')+' '+count+' 件・'+name+'<br><small>'+desc+'</small></span>';}).join('')+'</div></div>';}
+function pixelSetGuildShop(s){const open=classFeatureUnlocked('guild'),sets=PIXEL_SETS.map(set=>'<details class="panel"'+(set.job===s.job?' open':'')+'><summary style="cursor:pointer;font-weight:bold">'+set.name+'・'+(JOB_INFO[set.job]?.name||set.job)+'</summary><div class="shop-grid">'+PIXEL_SET_ITEMS.filter(it=>it.pixelSet===set.id).map(it=>'<div class="item-card"><div class="iic">'+pixelSetSprite(it,88)+'</div><div class="inm">'+it.name+'</div><div class="price">💎 50</div><button class="btn gold" data-pixelbuy="'+it.id+'"'+(!open||set.job!==s.job||pixelItemOwned(s,it.id)||(s.diamonds||0)<50?' disabled':'')+'>'+(pixelItemOwned(s,it.id)?'已收藏':set.job!==s.job?'職業限定':'購買單件')+'</button></div>').join('')+'</div></details>').join('');return '<div class="panel"><h3>🏰 公會鑽石套裝</h3><p class="mini">每件 50 鑽石；六件 300 鑽石。也可擊敗課堂 BOSS 獲得。'+(open?'':'教師尚未開啟公會功能。')+'</p>'+pixelSetReadout(s)+sets+'</div>';}
+async function pixelSetBuy(s,id){const it=pixelItemOf(id);if(!it||!it.jobs.includes(s.job))throw Error('職業不符');if(!classFeatureUnlocked('guild'))throw Error('公會功能尚未開放');if(pixelItemOwned(s,it.id))throw Error('已持有此裝備');if((s.bagItems||[]).length>=BAG_MAX)throw Error('背包已滿，請先整理');if((s.diamonds||0)<50)throw Error('鑽石不足');
+ if(CLOUD.on()){if(CLOUD.role!=='student')throw Error('請使用學生身分購買');return runInventoryAction(s.id,'pixelSetBuy',{itemId:it.id});}
+ s.diamonds-=50;s.bagItems=s.bagItems||[];s.bagItems.push(it.id);addLog(s.id,'公會商店購買「'+it.name+'」(-50💎)');save();return {message:'已放入背包：'+it.name};
+}
+function awardPixelBossDrop(b,parts){if(b.pixelDropSettled)return null;b.pixelDropSettled=true;if(CLOUD.on()&&CLOUD.role!=='teacher')return null;
+ const eligible=parts.map(stu).filter(s=>s&&(b.damage[s.id]||0)>0&&(s.bagItems||[]).length<BAG_MAX&&pixelSetBossDrop(s,()=>0));
+ if(!eligible.length||Math.random()>=.10)return null;const s=eligible[Math.floor(Math.random()*eligible.length)],it=pixelSetBossDrop(s,Math.random);s.bagItems=s.bagItems||[];s.bagItems.push(it.id);addLog(s.id,'BOSS 職業套裝掉落「'+it.name+'」');return {name:s.name,icon:'✨',item:it.name+'（套裝單件）',pct:Math.round((b.damage[s.id]||0)/Math.max(1,Object.values(b.damage).reduce((n,v)=>n+v,0))*100)};
+}

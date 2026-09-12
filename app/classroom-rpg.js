@@ -59,6 +59,7 @@ function legendSetSvgFx(set){
 }
 function legendSetJobText(set){return (set.jobs||[]).map(j=>(JOB_INFO[j]||{}).name||j).join("／");}
 function legendSetCardHtml(set,s,mode){
+  if(set.retired)return "";
   const owned=!!((s.legendSets||{})[set.id]),equipped=s.legendSetId===set.id,compatible=(set.jobs||[]).includes(s.job);
   let action="";
   if(mode==="shop"){
@@ -352,12 +353,12 @@ function petCraftVisualItem(it){
 }
 function itemArtThumb(it, size){
   if(!it) return "❓";
+  if(it.pixelSet)return pixelSetSprite(it,size);
   if(it.pixels || it.img) return customThumb(it, size);
   if(it.petCraft) return customThumb(petCraftVisualItem(it), size);
   const art = (RO_ART[it.type] && RO_ART[it.type][it.id]) || (DOLL_ART[it.type] && DOLL_ART[it.type][it.id]);
   if(!art) return TYPE_ICON[it.type] || "❓";
-  return '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" aria-hidden="true">'
-    + RO_DEFS + toonDefs() + TOON_OPEN + art + TOON_CLOSE + '</svg>';
+  return equipmentArtThumb(it,size,art);
 }
 function tierOf(s){
   if(s.roTier !== undefined && s.roTier !== null) return s.roTier;   // 預覽用強制階級
@@ -785,7 +786,7 @@ function starterPixels(type, gw, gh, kind, main){
   const put=(x,y,c)=>{ if(x>=0&&x<gw&&y>=0&&y<gh) out[x+","+y]=c; };
   const box=(x0,y0,x1,y1,c)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) put(x,y,c); };
   const outlineBox=(x0,y0,x1,y1,c)=>{box(x0,y0,x1,y1,ink);if(x1-x0>1&&y1-y0>1)box(x0+1,y0+1,x1-1,y1-1,c);};
-  const pair=(x0,x1,y0,y1,c)=>{const gap=Math.max(1,Math.round(gw*.08)),cx=mid;outlineBox(x0,y0,cx-gap,y1,c);outlineBox(cx+gap,x1,y0,y1,c);};
+  const pair=(x0,x1,y0,y1,c)=>{const gap=Math.max(1,Math.round(gw*.08)),cx=mid;outlineBox(x0,y0,cx-gap,y1,c);outlineBox(cx+gap,y0,x1,y1,c);};
   if(kind==="runner"){
     const y=Math.max(1,Math.floor(gh*.28)),gap=Math.max(1,Math.round(gw*.06));
     pair(1,gw-2,y,gh-2,main); box(1,gh-3,mid-gap,gh-1,ink);box(mid+gap,gh-3,gw-2,gh-1,ink);
@@ -840,7 +841,7 @@ function starterPixels(type, gw, gh, kind, main){
     for(let y=1;y<gh-1;y++){ const d=Math.max(1,Math.round(Math.sin(Math.PI*y/(gh-1))*Math.max(2,gw*.38))); box(mid-d,y,mid+d,y,main); put(mid-d,y,ink); put(mid+d,y,ink); }
     for(let y=Math.floor(gh*.28);y<Math.floor(gh*.72);y++) put(mid,y,light);
   }
-  return out;
+  return polishStarterPixels(out,type,gw,gh,kind,main);
 }
 function starterThumb(type,kind,main){
   const gw=gridW(type),gh=gridH(type),pixels=starterPixels(type,gw,gh,kind,main||"#d0483e");
@@ -851,12 +852,13 @@ function roSlot(s, slot, override){
   if(override && override.type===slot) return customArt(override, slot, RO_REGION);
   const id = s[slot+"Id"];
   if(!id) return "";
+  if(pixelItemOf(id))return pixelSetLayer(s,pixelItemOf(id));
   if(id>=1000){ const it = itemById(id); return it ? customArt(it, slot, RO_REGION) : ""; }
   const petItem=itemById(id),petVisual=petCraftVisualItem(petItem);
   if(petVisual) return customArt(petVisual,slot,RO_REGION);
   const png = artImg("item:"+id);
   if(png) return png;
-  return (RO_ART[slot] && RO_ART[slot][id]) || "";
+  return equipmentArtLayer(itemById(id),(RO_ART[slot] && RO_ART[slot][id]) || "");
 }
 /* 🎯 素體對位參數(誠兆用真裝備對位工具調校:dx/dy位移 + scale縮放,以裝備原座標中心50,55為基準) */
 /* 新版大頭短身素體專用對位：裝備收進頭、軀幹、短褲與腳掌的實際範圍。
@@ -869,7 +871,7 @@ function roSlot(s, slot, override){
 function isLegendSlot(s, slot, override){
   if(override && override.type === slot) return false;      // 工坊預覽中的作品不算
   const it = itemById(s[slot+"Id"]);
-  return !!(it && it.rarity === "Legendary");
+  return !!(it && it.rarity === "Legendary" && !it.pixelSet);
 }
 
 // 註冊與紙娃娃校正皆以刺蝟短髮男生（male2）為 100% 對位基準。
@@ -1109,6 +1111,7 @@ function dollRO(s, size, override){
     // 🎯 對位:依 BASE_FIT 的 dx/dy/scale 定位裝備(工坊自製裝備也走同一函式,自動同步)
     const fit = (svgFrag, slot)=>{
       if(!svgFrag) return "";
+      if(pixelItemOf(s[slot+'Id'])&&!(override&&override.type===slot))return svgFrag;
       const f = BASE_FIT[slot]; if(!f) return svgFrag;
       const sx = f.sx!==undefined ? f.sx : (f.sc||1);
       const sy = f.sy!==undefined ? f.sy : (f.sc||1);
@@ -1232,7 +1235,7 @@ function withDiamondCosmetic(svg,s){
 
 function dollSVG(s, size, override){
   const fullSet = !override && legendSetInfo(s&&s.legendSetId);
-  if(fullSet){
+  if(fullSet&&!fullSet.retired){
     return withPetAtFeet(withDiamondCosmetic('<svg class="legend-doll legend-'+fullSet.id+'" viewBox="0 -20 100 122" width="'+size+'" height="'+Math.round(size*1.22)+'" aria-hidden="true" style="--legend-main:'+fullSet.main+';--legend-accent:'+fullSet.accent+';overflow:visible">'
       + '<ellipse cx="50" cy="92" rx="25" ry="5" fill="rgba(0,0,0,.32)"/>'
       + legendSetSvgFx(fullSet)
@@ -1880,9 +1883,9 @@ function skillPassive(s, id){ return skillsEnabled() ? skillVal(s, id) : 0; }
 /* 專精可疊加但有上限：防止高年級把所有 SP 投在同一類後破壞課堂戰鬥平衡。 */
 
 function advancementBonus(s, effect){ return !skillsEnabled() ? 0 : Math.min(ADVANCE_BONUS_CAP[effect]||99, skillList(s.job).filter(sk=>sk.effect===effect).reduce((n,sk)=>n+skillVal(s,sk.id),0)); }
-function advancementDamageMult(s){ return 1 + advancementBonus(s,'power')/100; }
-function advancementWardMult(s){ return 1 - advancementBonus(s,'ward')/100; }
-function advancementHealMult(s){ return 1 + advancementBonus(s,'heal')/100; }
+function advancementDamageMult(s){ return (1 + advancementBonus(s,'power')/100)*(1+pixelSetEffects(s).power); }
+function advancementWardMult(s){ return (1 - advancementBonus(s,'ward')/100)*(1-pixelSetEffects(s).ward); }
+function advancementHealMult(s){ return (1 + advancementBonus(s,'heal')/100)*(1+pixelSetEffects(s).heal); }
 function advancementTempoMult(s){ return 1 - advancementBonus(s,'tempo')/100; }
 function advancementLead(s,effect){
   return skillList(s.job).filter(sk=>sk.effect===effect && activeSkillLv(s,sk.id)>0)
@@ -2094,6 +2097,7 @@ function totalStats(s){
   const t = {atk:s.baseAtk+e.atk+al.atk, agi:s.baseAgi+e.agi+al.agi, int:s.baseInt+e.int+al.int, def:s.baseDef+e.def+al.def};
   const te = titleEffect(s);                            // 配戴稱號的隱藏效果
   t.atk += te.atk; t.def += te.def; t.agi += te.agi; t.int += te.int;
+  const se=pixelSetEffects(s);for(const k of ['atk','def','agi','int'])t[k]+=se[k];
   if(s.glowBuff){                                       // 光暈觸發的暫時增益(Boss戰持續數回合)
     for(const stat in s.glowBuff){
       if(s.glowBuff[stat] && s.glowBuff[stat].turns>0) t[stat] += s.glowBuff[stat].amt;
@@ -2102,7 +2106,7 @@ function totalStats(s){
   for(const key of ['atk','def','agi','int']) t[key]=Math.max(0,Math.min(STAT_CAP,Math.round((t[key]||0)*10)/10));
   return t;
 }
-function skillMaxHpBonus(s){ return skillPassive(s,"tough") + titleEffect(s).hp; }
+function skillMaxHpBonus(s){ return skillPassive(s,"tough") + titleEffect(s).hp + Math.round((s.maxHp||0)*pixelSetEffects(s).hp); }
 /* v61 能力值效果重塑:INT/AGI 不再影響 XP/金倍率(改為戰鬥效果) */
 function xpMultiplier(s){ return Math.max(0.01, (1 + skillPassive(s,"study")/100) * (1 + titleEffect(s).xpMul)); }
 function goldMultiplier(s){ return Math.max(0.01, (1 + skillPassive(s,"wealth")/100) * (1 + titleEffect(s).goldMul)); }
@@ -2133,7 +2137,7 @@ function combatCritProfile(s,skillId){
   const agiBonus=Math.min(10,agi/190*10);
   const embedded=skillId==='edge'||skillId==='lethal';
   return {
-    chance:embedded?100:Math.min(tune.cap,tune.base+agiBonus),
+    chance:embedded?100:Math.min(tune.cap,tune.base+agiBonus+pixelSetEffects(s).crit),
     cap:tune.cap,
     mult:embedded?1:tune.mult,
     embedded:embedded
@@ -2780,12 +2784,14 @@ async function runInventoryAction(sid,action,payload){
 function bagPush(s, itemId){
   if(!Array.isArray(s.bagItems)) s.bagItems = [];
   const it = itemById(itemId);
-  if(!it || it.price<=0) return {sold:false, gold:0};
+  if(!it || (it.price<=0&&!it.pixelSet)) return {sold:false, gold:0};
+  if(it.pixelSet&&s.bagItems.length>=BAG_MAX)return {sold:false,gold:0,full:true};
   if(s.bagItems.length >= BAG_MAX){
     // 🏆 優先擠掉「非傳說/非稀有」的最舊一件,保護背包裡的珍貴裝備不被誤賣
     const isPrecious = (id)=>{ const x = itemById(id); return x && (x.rarity==="Legendary" || x.rarity==="Rare"); };
     let idx = s.bagItems.findIndex(id => !isPrecious(id));
-    if(idx < 0) idx = 0;                                          // 萬一整包都是珍貴裝備,才退而求其次擠最舊的
+    if(idx < 0) idx = s.bagItems.findIndex(id=>!pixelItemOf(id));
+    if(idx < 0)return {sold:false,gold:0,full:true};
     const oldestId = s.bagItems.splice(idx, 1)[0];
     const oldest = itemById(oldestId);
     const g = oldest ? bagSellPrice(oldest) : 0;
@@ -2801,6 +2807,7 @@ async function bagEquip(sid, idx){
   const s = stu(sid); if(!s || !Array.isArray(s.bagItems)) return;
   const itemId = s.bagItems[idx]; const it = itemById(itemId);
   if(!it || it.type==="consumable") return;
+  if(it.jobs&&!it.jobs.includes(s.job)){toast('職業不符，不能穿戴',true);return;}
   if(CLOUD.on()&&CLOUD.role==="student"){
     try{const r=await runInventoryAction(sid,"bagEquip",{itemId,index:idx});toast(r.message||"已穿戴裝備");sfx("buy");render();}catch(e){toast("裝備失敗："+(e.message||e),true);}return;
   }
@@ -2808,7 +2815,7 @@ async function bagEquip(sid, idx){
   const slotKey = it.type + "Id";
   const old = itemById(s[slotKey]);
   s[slotKey] = it.id;
-  if(old && old.price>0){
+  if(old && (old.price>0||old.pixelSet)){
     const r = bagPush(s, old.id);
     addLog(sid, "從背包裝上「"+it.name+"」,換下「"+old.name+"」"+(r.sold?"(背包已滿,自動出售 +"+r.gold+"金)":"收進背包"));
   }else{
@@ -2820,7 +2827,7 @@ async function bagEquip(sid, idx){
 async function bagSell(sid, idx){
   const s = stu(sid); if(!s || !Array.isArray(s.bagItems)) return;
   const it = itemById(s.bagItems[idx]); if(!it) return;
-  if(it.petLegend){toast("唯一傳說裝備不能出售",true);return;}
+  if(it.petLegend||it.pixelSet){toast("珍藏裝備不能出售",true);return;}
   if(CLOUD.on()&&CLOUD.role==="student"){
     try{const r=await runInventoryAction(sid,"bagSell",{itemId:it.id,index:idx});toast(r.message||"已出售裝備");render();}catch(e){toast("出售失敗："+(e.message||e),true);}return;
   }
@@ -2962,6 +2969,7 @@ async function buyItem(sid, itemId){
   if(CLOUD.on()&&CLOUD.role==="student"){
     try{const r=await runInventoryAction(sid,"buy",{itemId:it.id});toast(r.message||("已購買「"+it.name+"」"));sfx("buy");render();}catch(e){toast("購買失敗："+(e.message||e),true);}return;
   }
+  if(pixelItemOf(s[it.type+"Id"])&&(s.bagItems||[]).length>=BAG_MAX){toast("請先整理背包，保留換下的套裝",true);return;}
   debitGold(s,pay,"商店購買");
   if(it.type === "consumable"){
     s.consumables[itemId] = (s.consumables[itemId]||0) + 1;
@@ -2970,7 +2978,7 @@ async function buyItem(sid, itemId){
     const slotKey = it.type + "Id";
     const old = itemById(s[slotKey]);
     s[slotKey] = it.id;
-    if(old && old.price > 0){                                  // 🎒 換下的舊裝備放進背包(傳說/掉落限定 price=0 不入包)
+    if(old && (old.price > 0||old.pixelSet)){                                  // 🎒 換下的舊裝備放進背包(傳說/掉落限定 price=0 不入包)
       const r = bagPush(s, old.id);
       addLog(sid, "購買並裝備「"+it.name+"」,換下的「"+old.name+"」"
         + (r.sold ? "因背包已滿("+BAG_MAX+"件),自動出售獲得 "+r.gold+" 金幣" : "已收進背包"));
@@ -2995,6 +3003,7 @@ async function recycleSlot(sid, slot){
   const key = slot + "Id";
   const it = itemById(s[key]);
   if(!it){ toast("這個欄位沒有裝備", true); return; }
+  if(it.pixelSet||it.petLegend){toast("珍藏裝備不能回收",true);return;}
   if(CLOUD.on()&&CLOUD.role==="student"){
     try{const r=await runInventoryAction(sid,"recycle",{slot});closeModal();toast(r.message||"已回收裝備");render();}catch(e){toast("回收失敗："+(e.message||e),true);}return;
   }
@@ -3831,8 +3840,9 @@ function rollByContribution(damageMap){
   return entries[entries.length-1][0];
 }
 function winBoss(){
+  const b = state.boss; if(!b||b.hp>0||b.settled) return;
+  b.settled=true;
   state.bossKills = (state.bossKills||0) + 1;
-  const b = state.boss; if(!b) return;
   state.students.forEach(st=>{ st.glowBuff = null; });   // 戰鬥結束清光暈增益
   const parts = Object.keys(b.damage).filter(sid=>stu(sid));
   const totalDmg = parts.reduce((a,sid)=>a+b.damage[sid], 0) || 1;
@@ -3876,6 +3886,7 @@ function winBoss(){
   if(Math.random() < 0.05) drops.push({kind:"legend"});
 
   const dropResults = [];   // 結算對話框用
+  const setDrop=awardPixelBossDrop(b,parts);if(setDrop)dropResults.push(setDrop);
   for(const d of drops){
     const sid = rollByContribution(b.damage); if(!sid) continue;
     const s = stu(sid); if(!s) continue;
@@ -3890,7 +3901,7 @@ function winBoss(){
       addLog(sid,"貢獻度擲骰勝出!獲得【"+ti.icon+ti.name+"・"+TYPE_NAME[d.type]+"設計圖紙"+afTxt+wsTxt+rangeTxt+"】");
       dropResults.push({name:s.name,icon:ti.icon,item:ti.name+TYPE_NAME[d.type]+"圖紙"+afTxt+wsTxt+rangeTxt,pct:winPct});
     }else{
-      const legends = SHOP_ITEMS.filter(i=>i.rarity==="Legendary"&&(!i.jobs||i.jobs.includes(s.job)));
+      const legends = SHOP_ITEMS.filter(i=>i.rarity==="Legendary"&&!i.pixelSet&&(!i.jobs||i.jobs.includes(s.job)));
       const cands = legends.filter(i=> s[i.type+"Id"]!==i.id);
       if(cands.length){
         const it = cands[Math.floor(Math.random()*cands.length)];
@@ -5779,12 +5790,14 @@ function garenaBattleHtml(){
     + (GARENA.over && GARENA.mvp ? garenaMvpHtml() : "")
     + '</div>';
 }
+function closeMobaQuestionDetail(){modalHost.innerHTML="";}
+function openMobaQuestionDetail(q){q=q||GARENA.mobaQuiz;if(!q)return;modalHost.innerHTML='<div class="overlay moba-question-overlay"><section class="modal moba-question-detail" role="dialog" aria-modal="true" aria-label="完整題目"><button class="btn" onclick="closeMobaQuestionDetail()">返回戰場</button><h2>'+esc(q.prompt)+'</h2>'+quizGeometryHtml(q.visualSvg,"ga-detail-geometry")+quizImageHtml(q.questionImage,"ga-detail-image","題目圖片")+'<div class="moba-detail-options">'+(q.options||[]).map((o,i)=>'<div><b>'+String.fromCharCode(65+i)+'</b> '+esc(o)+quizImageHtml((q.optionImages||[])[i],"ga-detail-image","選項圖片")+'</div>').join('')+'</div><p>查看題目不會暫停倒數。返回戰場後，請移動到答案塔前站滿 3 秒。</p></section></div>';}
 function gaMobaKnowledgeCardHtml(){
   if(!gaIsKnowledgeMoba())return "";const q=GARENA.mobaQuiz;
   const score=GARENA.mobaKnowledgeScore||{red:0,blue:0},streak=GARENA.mobaKnowledgeStreak||{red:0,blue:0};
-  const time=q?Math.max(0,Math.ceil(((((q.finished?q.nextAtTick:q.roundEndsTick)||0)-(GARENA.ticks||0))*.5))):0;
+  const time=gaMobaQuizSeconds(q);
   if(!q)return '<div class="ga-knowledge-card"><div class="ga-knowledge-main"><div class="ga-team-score red"><span class="points">🔴 0</span><span class="combo">Combo ×0</span></div><span class="q">📚 等待教師選擇本場題庫</span><div class="ga-team-score blue"><span class="combo">Combo ×0</span><span class="points">0 🔵</span></div></div></div>';
-  return '<div class="ga-knowledge-card"><div class="ga-knowledge-main"><div class="ga-team-score red"><span class="points">🔴 <span id="gaKnowR">'+score.red+'</span></span><span class="combo">Combo ×'+streak.red+'</span></div><span class="q">第 '+(q.round||1)+' 題｜'+esc(q.prompt)+' <span class="ga-knowledge-time">剩 <span id="gaTime">'+time+'</span>s</span></span><div class="ga-team-score blue"><span class="combo">Combo ×'+streak.blue+'</span><span class="points"><span id="gaKnowB">'+score.blue+'</span> 🔵</span></div></div>'+quizGeometryHtml(q.visualSvg,"ga-geometry")+quizImageHtml(q.questionImage,"ga-question-img","題目圖片")+'</div>';
+  return '<div class="ga-knowledge-card"><div class="ga-knowledge-main"><div class="ga-team-score red"><span class="points">🔴 <span id="gaKnowR">'+score.red+'</span></span><span class="combo">Combo ×'+streak.red+'</span></div><button type="button" class="q ga-question-open" onclick="openMobaQuestionDetail()" title="展開完整題目">第 '+(q.round||1)+' 題｜'+esc(q.prompt)+' <span class="ga-knowledge-time">剩 <span id="gaTime">'+time+'</span>s</span></button><div class="ga-team-score blue"><span class="combo">Combo ×'+streak.blue+'</span><span class="points"><span id="gaKnowB">'+score.blue+'</span> 🔵</span></div></div><div id="gaQuizStatus" class="ga-quiz-status">'+esc(gaMobaQuizStatus(q))+'</div>'+quizGeometryHtml(q.visualSvg,"ga-geometry")+quizImageHtml(q.questionImage,"ga-question-img","題目圖片")+'</div>';
 }
 /* tick 局部更新(不整頁重繪) */
 /* 🗺 戰場地形視覺層:障礙物 + 地形格 + 落石預警 */
@@ -5829,7 +5842,7 @@ function gaTerrainHtml(C){
   if(gaIsKnowledgeMoba()&&GARENA.mobaQuiz){
     const q=GARENA.mobaQuiz,fs=Object.values(GARENA.fighters||{});
     ["red","blue"].forEach(team=>gaMobaQuizZones(team).forEach(z=>{const holder=fs.find(f=>!f.ko&&f.team===team&&f.x===z.x&&f.y===z.y),charge=holder&&holder.quizChargeKey===team+":"+z.answer?Math.min(100,Math.round((holder.quizChargeT||0)/6*100)):0,wrong=(q.wrong[team]||[]).includes(z.answer),answered=q.answeredTeams[team]&&z.answer===q.correct;color=team==="red"?"#e05252":"#5285e0";h+='<div class="ga-answer-domain '+(wrong?'wrong ':'')+(answered?'answered':'')+'" style="left:'+(z.x*C)+'px;top:'+(z.y*C)+'px;width:'+C+'px;height:'+C+'px;--team-color:'+color+';--charge:'+charge+'" title="'+(team==="red"?'紅隊攻城答案':'藍隊攻城答案')+' '+z.answer+'">'+z.answer+'<small>'+charge+'%</small></div>'; }));
-    const tick=GARENA.ticks||0;if((q.freezeUntil.red||0)>tick)h+='<div class="ga-quiz-freeze red" data-ga-freeze="red">🧊 紅隊凍結 <span>'+Math.ceil((q.freezeUntil.red-tick)*.5)+'</span>s</div>';if((q.freezeUntil.blue||0)>tick)h+='<div class="ga-quiz-freeze blue" data-ga-freeze="blue">🧊 藍隊凍結 <span>'+Math.ceil((q.freezeUntil.blue-tick)*.5)+'</span>s</div>';
+    ["red","blue"].forEach(team=>{const left=Math.max(0,Math.ceil(((q.freezeUntilAt?.[team]||0)-gaMobaQuizNow())/1000));if(left>0)h+='<div class="ga-quiz-freeze '+team+'" data-ga-freeze="'+team+'">🧊 '+(team==="red"?"紅隊":"藍隊")+'凍結 <span>'+left+'</span>s</div>';});
   }
   // 落石預警
   const evKind = (M.event||{}).kind;
@@ -5854,7 +5867,7 @@ function garenaRenderField(){
   const fs = Object.values(GARENA.fighters);
   const quizHost=document.getElementById("gaKnowledgeCardHost");
   if(quizHost&&gaIsKnowledgeMoba()){
-    const q=GARENA.mobaQuiz||{},quizCardSig=JSON.stringify([q.id||"",q.round||0,q.prompt||"",q.questionImage||"",GARENA.mobaKnowledgeScore||{},GARENA.mobaKnowledgeStreak||{}]);
+    const q=GARENA.mobaQuiz||{},quizCardSig=JSON.stringify([q.id||"",q.round||0,q.prompt||"",q.questionImage||"",q.finished,q.lastResult||"",GARENA.mobaKnowledgeScore||{},GARENA.mobaKnowledgeStreak||{}]);
     if(quizHost.dataset.sig!==quizCardSig){quizHost.dataset.sig=quizCardSig;quizHost.innerHTML=gaMobaKnowledgeCardHtml();}
   }
   // 🗺 地形層即時更新(落石預警等動態元素才會出現)
@@ -5872,7 +5885,7 @@ function garenaRenderField(){
       terr.innerHTML = gaTerrainHtml(GARENA.cell||46);
     }
   }
-  document.querySelectorAll('[data-ga-freeze]').forEach(el=>{const team=el.dataset.gaFreeze,left=Math.max(0,Math.ceil((((GARENA.mobaQuiz||{}).freezeUntil||{})[team]-(GARENA.ticks||0))*.5));el.hidden=left<=0;const n=el.querySelector('span');if(n)n.textContent=left;});
+  document.querySelectorAll('[data-ga-freeze]').forEach(el=>{const team=el.dataset.gaFreeze,left=Math.max(0,Math.ceil((((GARENA.mobaQuiz||{}).freezeUntilAt||{})[team]-gaMobaQuizNow())/1000));el.hidden=left<=0;const n=el.querySelector('span');if(n)n.textContent=left;});
   for(const f of fs){
     // render() 會重建整個教師端戰場；舊快取雖仍是物件，實際上已脫離畫面。
     // 手機讀取 GARENA.fighters 所以仍會移動，但若繼續更新舊節點，大屏角色就會看似站在原地。
@@ -5883,6 +5896,8 @@ function garenaRenderField(){
       if(el) GARENA._els[f.sid] = el;
     }
     if(!el) continue;
+    const respawnFresh=!!f._respawnFresh;
+    if(respawnFresh){el.style.transition='none';clearTimeout(el._walkT);el.classList.remove('ga-walk','ga-ko','ga-enter');}
     el.dataset.atb=String(Math.round(f.atb||0));el.dataset.entering=f.entering?"1":"0";el.dataset.ai=GARENA.aiMode||f.autoPilot?"1":"0";el.dataset.cmd=GARENA.cmdQueue[f.sid]?"1":"0";
     GARENA._els = GARENA._els || {}; GARENA._els[f.sid] = el;
     const C = GARENA.cell||46; const _nx=(f.x*C+6), _ny=(f.y*C+4);
@@ -5895,7 +5910,7 @@ function garenaRenderField(){
       const sv = el.querySelector("svg");
       if(sv) sv.style.animationDelay = (-Math.random()*2.4).toFixed(2)+"s";
     }
-    if(el.dataset.px!==undefined && (+el.dataset.px!==_nx || +el.dataset.py!==_ny) && !f.ko){   // 🚶 位置改變→走路步伐
+    if(!respawnFresh && el.dataset.px!==undefined && (+el.dataset.px!==_nx || +el.dataset.py!==_ny) && !f.ko){   // 🚶 位置改變→走路步伐
       el.classList.add("ga-walk");
       clearTimeout(el._walkT);
       el._walkT = setTimeout(()=>{ el.classList.remove("ga-walk"); }, 460);
@@ -5911,6 +5926,7 @@ function garenaRenderField(){
     const hp=Math.max(0,Math.round(f.hp/f.max*100));
     if(bar && bar.dataset.hp!==String(hp)){ bar.dataset.hp=hp; bar.style.width = hp+"%"; }
     el.classList.toggle("ga-ko", !!f.ko);
+    if(respawnFresh){void el.offsetWidth;el.style.removeProperty('transition');f._respawnFresh=false;}
     el.style.opacity = f.stealth>0 ? .35 : "";               // 🌫 隱身半透明(大屏仍隱約可見)
     el.style.outline = f.tauntT>0 ? "3px dashed #f5731f" : ((f.hunterMarkT||0)>0 ? "3px dashed #a98cff" : "");   // 📣 嘲諷／👁️ 印記
     el.classList.toggle("ga-frozen", (f.frozenT||0)>0 && !f.ko);                          // 🧊 凍結:冰塊覆蓋+去色
@@ -5927,8 +5943,9 @@ function garenaRenderField(){
     el.classList.toggle("lord-glory", !!(stL && !f.ko && !isPeakLord(stL) && isGloryLord(stL)));   // 榮耀城主橘光
     const oldOrbit=el.querySelector(".ga-pet");if(oldOrbit)oldOrbit.remove(); // 寵物改由紙娃娃腳邊固定圖層呈現，避免重複顯示
   }
+  const qs=document.getElementById("gaQuizStatus");if(qs)qs.textContent=gaMobaQuizStatus(GARENA.mobaQuiz);
   const t = document.getElementById("gaTime");
-  if(t) t.textContent = Math.max(0, Math.ceil(GARENA.DURATION - (GARENA.elapsed||0)));
+  if(t) t.textContent = gaIsKnowledgeMoba()?gaMobaQuizSeconds(GARENA.mobaQuiz):Math.max(0, Math.ceil(GARENA.DURATION - (GARENA.elapsed||0)));
   const ar = document.getElementById("gaAliveR"), ab = document.getElementById("gaAliveB");
   if(ar) ar.textContent = fs.filter(f=>f.team==="red"&&!f.ko).length;
   if(ab) ab.textContent = fs.filter(f=>f.team==="blue"&&!f.ko).length;
@@ -7478,7 +7495,7 @@ function bindTeacher(){
   if(gaP) gaP.onclick = ()=>{
     if(GARENA.paused){
       const pausedFor=Math.max(0,Date.now()-(GARENA.pausedAt||Date.now()));
-      shiftRuntimeCooldowns('ga',pausedFor);
+      shiftRuntimeCooldowns('ga',pausedFor);gaMobaQuizShift(pausedFor);
       Object.values(GARENA.fighters||{}).forEach(f=>{if(f.jobReadyAt)f.jobReadyAt+=pausedFor;if(f.advUltReadyAt)f.advUltReadyAt+=pausedFor;});
       GARENA.paused = false; gaP.textContent = "⏸ 暫停";
     }else{
@@ -7886,6 +7903,7 @@ function garenaStudentInit(sid){
     console.warn("garena student listener",e);
   }
 }
+function garenaCooldownBar(pct){return '<span class="gpad-cd-track" role="progressbar" aria-label="冷卻進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(100-pct)+'"><i style="width:'+(100-pct)+'%"></i></span>';}
 function garenaPadRender(){
   let ov = document.getElementById("gpadOverlay");
   const live = GPAD.live, sid = GPAD.sid;
@@ -7918,6 +7936,7 @@ function garenaPadRender(){
   const ready = false;
   const jsDef = jobSkillAvailable(st) ? (JOB_SKILL[st.job] || null) : null;
   const equippedBattleSkills=normalizeSkillLoadout(st).map(id=>skillDef(st.job,id)).filter(Boolean);
+  const attackNow=Math.max(0,Number(me.ac??((me.cd||0)*.5/(live.speed||1)))),attackPct=Math.max(0,Math.min(100,Number(me.acp)||0));
   const jcNow = Number(me.jc)||0, jcPct=Math.max(0,Math.min(100,Number(me.jcp)||0));
   if(!ov){
     ov = document.createElement("div");
@@ -7939,9 +7958,9 @@ function garenaPadRender(){
   }).join("");
   const isMobaLive=live.mode==="moba"||live.mode==="mobaKnowledge";
   const minimap = '<div style="position:relative;width:'+mmW+'px;height:'+mmH+'px;margin:6px auto;background:'+(isMobaLive?'linear-gradient(135deg,#315b43,#214633)':'rgba(255,255,255,.12)')+';border:2px solid #ffd234;border-radius:6px">'+structureDots+dots+'</div>';
-  const mq=live.mobaQuiz,wrong=mq&&mq.wrong&&mq.wrong[me.team]||[],quizPanel=mq?'<div style="margin:6px auto;padding:8px;max-width:460px;border:3px solid #ffd234;border-radius:12px;background:#fff8dc;color:#171717"><b>📚 第 '+(mq.round||1)+' 題｜'+esc(mq.prompt)+'</b>'+quizGeometryHtml(mq.visualSvg,"mobile-geometry")+quizImageHtml(mq.questionImage,"zone-question-img","題目圖片")+'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:6px">'+["A","B","C","D"].map((k,i)=>'<span style="padding:4px;border:2px solid #111;border-radius:9px;'+(wrong.includes(k)?'filter:grayscale(1);opacity:.35;':'background:#fff;')+'">'+quizImageHtml((mq.optionImages||[])[i],"ga-tower-option-img",k+" 選項圖片")+k+' '+esc((mq.options||[])[i]||"")+'</span>').join("")+'</div><div style="margin-top:5px;font-size:12px;font-weight:900">答題分 🔴 '+(mq.score.red||0)+'：'+(mq.score.blue||0)+' 🔵　｜　Combo 紅×'+((mq.streak||{}).red||0)+'・藍×'+((mq.streak||{}).blue||0)+'　｜　'+(mq.finished?'下一題':'本題')+' '+(mq.endsIn||0)+'s　｜　集氣 '+Math.min(100,Math.round((me.qc||0)/6*100))+'%</div></div>':'';
+  const mq=live.mobaQuiz,wrong=mq&&mq.wrong&&mq.wrong[me.team]||[],quizPanel=mq?'<div class="gpad-quiz-panel" style="margin:6px auto;padding:8px;max-width:460px;border:3px solid #ffd234;border-radius:12px;background:#fff8dc;color:#171717"><b>📚 第 '+(mq.round||1)+' 題｜'+esc(mq.prompt)+'</b><button class="btn" id="gpadFullQuestion">放大題目／圖片</button>'+quizGeometryHtml(mq.visualSvg,"mobile-geometry")+quizImageHtml(mq.questionImage,"zone-question-img","題目圖片")+'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:6px">'+["A","B","C","D"].map((k,i)=>'<span style="padding:4px;border:2px solid #111;border-radius:9px;'+(wrong.includes(k)?'filter:grayscale(1);opacity:.35;':'background:#fff;')+'">'+quizImageHtml((mq.optionImages||[])[i],"ga-tower-option-img",k+" 選項圖片")+k+' '+esc((mq.options||[])[i]||"")+'</span>').join("")+'</div><div style="margin-top:5px;font-size:12px;font-weight:900">答題分 🔴 '+(mq.score.red||0)+'：'+(mq.score.blue||0)+' 🔵　｜　Combo 紅×'+((mq.streak||{}).red||0)+'・藍×'+((mq.streak||{}).blue||0)+'　｜　'+(mq.finished?'下一題':'本題')+' '+(mq.endsIn||0)+'s　｜　集氣 '+Math.min(100,Math.round((me.qc||0)/6*100))+'%</div></div>':'';
   const autoOn=!!me.ap,autoLock=Math.max(0,Number(me.au)||0),manualDisabled=autoOn?' disabled':'';
-  const skillBtns=equippedBattleSkills.slice(0,5).map(sk=>{const ci=(me.sc||{})[sk.id]||{},cd=Math.max(0,Number(ci.left)||0),pct=Math.max(0,Math.min(100,Number(ci.pct)||0));return '<button class="gpad-btn gpad-skill '+(cd>0?'cooling':'ready')+'" style="--cd-pct:'+pct+'" data-gskill="'+esc(sk.id)+'"'+(cd>0?' disabled':'')+'><span class="si">'+sk.icon+'</span><span>'+esc(sk.name)+'</span>'+(cd>0?'<span class="cd-time">'+Math.ceil(cd)+'s</span>':'')+'</button>';}).join('');
+  const skillBtns=equippedBattleSkills.slice(0,5).map(sk=>{const ci=(me.sc||{})[sk.id]||{},cd=Math.max(0,Number(ci.left)||0),pct=Math.max(0,Math.min(100,Number(ci.pct)||0));return '<button class="gpad-btn gpad-skill '+(cd>0?'cooling':'ready')+'" style="--cd-pct:'+pct+'" data-gskill="'+esc(sk.id)+'"'+(cd>0?' disabled':'')+'><span class="si">'+sk.icon+'</span><span>'+esc(sk.name)+'</span>'+(cd>0?'<span class="cd-time">'+Math.ceil(cd)+'s</span>':'')+garenaCooldownBar(pct)+'</button>';}).join('');
   ov.innerHTML = '<div class="gpad-wrap">'
     + '<div style="color:#fff;font-weight:900;font-size:18px">'+(live.mode==="mobaKnowledge"?'📚 知識攻塔':(live.mode==="moba"?'🏰 Dota 戰場・榮耀峽谷':'⚔️ 團體戰進行中!'))+'</div>'
     + '<div style="color:#ffd234;font-size:13px;margin:4px 0">HP '+me.hp+'/'+me.max+'・射程 '+range+' 格・'+(me.team==="red"?"🔴紅隊":"🔵藍隊")+'・🔴'+live.aliveR+' vs '+live.aliveB+'🔵</div>'
@@ -7953,14 +7972,15 @@ function garenaPadRender(){
     + '<div class="gpad-btn'+(autoOn?' disabled':'')+'" data-gmove="left">◀</div><div class="gpad-btn'+(autoOn?' disabled':'')+'" data-gmove="down">▼</div><div class="gpad-btn'+(autoOn?' disabled':'')+'" data-gmove="right">▶</div>'
     + '</div>'
     + '<div class="gpad-act">'
-    + '<button class="gpad-btn gpad-atk" data-gact="attack"'+manualDisabled+'>⚔️ 攻擊</button>'
-    + (jsDef ? '<button class="gpad-btn gpad-job '+(jcNow>0?'cooling':'ready')+'" style="--cd-pct:'+jcPct+'" data-gact="jobskill"'+((jcNow>0||autoOn)?" disabled":"")+'><span>'+jsDef.icon+' '+jsDef.name+'</span>'+(jcNow>0?'<span class="cd-time">'+Math.ceil(jcNow)+'s</span>':"")+'</button>' : "")
+    + '<button class="gpad-btn gpad-atk" data-gact="attack"'+((autoOn||attackNow>0)?' disabled':'')+'>⚔️ 攻擊'+(attackNow>0?'<small>'+attackNow.toFixed(1)+'s</small>':'')+garenaCooldownBar(attackPct)+'</button>'
+    + (jsDef ? '<button class="gpad-btn gpad-job '+(jcNow>0?'cooling':'ready')+'" style="--cd-pct:'+jcPct+'" data-gact="jobskill"'+((jcNow>0||autoOn)?" disabled":"")+'><span>'+jsDef.icon+' '+jsDef.name+'</span>'+(jcNow>0?'<span class="cd-time">'+Math.ceil(jcNow)+'s</span>':"")+garenaCooldownBar(jcPct)+'</button>' : "")
     + (ready ? '<button class="gpad-btn gpad-ult" data-gact="ult">💫 大招</button>' : '')
     + '</div>'
     + (skillBtns?'<div style="color:#ffe486;font-size:11px;margin-top:7px">裝備技能（點按施放）</div><div class="gpad-skills" style="'+(autoOn?'pointer-events:none;filter:grayscale(.8);opacity:.45':'')+'">'+skillBtns+'</div>':'')
     + (jsDef ? '<div style="color:#aaa;font-size:11px;margin-top:4px">'+jsDef.icon+' '+jsDef.desc+'</div>' : "")
     + '<div style="color:#aaa;font-size:11px;margin-top:10px">移動到敵人射程內再攻擊・攻擊有冷卻</div>'
     + '</div>';
+  const fullQuestion=ov.querySelector("#gpadFullQuestion");if(fullQuestion)fullQuestion.onclick=()=>openMobaQuestionDetail(mq);
   const send = (cmd)=> CLOUD.garenaCmd(sid, cmd).catch(e=>console.warn(e));
   GPAD.sendMove=send;
   if(!GPAD.holdBound){GPAD.holdBound=true;window.addEventListener("pointerup",garenaPadStopMoveHold);window.addEventListener("pointercancel",garenaPadStopMoveHold);window.addEventListener("blur",garenaPadStopMoveHold);}

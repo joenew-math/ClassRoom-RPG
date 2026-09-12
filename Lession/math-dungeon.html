@@ -317,6 +317,15 @@ html,body{height:100%;overflow:hidden;background:#07050f;color:#f3ecff;
 @keyframes msLeaf{0%{opacity:0;transform:translate(0,18px) rotate(0)}35%{opacity:1}100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) - 42px)) rotate(180deg)}}
 @keyframes msChaosBit{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(360deg);filter:hue-rotate(240deg)}}
 @media (prefers-reduced-motion:reduce){.monsterSkillFx{animation-duration:.25s}.monsterSkillFx *{animation-duration:.25s!important}.foe .monsterSprite{animation:none!important}}
+/* 原創 HD-2D 風格分級：像素本體保持銳利，高畫質只增加光影、景深與空氣感。 */
+html[data-dungeon-quality="cinematic"] #viewFrame{box-shadow:0 0 0 3px #2a1f0d,0 0 0 5px #6b5320,inset 0 0 38px rgba(116,86,190,.24),0 12px 32px rgba(0,0,0,.82)}
+html[data-dungeon-quality="cinematic"] #screen{filter:saturate(1.12) contrast(1.06) brightness(1.03)}
+html[data-dungeon-quality="cinematic"] #field{box-shadow:inset 0 22px 35px rgba(116,92,190,.12),inset 0 -28px 45px rgba(0,0,0,.34)}
+html[data-dungeon-quality="cinematic"] .foe canvas{filter:drop-shadow(0 7px 3px rgba(0,0,0,.58)) saturate(1.08)}
+html[data-dungeon-quality="smooth"] #screen{filter:saturate(1.04) contrast(1.03)}
+html[data-dungeon-quality="smooth"] .foe canvas{filter:drop-shadow(0 4px 1px rgba(0,0,0,.48))}
+html[data-dungeon-quality="reduced"] #screen,html[data-dungeon-quality="reduced"] .foe canvas{filter:none!important}
+html[data-dungeon-quality="reduced"] .monsterSkillFx,html[data-dungeon-quality="reduced"] .foe .monsterSprite{animation:none!important}
 
 /* 接敵方位橫幅 */
 #openBanner{position:fixed;top:34%;left:0;right:0;text-align:center;z-index:56;
@@ -1594,9 +1603,28 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #5a3f0d}
 .teacher-final-stage .teacher-pixel{top:0;width:86px;height:129px}.teacher-final-formula{position:absolute;left:50%;top:42px;color:#fff5a2;font:900 18px/1 Georgia;opacity:.42;transform:translateX(-50%);letter-spacing:10px}.teacher-final-book,.teacher-final-flash{position:absolute;z-index:4;opacity:0;pointer-events:none}.teacher-final-book{left:52%;top:58px;font-size:42px;filter:drop-shadow(0 0 10px #fff)}.teacher-final-flash{inset:0;background:radial-gradient(circle at 20% 65%,#fff 0 3%,#ffe25d 4% 10%,rgba(199,69,255,.72) 11% 22%,transparent 45%)}.teacher-final-stage.punish .teacher-pixel{animation:teacherFinalCast .9s steps(6)}.teacher-final-stage.punish .teacher-final-formula{animation:teacherFormulaSpin .9s linear}.teacher-final-stage.punish .teacher-final-book{animation:teacherFinalBook .85s steps(6)}.teacher-final-stage.punish .teacher-final-flash{animation:teacherFinalFlash .7s .3s steps(4)}.teacher-final-stage.solved{animation:teacherSolved .45s ease}
 @keyframes teacherAlert{50%{transform:translateY(-6px) scale(1.08)}}@keyframes teacherBookHit{0%{opacity:0;transform:translate(0,0) rotate(0)}20%{opacity:1}75%{opacity:1;transform:translate(-180px,105px) rotate(-22deg) scale(1.3)}100%{opacity:0;transform:translate(-210px,125px) rotate(-35deg)}}@keyframes teacherWalkCloser{from{transform:translateX(-50%) scale(.35);filter:brightness(.25)}to{transform:translateX(-50%) scale(var(--walkScale,.58));filter:brightness(1)}}
 @keyframes teacherCast{0%,20%{transform:translateX(-50%)}38%{transform:translateX(-50%) translateY(-5px) rotate(-3deg);filter:brightness(1.35) drop-shadow(0 0 8px #fff)}65%{transform:translateX(-50%) translateY(2px) rotate(3deg);filter:drop-shadow(0 0 18px #c87cff)}100%{transform:translateX(-50%)}}@keyframes teacherFormula{0%{opacity:0;transform:translateX(-50%) scale(.25) rotate(0)}25%,75%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.25) rotate(300deg)}}@keyframes teacherOpenBook{0%,25%{opacity:0;transform:translateX(-50%) scale(.2)}45%,78%{opacity:1;transform:translateX(-50%) scale(1.2)}100%{opacity:0;transform:translateX(-50%) translateY(-16px) scale(1.45)}}@keyframes teacherPageBurst{0%{opacity:0;transform:translate(-50%,0) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translate(var(--pageX,-70px),var(--pageY,-70px)) rotate(240deg)}}@keyframes teacherAttackName{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%,70%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-8px) scale(1.08)}}@keyframes teacherImpact{0%{opacity:0;transform:rotate(-12deg) scale(.2)}45%{opacity:1;transform:rotate(-8deg) scale(1.5)}100%{opacity:0;transform:rotate(-3deg) scale(1.9)}}@keyframes teacherFinalCast{50%{transform:translateX(-50%) translateY(-5px) rotate(4deg);filter:brightness(1.55) drop-shadow(0 0 15px #fff)}}@keyframes teacherFormulaSpin{50%{opacity:1;transform:translateX(-50%) rotate(180deg) scale(1.45)}}@keyframes teacherFinalBook{0%{opacity:0;transform:translate(0,0) rotate(0)}30%{opacity:1}100%{opacity:0;transform:translate(-175px,92px) rotate(-55deg) scale(1.8)}}@keyframes teacherFinalFlash{30%{opacity:1}100%{opacity:0;transform:scale(1.2)}}@keyframes teacherSolved{50%{box-shadow:inset 0 0 45px #5df18a,0 0 22px #5df18a}}
+/* 20 秒下載進度：核心完成後立刻進入，精緻場景在背景載入。 */
+#dungeonBoot{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,#302456,#0a0716 68%);transition:opacity .45s ease,visibility .45s ease}
+#dungeonBoot.done{opacity:0;visibility:hidden;pointer-events:none}
+.dungeon-boot-card{width:min(560px,92vw);padding:clamp(24px,5vw,42px);border:4px solid #d2a73f;background:rgba(19,13,36,.94);box-shadow:0 0 0 4px #24190c,0 20px 60px rgba(0,0,0,.72),inset 0 0 35px rgba(105,74,170,.2);text-align:center}
+.dungeon-boot-mark{font-size:clamp(42px,10vw,72px);filter:drop-shadow(0 0 14px #7bcfff)}
+.dungeon-boot-card h1{margin:12px 0 5px;font-size:clamp(21px,5vw,32px);color:#ffe38a}.dungeon-boot-label{color:#d9d0ee;font-size:14px;min-height:1.6em}
+.dungeon-boot-track{height:22px;margin:22px 0 9px;border:3px solid #0a0716;background:#1a1230;box-shadow:inset 0 0 0 2px #48386f;overflow:hidden}
+.dungeon-boot-fill{display:block;width:3%;height:100%;background:linear-gradient(90deg,#54bfff,#8b6cff 58%,#ffd75f);box-shadow:0 0 18px #75cfff;transition:width .18s linear}
+.dungeon-boot-stats{display:flex;justify-content:space-between;color:#b9aed5;font:700 12px/1.3 monospace}.dungeon-boot-value{color:#ffe38a;font-size:16px}
 </style>
+<link rel="stylesheet" href="./app/math-dungeon-combat-art.css?v=80">
 </head>
 <body>
+<div id="dungeonBoot" role="status" aria-live="polite" aria-label="地下城下載進度">
+  <div class="dungeon-boot-card">
+    <div class="dungeon-boot-mark">📚</div>
+    <h1>地下城資料載入</h1>
+    <p class="dungeon-boot-label">正在下載核心、題庫與角色資料…</p>
+    <div class="dungeon-boot-track"><i class="dungeon-boot-fill"></i></div>
+    <div class="dungeon-boot-stats"><b class="dungeon-boot-value">3%</b><span class="dungeon-boot-detail">0.0 / 0.0 MB</span></div>
+  </div>
+</div>
 
 <div id="dungeon" class="hide">
   <div id="viewFrame">
@@ -1646,6 +1674,10 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #5a3f0d}
     <div id="reinfBar">
       <div class="rh"><b id="rTick">援軍接近</b></div>
       <div id="rList"></div>
+    </div>
+    <div id="battleActor" class="hide" aria-hidden="true">
+      <img class="battle-actor-avatar hide" alt="">
+      <span class="battle-actor-fallback">⚔️</span>
     </div>
     <div id="pFx"></div>
     <div id="ultFx"></div>
@@ -1699,9 +1731,14 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #5a3f0d}
 <div id="veil" class="veil"><div class="cw" id="veilCard"></div></div>
 
 <script src="../app/runtime-health.js"></script>
+<script src="./app/math-dungeon-load-policy.js?v=78"></script>
 <script src="question-bank-data.js?v=67"></script>
 <script src="./app/math-dungeon-data.js?v=65"></script>
 <script src="./app/math-dungeon-monster-data.js?v=65"></script>
+<script src="./app/math-dungeon-core.js?v=78"></script>
+<script src="./app/math-dungeon-card-rules.js?v=78"></script>
+<script src="./app/math-dungeon-state.js?v=78"></script>
+<script src="./app/math-dungeon-combat-art.js?v=80"></script>
 <script src="./app/math-dungeon-network.js?v=70"></script>
 <script src="./app/math-dungeon-classroom.js?v=65"></script>
 <script src="./app/math-dungeon-learning.js?v=65"></script>

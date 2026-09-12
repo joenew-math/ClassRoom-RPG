@@ -309,7 +309,7 @@ const CLOUD = {
     return m;
   },
   _catalog(){
-    return allShopItems().filter(it=>!it.creatorId||it.status==="approved").map(it=>({id:it.id,name:it.name,type:it.type,price:Number(it.price)||0,rarity:it.rarity||"Common",jobs:it.jobs||null,itemLevel:itemLevelOf(it),creatorId:it.creatorId||null,atk:Number(it.atk)||0,def:Number(it.def)||0,agi:Number(it.agi)||0,int:Number(it.int)||0,affix:it.affix||null,weaponSkill:it.weaponSkill||null,weaponPattern:it.weaponPattern||null,effect:it.effect||null,petCraft:!!it.petCraft,petLegend:!!it.petLegend,sourcePet:it.sourcePet||null}));
+    return allShopItems().filter(it=>!it.creatorId||it.status==="approved").map(it=>({id:it.id,name:it.name,type:it.type,price:Number(it.price)||0,rarity:it.rarity||"Common",jobs:it.jobs||null,itemLevel:itemLevelOf(it),creatorId:it.creatorId||null,atk:Number(it.atk)||0,def:Number(it.def)||0,agi:Number(it.agi)||0,int:Number(it.int)||0,affix:it.affix||null,weaponSkill:it.weaponSkill||null,weaponPattern:it.weaponPattern||null,effect:it.effect||null,pixelSet:it.pixelSet||null,petCraft:!!it.petCraft,petLegend:!!it.petLegend,sourcePet:it.sourcePet||null}));
   },
   _affixCatalog(){
     return AFFIXES.map(a=>({key:a.key,name:a.name,icon:a.icon,grade:a.grade,kind:a.kind,chance:a.chance,short:a.short,desc:a.desc,price:a.price||80}));

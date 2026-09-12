@@ -1518,19 +1518,28 @@ function drawFieldBg(){
   c.dataset.zone=String(S.zone||0);
   c.dataset.floor=String(fl||0);
   const fog=CUR_TH&&CUR_TH.fog||[22,16,42];
-  const fallback=g.createLinearGradient(0,0,0,H);
-  fallback.addColorStop(0,`rgb(${fog[0]},${fog[1]},${fog[2]})`);
-  fallback.addColorStop(1,'rgb(8,6,18)');
-  g.fillStyle=fallback;g.fillRect(0,0,W,H);
-  // 背景沿用當層環境，但不把即時巡邏怪物烙進背景，避免戰場上同時出現兩批敵人。
-  drawWeapon.skip=true;
-  render.staticBattleBackdrop=true;
-  try{ render(); }catch(_){}
-  finally{render.staticBattleBackdrop=false;}
-  drawWeapon.skip=false;
-  g.imageSmoothingEnabled=false;
-  const sc=Math.max(W/RW,H/RH),dw=RW*sc,dh=RH*sc;   // cover 填滿不變形
-  g.drawImage(cvs,(W-dw)/2,(H-dh)/2,dw,dh);
+  const scene=window.DungeonLoadPolicy&&window.DungeonLoadPolicy.sceneImage('zone'+((S.zone||0)+1));
+  if(scene){
+    g.imageSmoothingEnabled=false;
+    const sc=Math.max(W/scene.naturalWidth,H/scene.naturalHeight),dw=scene.naturalWidth*sc,dh=scene.naturalHeight*sc;
+    g.drawImage(scene,(W-dw)/2,(H-dh)/2,dw,dh);
+    c.dataset.scene='hd2d-original';
+  }else{
+    const fallback=g.createLinearGradient(0,0,0,H);
+    fallback.addColorStop(0,`rgb(${fog[0]},${fog[1]},${fog[2]})`);
+    fallback.addColorStop(1,'rgb(8,6,18)');
+    g.fillStyle=fallback;g.fillRect(0,0,W,H);
+    // 背景沿用當層環境，但不把即時巡邏怪物烙進背景，避免戰場上同時出現兩批敵人。
+    drawWeapon.skip=true;
+    render.staticBattleBackdrop=true;
+    try{ render(); }catch(_){}
+    finally{render.staticBattleBackdrop=false;}
+    drawWeapon.skip=false;
+    g.imageSmoothingEnabled=false;
+    const sc=Math.max(W/RW,H/RH),dw=RW*sc,dh=RH*sc;
+    g.drawImage(cvs,(W-dw)/2,(H-dh)/2,dw,dh);
+    c.dataset.scene='procedural';
+  }
   // 輕微壓暗＋暗角，讓怪物與手牌浮在場景上
   g.fillStyle='rgba(10,6,20,.28)';g.fillRect(0,0,W,H);
   const v=g.createRadialGradient(W/2,H*.5,H*.25,W/2,H*.5,H*.9);
@@ -1580,6 +1589,7 @@ function renderReinf(){
 
 function renderFoes(){
   const field=$('field');
+  if(window.DungeonCombatArt)DungeonCombatArt.renderBattleActor();
   // 移除已消失的
   for(const el of [...field.querySelectorAll('.foe')]){
     if(!B.foes.some(f=>f.uid===el.id&&!f.dead)) { el.classList.add('dying'); setTimeout(()=>el.remove(),450); }
@@ -2029,8 +2039,10 @@ function enemyPhase(i,done){
   }
   if(f.boss){ setTimeout(()=>enemyPhase(i+1,done),60); return; }   // Boss 只靠眼睛攻擊
   const el=document.getElementById(f.uid);
-  if(el){el.classList.add('acting');el.classList.remove('attack');
-         void el.offsetWidth;el.classList.add('attack');}
+  if(el){
+    if(window.DungeonCombatArt)DungeonCombatArt.beginMonsterAction(f,el);
+    else{el.classList.add('acting');el.classList.remove('attack');void el.offsetWidth;el.classList.add('attack');}
+  }
   monsterSay(f,f.hp/f.max<=.3?'low':(f.act||'atk'));
   const usedSpeciesFx=monsterAbilityFx(f);
   if(f.teacherBoss)teacherTextbookAttackFx(f,'奧義・課本演算連擊');
@@ -2040,24 +2052,24 @@ function enemyPhase(i,done){
     let regen=0;if(f.battleType==='regen'&&f.hp<f.max){regen=Math.min(6,f.max-f.hp);f.hp+=regen;}
     setTimeout(()=>{ popDmg(f,f.intent,false,'🛡 +'); refreshStatus();
       if(regen)toast('🌿 '+f.n+' 再生 HP +'+regen,1000);
-      setTimeout(()=>enemyPhase(i+1,done),320); },170);
-    if(el)setTimeout(()=>el.classList.remove('acting'),400);
+      setTimeout(()=>enemyPhase(i+1,done),320); },360);
+    if(el)setTimeout(()=>el.classList.remove('acting'),720);
     return;
   }
   if(f.act==='buff'){                      // 強化：永久提升攻擊力
     if(f.battleType==='chorus')B.foes.filter(x=>!x.dead).forEach(x=>x.atk+=1);else f.atk+=3;
     triggerFollowerSkills('assist',{status:'enemyBuff'});
     setTimeout(()=>{ popDmg(f,3,true,'▲ ATK+'); refreshStatus();
-      setTimeout(()=>enemyPhase(i+1,done),320); },170);
-    if(el)setTimeout(()=>el.classList.remove('acting'),400);
+      setTimeout(()=>enemyPhase(i+1,done),320); },360);
+    if(el)setTimeout(()=>el.classList.remove('acting'),720);
     return;
   }
   if(f.act==='curse'){                     // 詛咒：塞一張廢牌進棄牌堆
     B.disc.push({id:'curse',gem:null});
     triggerFollowerSkills('assist',{status:'curse'});
     setTimeout(()=>{ toast(f.n+' 施放詛咒 — 一張詛咒牌混入牌堆',1500);
-      refreshStatus(); setTimeout(()=>enemyPhase(i+1,done),320); },170);
-    if(el)setTimeout(()=>el.classList.remove('acting'),400);
+      refreshStatus(); setTimeout(()=>enemyPhase(i+1,done),320); },360);
+    if(el)setTimeout(()=>el.classList.remove('acting'),720);
     return;
   }
   /* 固定防禦最多抵銷單次攻擊 35%，避免高等角色把低中階怪物全部壓成 1 傷害。 */
@@ -2079,6 +2091,7 @@ function enemyPhase(i,done){
     if(absorbed){B.block-=absorbed;popPlayer('🛡 -'+absorbed,'shield',0);}
     if(toHp){
       S.hp-=toHp;
+      if(window.DungeonCombatArt)DungeonCombatArt.playerHurt(toHp);
       popPlayer('-'+toHp,'hurt',absorbed?150:0);flash();
       if(f.battleType==='leech'&&f.hp<f.max){const heal=Math.min(5,Math.ceil(toHp*.25),f.max-f.hp);f.hp+=heal;if(heal)popDmg(f,heal,false,'💚 +');}
       if(f.battleType==='venom'&&Math.random()<.30){B.disc.push({id:'curse',gem:null});toast('🟣 '+f.n+' 的干擾毒粉混入一張詛咒牌',1200);triggerFollowerSkills('assist',{status:'venom'});}
@@ -2088,7 +2101,7 @@ function enemyPhase(i,done){
     refreshStatus();
     if(S.hp<=0){S.hp=0;refreshStatus();B.busy=false;setTimeout(loseGame,650);return;}
     setTimeout(()=>enemyPhase(i+1,done),absorbed&&toHp?430:340);
-  },f.teacherBoss?820:170);
+  },f.teacherBoss?820:360);
 }
 
 function finishEnemyPhase(){

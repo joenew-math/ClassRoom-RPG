@@ -66,7 +66,8 @@ function skillChance(s, id){ const sk = skillDef(s.job,id),lv=activeSkillLv(s,id
 
 function intCooldownReductionPct(s){
   const x=Math.max(0,Math.min(190,totalStats(s).int-10));
-  return Math.min(35,x/190*35);
+  const extra=typeof pixelSetEffects==='function'?pixelSetEffects(s).cd:0;
+  return Math.min(extra?40:35,x/190*35+extra);
 }
 
 function skillCooldownSeconds(s,id){
@@ -124,7 +125,8 @@ function runtimeCooldownSnapshot(scope,sid){
 }
 
 function fighterCooldownInfo(f,key){
-  const readyAt=Number(f&&f[key+'ReadyAt'])||0,total=Math.max(.1,Number(f&&f[key+'CdTotal'])||1),left=Math.max(0,(readyAt-Date.now())/1000);
+  const now=typeof GARENA!=='undefined'&&GARENA.paused&&GARENA.fighters?.[f?.sid]===f?GARENA.pausedAt:Date.now();
+  const readyAt=Number(f&&f[key+'ReadyAt'])||0,total=Math.max(.1,Number(f&&f[key+'CdTotal'])||1),left=Math.max(0,(readyAt-now)/1000);
   if(f&&left<=0){f[key+'ReadyAt']=0;return {left:0,total,pct:0};}
   return {left,total,pct:Math.max(0,Math.min(100,left/total*100))};
 }
