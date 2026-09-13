@@ -17,7 +17,7 @@ function renderStudent(){
   }
   if(!classFeatureUnlocked(view.tab||"stats")) view.tab="stats";
   if(view.tab==="wheel" && s.readDate!==todayStr()) view.tab="announce";
-  garenaStudentInit(s.id);                                   // 掛團體戰監聽(進場自動彈遙控器)
+  if(!afterSchoolMode)garenaStudentInit(s.id);                // 課後複習不掛課堂戰場監聽
   const e = equipStatSum(s);
   const nxt = xpForNextLevel(s.level);
   const xpPct = Math.min(100, Math.round(s.xp/nxt*100));
@@ -44,7 +44,7 @@ function renderStudent(){
   const tabs = studentTabDefs.map(([k,n])=>{ const open=classFeatureUnlocked(k); return '<button class="tab '+(view.tab===k?"on ":"")+(open?'':'feature-locked')+'" '+(open?'data-tab="'+k+'"':'data-locked-feature="'+k+'"')+'>'+(open?'':'🔒 ')+n+'</button>'; }).join("");
   const currentStudentTab=studentTabDefs.find(([k])=>k===view.tab)||(view.tab==="wheel"?["announce","📣 公告與抽卡"]:studentTabDefs[0]);
   const currentEntryToken=String(new URLSearchParams(location.search).get("session")||"");
-  const canShareClassQr=view.role==="student"&&!!CLOUD.cid&&classSessionIsLive(state.classSession,currentEntryToken);
+  const canShareClassQr=!afterSchoolMode&&!!currentEntryToken&&view.role==="student"&&!!CLOUD.cid&&classSessionIsLive(state.classSession,currentEntryToken);
   const studentMenu='<div class="board-launcher feature-launcher student-launcher"><button class="btn gold board-launcher-main" id="studentMenuToggle">☰ '+currentStudentTab[1]+(view.studentMenu?"　收合 ▲":"　功能選單 ▼")+'</button>'
     +(view.studentMenu?'<div class="board-launcher-panel">'+tabs+'</div>':'')+'</div>';
 

@@ -71,5 +71,7 @@ function renderTeacher(){
     view.tview=b.dataset.tv; view.teacherMenu=false; view.boardMenu=false; render();
   });
   bindBackupBanner();
+  const dungeonMapEditor=document.getElementById('dungeonMapEditor');
+  if(dungeonMapEditor)dungeonMapEditor.onclick=()=>openDungeonCampusEditor();
   bindTeacher();
 }

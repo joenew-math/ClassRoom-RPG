@@ -465,6 +465,8 @@ const CLOUD = {
   },
   async loadClass(cid, myEmail, options){
     options=options||{};
+    const loadVersion=this._loadVersion=(this._loadVersion||0)+1;
+    const loadingUser=FB.user&&FB.user.uid,loadingRole=this.role;
     const c = FB.db.collection("classes").doc(cid);
     let account=null;
     if(this.role==="student"&&FB.user&&FB.user.uid){
@@ -478,11 +480,15 @@ const CLOUD = {
     }else{
       /* 登入核心只依賴班級公開設定與自己的角色。商店／任務等附加查詢個別容錯，
        * 避免其中一個索引或網路請求失敗時，把已成功註冊的角色擋在登入頁外。 */
-      const core=await Promise.all([c.collection("public").doc("main").get(),c.collection("students").doc(String(account.sid)).get()]);
-      const extras=await Promise.allSettled([c.collection("publicRoster").get(),c.collection("items").where("status","==","approved").get(),c.collection("submissions").where("sid","==",String(account.sid)).get(),c.collection("items").where("creatorId","==",String(account.sid)).get()]);
+      const [core,extras]=await Promise.all([
+        Promise.all([c.collection("public").doc("main").get(),c.collection("students").doc(String(account.sid)).get()]),
+        Promise.allSettled([c.collection("publicRoster").get(),c.collection("items").where("status","==","approved").get(),c.collection("submissions").where("sid","==",String(account.sid)).get(),c.collection("items").where("creatorId","==",String(account.sid)).get()])
+      ]);
+      if(!core[1].exists)throw new Error("找不到自己的班級角色，請老師核對名冊綁定");
       const empty={docs:[],empty:true},pick=i=>extras[i].status==="fulfilled"?extras[i].value:(console.warn("student class optional load",extras[i].reason),empty);
       got=[core[0],pick(0),pick(1),core[1],pick(2),pick(3)];metaDoc=got[0];
     }
+    if(loadVersion!==this._loadVersion||loadingUser!==(FB.user&&FB.user.uid)||loadingRole!==this.role)throw new Error("登入身分已變更，請重新進入班級");
     if(!metaDoc.exists) throw new Error("找不到班級資料");
     const meta = metaDoc.data();
     if(this.role==="teacher"){

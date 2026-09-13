@@ -1145,7 +1145,14 @@ function dollRO(s, size, override){
       y:Math.max(-18,Math.min(18,Number(rawTune.y)||0)),
       s:Math.max(.55,Math.min(1.65,Number(rawTune.s)||1))
     };
-    const baseTransform = 'translate('+baseTune.x+' '+baseTune.y+') translate(50 55) scale('+baseTune.s+') translate(-50 -55)';
+    // 以每款素體的實際腳底縮放，避免女性素體縮小後從陰影向上飄；透明底邊也會自動補齊。
+    const variantSpec = BASE_VARIANT_SPEC[(s&&s.baseVariant)||""] || {};
+    const sourceHeight = Math.max(1,Number(variantSpec.h)||280);
+    const footY = Math.max(0,Math.min(sourceHeight,Number(variantSpec.footY)||sourceHeight));
+    const baseFootY = BASE_POS.y + BASE_POS.h * footY / sourceHeight;
+    const baseGroundY = BASE_POS.y + BASE_POS.h;
+    const baseGroundOffset = baseGroundY - baseFootY;
+    const baseTransform = 'translate('+baseTune.x+' '+(baseTune.y+baseGroundOffset)+') translate(50 '+baseFootY+') scale('+baseTune.s+') translate(-50 -'+baseFootY+')';
     const parts = [
       {z:BASE_FIT.back.z,    svg:fit(back,"back"), legend:LG("back")},
       {z:BASE_FIT.base.z,    svg:'<g transform="'+baseTransform+'"><image href="'+A_base(s)+'" x="'+BASE_POS.x+'" y="'+BASE_POS.y+'" width="'+BASE_POS.w+'" height="'+BASE_POS.h+'" preserveAspectRatio="xMidYMax meet"/></g>'},
@@ -2698,6 +2705,8 @@ function classFeatureStage(feature){
   return st ? st.id : 0;
 }
 function classFeatureUnlocked(feature){
+  // 回家複習是學習入口，不依賴班級遊戲 XP；上課鎖定仍由地下城檢查。
+  if(feature==='dungeon'&&typeof view!=='undefined'&&view.role==='student'&&view.accessMode==='afterSchool')return true;
   if(classEffectiveStage()<classFeatureStage(feature))return false;
   const gate=CLASS_FEATURE_GATES[feature];return !gate||!!(((state.classUnlocks||{}).teacherGates||{})[gate]);
 }
@@ -4904,6 +4913,7 @@ function render(){
       : '© 2025 誠兆(Joenew)｜班級經營公會｜未經授權請勿轉載或商用';
   }
   if(view.page==="home") renderHome();
+  else if(view.page==="studentWaiting"){if(!document.getElementById('studentWaitingDungeon'))renderStudentWaiting(FB.user?.email||'',FB.user);}
   else if(view.page==="home2") renderLegacyHome();
   else if(view.page==="teacher") renderTeacher();
   else if(view.page==="parent") renderParent();
@@ -5010,6 +5020,8 @@ function homeProgressRoadHtml(){
 }
 function fitHomePane(){
   const vp=document.querySelector(".home-pane-viewport"),inner=document.getElementById("homePaneScale"); if(!vp||!inner)return;
+  // Natural-flow interface keeps controls readable at narrow widths and browser zoom.
+  if(getComputedStyle(inner).position==="static"){app.style.height="";inner.style.transform="";return;}
   const header=document.querySelector("header"); if(header) app.style.height=Math.max(320,window.innerHeight-header.getBoundingClientRect().height)+"px";
   inner.style.transform="translateX(-50%) scale(1)";
   const sw=Math.max(1,inner.scrollWidth),sh=Math.max(1,inner.scrollHeight),scale=Math.max(.38,Math.min(1,(vp.clientWidth-4)/sw,(vp.clientHeight-4)/sh));
@@ -5041,7 +5053,7 @@ function renderHome(){
   }else{
     pane='<div class="home-login-pane"><p>'+(fbOk?'請選擇身分':'⚠️ 目前無法連線登入服務，請檢查網路後重新整理')+'</p>'
       +'<div class="role-grid"><button class="role-card teacher" id="loginTeacher"'+(fbOk?'':' disabled')+'><span class="face">📲</span><span class="nm">教師登入</span><span class="sub">顯示 QR Code・Google 帳號</span></button>'
-      +'<button class="role-card" id="loginStudentWait"'+(fbOk?'':' disabled')+'><span class="face">🎒</span><span class="nm">學生登入</span><span class="sub">提前登入等待・快速回課堂</span></button>'
+      +'<button class="role-card" id="loginStudentWait"'+(fbOk?'':' disabled')+'><span class="face">🎒</span><span class="nm">學生登入／回家複習</span><span class="sub">課堂掃 QR・課後直接進地下城</span></button>'
       +'<button class="role-card" id="loginParent"><span class="face">👪</span><span class="nm">家長查看</span><span class="sub">班級代碼＋學號＋生日</span></button></div>'
       +'<div id="parentForm" style="display:none;max-width:340px;width:100%"><div class="panel"><h3>👪 家長查看</h3>'
       +(function(){try{const p=JSON.parse(sessionStorage.getItem("rpg-parent-last")||"null");window._pLast=p&&Date.now()-(p.ts||0)<30*60*1000?p:null;return window._pLast?'<div class="mini" style="color:#3fae76">本分頁暫存班級與學號（30 分鐘）・<a href="#" id="pForget">清除</a></div>':"";}catch(_){window._pLast=null;return "";}})()
@@ -5055,16 +5067,16 @@ function renderHome(){
     const beginStudentAuth=mode=>{try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode",mode);sessionStorage.removeItem("rpg-student-join");}catch(_){}googleLogin("student");};
     document.getElementById("studentQrGoogle").onclick=()=>beginStudentAuth("login");
     document.getElementById("studentFirstRegister").onclick=()=>beginStudentAuth("auto");
+    if(FB.user)offerStudentQuickLogin(FB.user);
     return;
   }
   if(teacherEntry){document.getElementById("teacherQrGoogle").onclick=()=>googleLogin("teacher");return;}
   document.getElementById("loginTeacher").onclick=openTeacherLoginQr;
   document.getElementById("loginStudentWait").onclick=()=>{
     try{sessionStorage.setItem("rpg-student-mode","waiting");sessionStorage.removeItem("rpg-student-join");}catch(_){}
-    const lastRole=(()=>{try{return localStorage.getItem("rpg-last-role")||"";}catch(_){return "";}})();
-    if(FB.user&&lastRole==="student")loginSuccess(FB.user,"student");
-    else googleLogin("student");
+    googleLogin("student");
   };
+  if(FB.user)offerStudentQuickLogin(FB.user);
   document.getElementById("loginParent").onclick=()=>{const f=document.getElementById("parentForm"),show=f.style.display==="none";f.style.display=show?"":"none";requestAnimationFrame(fitHomePane);if(show){const el=document.getElementById("pCid");if(el&&!el.value)el.focus();}};
   document.getElementById("pGo").onclick=parentLogin;
   const rememberedCid=normalizeClassCode((window._pLast&&window._pLast.cid)||localStorage.getItem("rpg-last-class")||"");document.getElementById("pCid").value=rememberedCid;
@@ -6317,7 +6329,7 @@ function teacherTasks(){
   const dungeonBankBoxes=dungeonRows.map((r,i)=>'<label class="dungeon-bank-option" data-dungeon-vol="'+esc(r.vol)+'" data-dungeon-grade="'+esc(r.grade||'')+'"><input type="checkbox" class="tkDungeonBank" value="'+i+'"><span><b>'+esc((r.grade||"")+"・第 "+(r.vol||"?")+" 冊｜"+(r.unit||r.chap||"未分類"))+'</b><small>'+esc(r.topic||"主題")+'・'+((r.qs||[]).length)+' 題'+(r.custom?'・教師追加題庫':'・課程目錄題庫')+'</small></span></label>').join("");
   const dungeonQuick='<div class="task-form-grid"><label class="wide">作業名稱<input id="dungeonTaskTitle" value="地下城自主複習" maxlength="40"></label><label>課本冊別<select id="dungeonTaskVolume">'+[1,2,3,4,5,6].map(v=>'<option value="'+v+'">第 '+v+' 冊（'+(v<=2?'七年級':v<=4?'八年級':'九年級')+'）</option>').join("")+'</select></label><label>發布對象<select id="dungeonTaskScope">'+scopeOpts.replace('<option value="pick">🎯 指定學生(可勾多人,專屬任務)</option>',"")+'</select></label><label>完成門檻<input id="dungeonTaskTarget" type="number" min="3" max="100" value="10"> 題</label><label>任務 XP<input id="dungeonTaskXp" type="number" min="0" max="500" value="20"></label><label>任務金幣<input id="dungeonTaskGold" type="number" min="0" max="1000" value="10"></label></div>'
     +'<details style="margin-top:9px"><summary><b>☑️ 勾選課程目錄的題庫單元</b> <span class="mini" id="dungeonBankCount">未勾選時使用地下城內建題庫</span></summary><div class="inline-form" style="margin-top:8px"><button type="button" class="btn" id="dungeonBankAll">勾選本冊全部</button><button type="button" class="btn" id="dungeonBankNone">清除勾選</button></div><div class="dungeon-bank-picker">'+(dungeonBankBoxes||'<div class="mini">目前沒有課程目錄題庫，仍可發布地下城內建題庫作業。</div>')+'</div></details>'
-    +'<div class="dungeon-reward-note" style="margin-top:9px">學生遊玩會取得每日限額自主獎勵；達標或通關時成果會自動送入教師審核，教師通過後才發正式任務獎勵。勾選後會混合「課程目錄題目＋地下城同單元題型」，並鎖定同年級、同冊別與同單元，不會跨單元出題。</div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn gold" id="dungeonTaskPublish">🏰 發布地下城作業</button></div>';
+    +'<div class="dungeon-reward-note" style="margin-top:9px">學生遊玩會取得每日限額自主獎勵；達標或通關時成果會自動送入教師審核，教師通過後才發正式任務獎勵。勾選後會混合「課程目錄題目＋地下城同單元題型」，並鎖定同年級、同冊別與同單元，不會跨單元出題。</div><div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="dungeonMapEditor">🗺 地下城地圖設定</button><button class="btn gold" id="dungeonTaskPublish">🏰 發布地下城作業</button></div>';
   const pend = pendingSubs().map(x=>{
     const s = stu(x.sid); const t = taskById(x.taskId);
     if(!s || !t) return "";
@@ -8127,18 +8139,11 @@ if(FB.ready&&!_mobaPhonePage){
       _entryLoginStarted=true;try{sessionStorage.removeItem("rpg-login-role");}catch(_){}FB.user=user;loginSuccess(user,"teacher");return;
     }
     else if(entryCid&&(entry.get("session")||entry.get("dota")||entry.get("reward"))){
-      // 已在同一裝置完成「學生提前登入」時，掃描有效課堂 QR 可直接接續；
-      // 共用平板沒有等待記號時仍要求本人按下快速登入，避免沿用上一位同學。
-      let waitingEmail="";try{waitingEmail=String(localStorage.getItem("rpg-student-waiting-email")||"").toLowerCase();}catch(_){}
-      if(waitingEmail&&waitingEmail===String(user.email||"").toLowerCase()){
-        if(_entryLoginStarted)return;
-        _entryLoginStarted=true;FB.user=user;
-        try{sessionStorage.setItem("rpg-student-mode","login");sessionStorage.removeItem("rpg-student-join");}catch(_){}
-        loginSuccess(user,"student");return;
-      }
+      // 快速接續只省略重開 Google；共用裝置仍需本人確認帳號。
       FB.user=user;offerStudentQuickLogin(user);return;
     }
-    // 一般首頁提供教師、學生等待與家長入口，但不自動帶入共用裝置的舊帳號。
+    // 一般首頁也提供明確帳號確認；不自動登入舊角色。
+    FB.user=user;offerStudentQuickLogin(user);
     return;
   });
 }

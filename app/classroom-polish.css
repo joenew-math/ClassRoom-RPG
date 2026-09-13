@@ -1,4 +1,9 @@
 /* Scoped studio and knowledge-siege layout; no extra render loops. */
+#studentQuickLogin{grid-column:1/-1;min-width:0;padding:12px;border:2px solid #9db8ab;border-radius:12px;background:#edf8f0;color:#233d32;box-sizing:border-box}
+#studentQuickLogin button{min-height:44px;white-space:normal}#studentQuickLogin .student-quick-account{overflow-wrap:anywhere}
+.after-school-review-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0;padding:12px;background:#fff4d7;border-radius:12px}.after-school-review-actions .mini{flex-basis:100%}
+.after-school-home h2,.after-school-home h3{color:#263e35}.after-school-home .mini{color:#43554c}.after-school-home .after-school-class{color:#263e35}.after-school-home button{min-height:44px;white-space:normal}
+.dungeon-homework{color:#f5efff}.dungeon-homework .mini{color:#ddd6ef!important}.dungeon-homework .dungeon-reward-note,.dungeon-homework h3{color:#ffe9a7}.dungeon-homework label,.dungeon-homework .dungeon-progress span{color:#f5efff}.dungeon-homework .dungeon-task-quick .mini{color:#43554c!important}
 .equipment-art-plate{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;box-sizing:border-box;border:1px solid #b6a88a;border-radius:18%;background:radial-gradient(ellipse at 40% 24%,#fffdf5 8%,#eee5d3 65%,#d7c8b0);box-shadow:inset 0 1px 0 #fff,0 3px 7px #241e2022;overflow:visible}
 .equipment-art-plate svg{display:block;overflow:visible;filter:drop-shadow(0 2px 1px #29213344)}
 .equipment-art-plate.rare{border-color:#7098b4;background:radial-gradient(ellipse at 40% 24%,#f3fcff,#dceaf5 65%,#b6cbe1)}

@@ -97,6 +97,7 @@ function registerClassEquipmentCards(list){
   if(ids.length)S.deck=sanitizeDeck(S.deck,S.job);saveChar();return ids;
 }
 function classroomApplyLaunch(){
+  if(canEditCampus())return false; // 教師配置地圖時，不套用共用裝置殘留的學生啟動資料。
   let d=null;
   try{d=JSON.parse(localStorage.getItem(CLASSROOM_LAUNCH_KEY)||'null');}catch(e){}
   if(!d||d.type!=='class_rpg_launch'||!d.sessionId||Date.now()-Number(d.issuedAt||0)>7*86400000)return false;
@@ -355,5 +356,4 @@ function bridgeScreen(msg){
       return true;
     });
 }
-
 

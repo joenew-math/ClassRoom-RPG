@@ -1,0 +1,22 @@
+/* Shared presentation only: never change game-state, team or rarity colours. */
+:root {
+  --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --ui-bg: #f5f5f7;
+  --ui-surface: #fff;
+  --ui-subtle: #f1f3f6;
+  --ui-ink: #202124;
+  --ui-muted: #606773;
+  --ui-line: #dce0e6;
+  --ui-blue: #0965ce;
+  --ui-blue-soft: #edf4ff;
+  --ui-shadow: 0 4px 20px rgba(25, 39, 62, .055);
+  --ui-radius: 20px;
+}
+:where(button, input, select, textarea) { font-family: var(--ui-font); }
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #2384e8 !important;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(button, a, summary) { transition: none !important; scroll-behavior: auto !important; }
+}

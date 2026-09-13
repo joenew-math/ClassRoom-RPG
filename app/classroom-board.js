@@ -113,7 +113,7 @@ function teacherBoard(){
       +'<span class="gscore num">'+groupScore(group)+' XP</span><span class="hsp"></span><button class="gaward" data-gaward="'+esc(group)+'">整組 +10 XP</button></div>'
       +'<div class="member-grid">'+cards+'</div></div>';
   }).join('');
-  return boardBossHeader()+'<div class="group-wall board-focus">'+walls+'</div>'+floatConsole()+courseButton;
+  return boardBossHeader()+'<div class="group-wall board-focus">'+walls+'</div>'+floatConsole();
 }
 
 function floatConsole(){
@@ -138,6 +138,7 @@ function floatConsole(){
     +'<div class="fc-btns" style="margin-top:8px"><button class="btn'+(view.locked?' gold':'')+'" id="btnLock">'+(view.locked?'🔒 投影中':'🔓 投影模式')+'</button>'
     +'<button class="btn'+(view.multiSel?' gold':'')+'" id="btnMulti">'+(view.multiSel?'☑ 已選 '+view.multiSel.length+' 人(點角色勾選)':'☑ 批次加分')+'</button>'
     +'<button class="btn'+(state.lesson&&state.lesson.active?' gold':'')+'" id="btnLesson">'+(state.lesson&&state.lesson.active?'🏁 結束答題':'📣 發起答題')+'</button>'
+    +'<a class="btn board-course-console-link" href="'+COURSE_CATALOG_URL+'" target="_blank" rel="noopener" title="開啟課後複習課程">📚 課程目錄</a>'
     +(CLOUD.on()?'<button class="btn" id="btnQr">📱 登入 QR</button>':'')
     +(view.multiSel&&view.multiSel.length?'<button class="btn gold" id="btnMultiGo">💰 發獎勵給 '+view.multiSel.length+' 人</button>':'')
     +(pendingSubs().length?'<span class="stat-chip">📌 待審 '+pendingSubs().length+'</span>':'')

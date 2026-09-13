@@ -7,6 +7,7 @@
  */
 
 let _googleLoginBusy=false;
+let _studentLoginPromise=null;
 
 function normalizeClassCode(v){
   v=String(v||"").trim();
@@ -142,9 +143,11 @@ function renderLoginRecovery(role,user,email,cid,error){
 }
 
 async function loginSuccess(user,role){
+  if(_studentLoginPromise)return _studentLoginPromise;
   loginLoading("正在確認登入","Google 身分已確認，正在核對班級與角色資料…",2);
-  try{return await completeLoginSuccess(user,role);}
-  finally{loginLoadingDone();}
+  _studentLoginPromise=completeLoginSuccess(user,role);
+  try{return await _studentLoginPromise;}
+  finally{_studentLoginPromise=null;loginLoadingDone();}
 }
 
 async function completeLoginSuccess(user, role){
@@ -173,7 +176,7 @@ async function completeLoginSuccess(user, role){
       const urlCid=normalizeClassCode(entryParams.get("class")||"");
       cid=urlCid; // 已註冊學生由本節課 QR 帶入班級，不再靠舊班級記錄猜測
     }
-    if(!cid&&studentMode==="waiting"){ renderStudentWaiting(email,user); return; }
+    if(studentMode==="waiting"||(!cid&&studentMode==="login")){ renderStudentWaiting(email,user); return; }
     if(!cid){ renderStudentSessionMissing(email,"請掃描老師投影的本節課班級 QR Code，再使用 Google 帳號登入。"); return; }
     try{
       let enrollment=null;
@@ -253,24 +256,31 @@ async function completeLoginSuccess(user, role){
 }
 
 function renderStudentWaiting(email,user){
+  try{CLOUD.stopListen();}catch(_){}
+  if(typeof GPAD!=='undefined'){try{if(GPAD.unsub)GPAD.unsub();}catch(_){}GPAD.unsub=null;GPAD.live=null;garenaPadRender();}
+  view={page:"studentWaiting",role:"student",accessMode:"afterSchool"};
+  // A home-review entry must not retain an expired classroom/reward URL.
+  try{const u=new URL(location.href);u.search="";u.hash="";history.replaceState(null,"",u.toString());sessionStorage.removeItem("rpg-student-mode");sessionStorage.removeItem("rpg-student-join");}catch(_){}
   prepareScrollableAuthPage();
-  try{localStorage.setItem("rpg-student-waiting-email",String(email||"").toLowerCase());}catch(_){}
+  try{localStorage.removeItem("rpg-student-waiting-email");}catch(_){}
   app.innerHTML='<div class="home after-school-home" style="min-height:100vh;padding-bottom:max(28px,env(safe-area-inset-bottom))"><div class="crest">📚</div><h2>課後自主學習大廳</h2>'
     +'<div class="panel after-school-intro"><p><b>已登入：'+esc(email)+'</b></p><div class="mini">放學後可從這裡複習、查看自己的學習進度與傳送學習回饋。老師開始上課後，請掃大屏 QR Code 進入另一套「課堂介面」。</div>'
     +'<div class="after-school-boundary"><span>🏠 課後：課程、地下城、進度、公告與抽卡、學習回饋</span><span>🏫 課堂：即時答題、獎勵、商店、競技與團隊活動</span></div></div>'
-    +'<div class="after-school-shortcuts"><a class="after-school-card" href="'+COURSE_CATALOG_URL+'" target="_blank" rel="noopener"><b>📚 課程目錄</b><span>依冊別與單元複習</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>🏰 地下城作業</b><span>完成教師指定任務</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>📈 我的進度</b><span>只看自己的答題成果</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>📣 公告與抽卡</b><span>看完公告即可使用每日抽卡</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>🫶 學習回饋</b><span>內容只有老師看得到</span></a></div>'
+    +'<div class="after-school-shortcuts"><a class="after-school-card" href="'+COURSE_CATALOG_URL+'" target="_blank" rel="noopener"><b>📚 課程目錄</b><span>依冊別與單元複習</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>🏰 地下城複習</b><span>自由複習或教師指定任務</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>📈 我的進度</b><span>只看自己的答題成果</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>📣 公告與抽卡</b><span>看完公告即可使用每日抽卡</span></a><a class="after-school-card" href="#studentWaitingDungeon"><b>🫶 學習回饋</b><span>內容只有老師看得到</span></a></div>'
     +'<div class="panel after-school-classes" style="max-width:820px;margin:14px auto;text-align:left"><h3>🎒 我的班級與課後任務</h3><div id="studentWaitingDungeon"><div class="mini">正在讀取你的班級、公告與學習進度…</div></div></div>'
-    +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="studentWaitingReady">📱 老師開課後掃大屏 QR</button><button class="btn" id="studentWaitingOther">使用其他 Google 帳號</button><button class="btn" id="studentWaitingHome">回首頁（保持登入）</button></div></div>';
+    +'<div class="inline-form" style="justify-content:center;margin-top:14px"><button class="btn gold" id="studentWaitingReady">📱 老師開課後掃大屏 QR</button><button class="btn" id="studentWaitingRefresh">重新讀取班級</button><button class="btn" id="studentWaitingOther">使用其他 Google 帳號</button><button class="btn" id="studentWaitingHome">回首頁（保持登入）</button></div></div>';
+  document.getElementById("studentWaitingRefresh").onclick=()=>renderStudentWaiting(email,user);
   document.getElementById("studentWaitingReady").onclick=()=>toast("老師開始上課後，請掃描大屏顯示的本節課 QR Code");
-  document.getElementById("studentWaitingOther").onclick=async()=>{try{localStorage.removeItem("rpg-student-waiting-email");await FB.auth.signOut();}catch(_){}FB.user=null;googleLogin("student");};
+  document.getElementById("studentWaitingOther").onclick=async()=>{try{localStorage.removeItem("rpg-student-waiting-email");await FB.auth.signOut();}catch(_){}FB.user=null;sessionStorage.setItem("rpg-student-mode","waiting");googleLogin("student");};
   document.getElementById("studentWaitingHome").onclick=()=>{view={page:"home"};render();};
+  const logout=document.createElement('button');logout.id='studentWaitingLogout';logout.className='btn';logout.textContent='🚪 共用平板：登出';logout.onclick=()=>doLogout();document.getElementById('studentWaitingHome').after(logout);
   loadStudentWaitingDungeon(email,user);
 }
 
 async function loadStudentWaitingDungeon(email,user){
   const host=document.getElementById("studentWaitingDungeon");if(!host)return;
   try{
-    const rows=await CLOUD.listStudentClassSummaries(user);if(!document.getElementById("studentWaitingDungeon"))return;
+    const rows=await CLOUD.listStudentClassSummaries(user);if(document.getElementById("studentWaitingDungeon")!==host||FB.user?.uid!==user?.uid)return;
     const entries=[];
     const html=rows.map((row,ri)=>{
       const live=classSessionIsLive(row.classSession),grade=dungeonGradeOf(row.student),s=row.student||{},ds=dungeonStatsOf(s),accuracy=ds.totalQuestions?Math.round(ds.totalCorrect/ds.totalQuestions*100):0;
@@ -283,23 +293,51 @@ async function loadStudentWaitingDungeon(email,user){
         +'</section>';
     }).join("")||'<div class="mini">這個 Google 帳號目前沒有可讀取的班級角色。請先掃描老師的 QR Code 完成第一次註冊。</div>';
     host.innerHTML=html;
-    host.querySelectorAll("[data-waiting-dungeon]").forEach(b=>b.onclick=async()=>{
-      const entry=entries.find(x=>x.key===b.dataset.waitingDungeon);if(!entry)return;b.disabled=true;b.textContent="正在載入角色…";
+    host.querySelectorAll('.after-school-class').forEach((card,i)=>{
+      if(classSessionIsLive(rows[i].classSession))return;
+      const actions=document.createElement('div');actions.className='after-school-review-actions';
+      actions.innerHTML='<button class="btn gold" data-waiting-review="'+i+'">🏰 自由複習地下城</button><button class="btn" data-waiting-progress="'+i+'">📈 我的角色與進度</button><span class="mini">沒有指定作業也能複習；沿用本班角色與學習紀錄。</span>';
+      card.querySelector('.after-school-class-head').after(actions);
+    });
+    let opening=false;
+    const lockEntry=()=>{if(opening)return false;opening=true;host.querySelectorAll('button').forEach(b=>b.disabled=true);return true;};
+    const unlockEntry=()=>{opening=false;host.querySelectorAll('button').forEach(b=>b.disabled=false);};
+    const openReview=async(b,tab)=>{
+      const row=rows[Number(b.dataset.waitingReview??b.dataset.waitingProgress)];if(!row)return;
+      if(!lockEntry())return;
+      const label=b.textContent;b.disabled=true;b.textContent='正在核對角色…';
       try{
-        CLOUD.role="student";await CLOUD.loadClass(entry.row.cid,email,{listen:true});
+        CLOUD.role='student';await CLOUD.loadClass(row.cid,email,{listen:false});
+        if(FB.user?.uid!==user?.uid||document.getElementById('studentWaitingDungeon')!==host)return;
+        if(classSessionIsLive(state.classSession))throw new Error('老師已開始上課，請掃描本節課 QR Code');
+        const s=stu(String(CLOUD.myId||''));if(!s||String(s.id)!==String(row.sid))throw new Error('班級角色已變更，請重新讀取班級');
+        if(!(await studentRegistrationComplete(s))){renderJobPick(s,email);return;}
+        view={page:'student',sid:s.id,tab,role:'student',accessMode:'afterSchool'};render();startStudentRealtimeSafely();
+      }catch(e){unlockEntry();b.textContent=label;toast('無法開啟複習：'+(e.message||e),true);}
+    };
+    host.querySelectorAll('[data-waiting-review]').forEach(b=>b.onclick=()=>openReview(b,'dungeon'));
+    host.querySelectorAll('[data-waiting-progress]').forEach(b=>b.onclick=()=>openReview(b,'stats'));
+    host.querySelectorAll("[data-waiting-dungeon]").forEach(b=>b.onclick=async()=>{
+      const entry=entries.find(x=>x.key===b.dataset.waitingDungeon);if(!entry||!lockEntry())return;b.disabled=true;b.textContent="正在載入角色…";
+      try{
+        CLOUD.role="student";await CLOUD.loadClass(entry.row.cid,email,{listen:false});
+        if(FB.user?.uid!==user?.uid||document.getElementById('studentWaitingDungeon')!==host)return;
         if(classSessionIsLive(state.classSession))throw new Error("老師已開始上課，地下城已關閉");
-        const s=stu(String(entry.row.sid));if(!s)throw new Error("找不到這個班級角色");
-        const task=taskById(Number(entry.task.id));view={page:"student",sid:s.id,tab:"dungeon",role:"student",accessMode:"afterSchool"};render();startStudentRealtimeSafely();await launchDungeon(s,task);
-      }catch(e){b.disabled=false;b.textContent="開始作業";toast("無法進入地下城："+(e.message||e),true);}
+        const s=stu(String(CLOUD.myId||''));if(!s||String(s.id)!==String(entry.row.sid))throw new Error("找不到這個班級角色");
+        if(!(await studentRegistrationComplete(s))){renderJobPick(s,email);return;}
+        const task=taskById(Number(entry.task.id));if(!task||!task.active||!task.dungeonHomework)throw new Error('這份作業已更新，請重新讀取班級');
+        view={page:"student",sid:s.id,tab:"dungeon",role:"student",accessMode:"afterSchool"};render();startStudentRealtimeSafely();await launchDungeon(s,task);
+      }catch(e){unlockEntry();b.textContent="開始作業";toast("無法進入地下城："+(e.message||e),true);}
     });
     host.querySelectorAll("[data-waiting-announce]").forEach(b=>b.onclick=async()=>{
-      const row=rows[Number(b.dataset.waitingAnnounce)];if(!row)return;b.disabled=true;b.textContent="正在載入公告…";
+      const row=rows[Number(b.dataset.waitingAnnounce)];if(!row||!lockEntry())return;b.disabled=true;b.textContent="正在載入公告…";
       try{
-        CLOUD.role="student";await CLOUD.loadClass(row.cid,email,{listen:true});
+        CLOUD.role="student";await CLOUD.loadClass(row.cid,email,{listen:false});
+        if(FB.user?.uid!==user?.uid||document.getElementById('studentWaitingDungeon')!==host)return;
         if(classSessionIsLive(state.classSession))throw new Error("老師已開始上課，請掃 QR 進入課堂");
         const s=stu(String(row.sid));if(!s)throw new Error("找不到這個班級角色");
         view={page:"student",sid:s.id,tab:"announce",role:"student",accessMode:"afterSchool"};render();startStudentRealtimeSafely();
-      }catch(e){b.disabled=false;b.textContent="開啟公告與抽卡";toast("無法開啟公告與抽卡："+(e.message||e),true);}
+      }catch(e){unlockEntry();b.textContent="開啟公告與抽卡";toast("無法開啟公告與抽卡："+(e.message||e),true);}
     });
     host.querySelectorAll("[data-waiting-feedback]").forEach(b=>b.onclick=()=>{
       const [riText,kind]=String(b.dataset.waitingFeedback||"").split("|"),row=rows[Number(riText)],opt=HELP_REQUEST_OPTIONS[kind];if(!row||!opt)return;
@@ -312,16 +350,18 @@ async function loadStudentWaitingDungeon(email,user){
         }catch(e){b.disabled=false;b.textContent=opt.icon+' '+opt.label;toast("回饋未送出："+(e.message||e),true);}
       },"確認私密送出");
     });
-  }catch(e){host.innerHTML='<div class="mini" style="color:#a33">任務讀取失敗：'+esc(e.message||e)+'<br>可先等待老師 QR Code，或重新整理頁面。</div>';}
+  }catch(e){if(document.getElementById('studentWaitingDungeon')!==host)return;host.innerHTML='<div class="mini" style="color:#a33">任務讀取失敗：'+esc(e.message||e)+'<br>請按「重新讀取班級」，不需要重做 Google 登入。</div>';}
 }
 
 function renderStudentSessionMissing(email,message){
+  prepareScrollableAuthPage();
   sessionStorage.removeItem("rpg-student-mode");
   sessionStorage.removeItem("rpg-student-join");
   app.innerHTML='<div class="home"><div class="crest">📱</div><h2>需要本節課 QR Code</h2>'
     +'<div class="panel" style="max-width:500px;margin:0 auto"><p>'+esc(message||"請掃描老師顯示的班級 QR Code。")+'</p>'
     +'<div class="mini">目前登入帳號：<b>'+esc(email)+'</b><br>QR Code 只在本節課有效，結束上課後會自動失效。</div></div>'
-    +'<button class="btn" id="sessionMissingBack" style="margin-top:12px">回首頁</button></div>';
+    +'<div class="inline-form" style="justify-content:center;margin-top:12px"><button class="btn gold" id="sessionMissingReview">🏠 回家複習／課後大廳</button><button class="btn" id="sessionMissingBack">登出並回首頁</button></div></div>';
+  document.getElementById("sessionMissingReview").onclick=()=>renderStudentWaiting(email,FB.user);
   document.getElementById("sessionMissingBack").onclick=()=>{ try{FB.auth.signOut();}catch(_){} FB.user=null; view={page:"home"}; render(); };
 }
 
@@ -397,8 +437,9 @@ async function googleLogin(role){
 }
 
 function offerStudentQuickLogin(user){
-  if(!user||!document.getElementById("studentQrGoogle")||document.getElementById("studentQuickLogin"))return;
-  const grid=document.getElementById("studentQrGoogle").parentElement;if(!grid)return;
+  const target=document.getElementById('studentQrGoogle')||document.getElementById('loginStudentWait');
+  if(!user||!target||document.getElementById("studentQuickLogin"))return;
+  const classroom=target.id==='studentQrGoogle',grid=target.parentElement;if(!grid)return;
   const email=String(user.email||""),parts=email.split("@"),masked=parts.length>1?(parts[0].slice(0,2)+"•••@"+parts[1]):"目前的 Google 帳號";
   const box=document.createElement("div");box.id="studentQuickLogin";
   box.innerHTML='<div class="mini student-quick-account">目前帳號：<b>'+esc(user.displayName||masked)+'</b>（'+esc(masked)+'）</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px"><button class="btn gold" id="studentQuickContinue">🔐 登入角色</button><button class="btn" id="studentQuickRegister">🪪 第一次註冊</button></div><div class="mini student-quick-hint">不是你的帳號？請改按下方使用其他 Google 帳號。</div>';
@@ -407,10 +448,13 @@ function offerStudentQuickLogin(user){
   // Firebase 登入狀態在首頁縮放完成後才回傳；插入快速登入卡後必須重算高度，避免手機底部按鈕被裁切。
   requestAnimationFrame(fitHomePane);setTimeout(fitHomePane,80);
   const continueWith=mode=>{
+    if(_studentLoginPromise||_googleLoginBusy)return;
     const q=new URLSearchParams(location.search),cid=normalizeClassCode(q.get("class")||"");
-    try{localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode",mode);sessionStorage.removeItem("rpg-student-join");}catch(_){}
+    try{if(cid)localStorage.setItem("rpg-last-class",cid);sessionStorage.setItem("rpg-student-mode",classroom?mode:'waiting');sessionStorage.removeItem("rpg-student-join");}catch(_){}
     loginSuccess(user,"student");
   };
+  document.getElementById('studentQuickContinue').textContent=classroom?'✅ 是我，進入本節課':'✅ 是我，進入課後複習';
+  if(!classroom){document.getElementById('studentQuickRegister').hidden=true;box.querySelector('.student-quick-hint').textContent='共用平板請先確認帳號；不是本人請按下方學生登入選擇其他帳號。';}
   document.getElementById("studentQuickContinue").onclick=()=>continueWith("login");
   document.getElementById("studentQuickRegister").onclick=()=>continueWith("auto");
 }

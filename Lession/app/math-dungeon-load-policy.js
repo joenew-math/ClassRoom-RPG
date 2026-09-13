@@ -21,6 +21,8 @@ const DUNGEON_ESSENTIAL_RESOURCES=Object.freeze({
   'math-dungeon-core.js':1000,
   'math-dungeon-card-rules.js':5000,
   'math-dungeon-state.js':1000,
+  'math-dungeon-campus-data.js':7000,
+  'math-dungeon-campus.js':19000,
   'math-dungeon-combat-art.css':18000,
   'math-dungeon-combat-art.js':7000,
   'math-dungeon-network.js':7000,
@@ -29,7 +31,7 @@ const DUNGEON_ESSENTIAL_RESOURCES=Object.freeze({
   'math-dungeon-pets.js':40000,
   'monster-atlas-foundation-v1.js':3000,
   'math-dungeon-gameplay.js':186000,
-  'math-dungeon.js':269000
+  'math-dungeon.js':243000
 });
 const DUNGEON_SCENE_ASSETS=Object.freeze([
   {id:'zone1',url:'./assets/scenes/zone1-academy-crypt-v1.webp',bytes:188596},

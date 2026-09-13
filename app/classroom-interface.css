@@ -1,0 +1,174 @@
+/* Calm application chrome. Kept after legacy skins; game canvases are untouched. */
+body { background: var(--ui-bg) !important; color: var(--ui-ink) !important; font-family: var(--ui-font); }
+body > header { background: rgba(255,255,255,.96) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: none; }
+header h1 { color: var(--ui-ink) !important; -webkit-text-stroke: 0; letter-spacing: -.02em; }
+header .tag { background: var(--ui-subtle); color: var(--ui-muted) !important; border: 0 !important; border-radius: 8px; }
+header .tagline { color: var(--ui-muted) !important; }
+#topDrawerToggle { width: 64px; height: 40px; border: 1px solid var(--ui-line); border-top: 0; border-radius: 0 0 14px 14px; background: #fff; color: var(--ui-muted); box-shadow: 0 3px 10px #1d314815; }
+body.role-drawer-mode>header { box-shadow: none; }
+body.role-drawer-mode:not(.teacher-board-mode):not(.teacher-arena-battle-mode):not(.teacher-zone-mode) main#app { padding-top: 50px; }
+main#app { padding: clamp(12px,2vw,26px); }
+.panel, .role-card, .group-card, .hero-card, .char-card, .item-card, .member {
+  background: var(--ui-surface) !important; color: var(--ui-ink) !important;
+  border: 1px solid var(--ui-line) !important; border-radius: var(--ui-radius) !important;
+  box-shadow: var(--ui-shadow) !important;
+}
+.panel { padding: clamp(16px,2vw,24px); margin-bottom: 18px; }
+.panel h3 { background: transparent; border: 0; box-shadow: none; transform: none; padding: 0; margin-bottom: 16px;
+  font-size: 17px; letter-spacing: -.02em; line-height: 1.5; font-weight: 700; }
+.panel h3 .hsp { display: block; }
+.mini { color: var(--ui-muted) !important; line-height: 1.65; }
+.btn, .tab { border: 1px solid var(--ui-line) !important; border-radius: 12px !important; background: #fff !important;
+  color: var(--ui-ink) !important; box-shadow: none !important; font-weight: 600 !important;
+  font-size: 14px !important; padding: 10px 16px !important; min-height: 44px;
+  transition: background .16s ease, border-color .16s ease !important; }
+.btn:hover, .tab:hover { background: var(--ui-subtle) !important; border-color: #a8b5c7 !important; }
+.btn:active, .tab:active { transform: none !important; }
+.btn.gold, .tab.on { background: var(--ui-blue) !important; color: #fff !important; border-color: var(--ui-blue) !important; }
+.btn.gold:hover, .tab.on:hover { background: #0755ae !important; }
+.btn.danger { background: #fff0ef !important; color: #ad2925 !important; border-color: #edc6c3 !important; }
+.btn:disabled { box-shadow: none !important; cursor: not-allowed; }
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea {
+  background: #fff; color: var(--ui-ink); border: 1px solid #b7c0cd; border-radius: 10px; min-height: 44px; font-size: 16px;
+}
+.board-launcher { background: rgba(245,245,247,.98); border: 0; padding: 10px 0; margin-bottom: 12px; }
+.board-launcher.feature-launcher { box-shadow: none; }
+.classroom-home-hero, .class-progress, .class-progress.compact, .class-stage-card, .classroom-flow-step {
+  border: 1px solid var(--ui-line); background: #fff; border-radius: 20px; box-shadow: var(--ui-shadow);
+}
+.classroom-home-hero { padding: 24px; margin-bottom: 18px; }
+.classroom-home-title h2 { font-weight: 700; letter-spacing: -.03em; }
+.classroom-home-icon { filter: none; }
+.classroom-flow { gap: 12px; margin-top: 24px; }
+.classroom-flow-step { border-radius: 14px; background: #f7f9fc; box-shadow: none; }
+.classroom-flow-step .step-no { border: 0; background: #e5effd; color: var(--ui-blue); }
+.class-session-badge { border: 1px solid var(--ui-line); font-size: 13px; font-weight: 600; }
+.class-session-dot { width: 9px; height: 9px; border: 0; }
+.class-progress-title { font-size: 15px; font-weight: 650; }
+.class-progress-track { height: 10px; border: 0; background: #e9edf3; }
+.class-progress-fill { background: linear-gradient(90deg,#3987dc,#68a8ec); }
+.class-stage-card.current { outline: 2px solid #77a8e4; }
+.unlock-note { border: 1px solid #ecd9a8; background: #fff9ec; font-weight: 500; line-height: 1.7; }
+.board-launcher-panel { background: #fff; border: 1px solid var(--ui-line); border-radius: 16px; box-shadow: var(--ui-shadow); gap: 8px; padding: 12px; }
+.board-quickbar { background: #fff; border: 1px solid var(--ui-line); border-radius: 16px; box-shadow: 0 8px 28px #17233b26; }
+.board-quickbar .mini { color: var(--ui-muted) !important; }
+.group-head .gname { color: var(--ui-muted); font-weight: 600; }
+body.teacher-board-mode .board-focus .group-card, body.teacher-board-mode .board-focus .member { box-shadow: none !important; }
+#float-console { background: #fff; border: 1px solid var(--ui-line); border-radius: 18px; box-shadow: 0 8px 32px #20304624; }
+#float-console .fc-bar { background: #f3f6fa; border-bottom: 1px solid var(--ui-line); border-radius: 18px 18px 0 0; color: var(--ui-ink); }
+#float-console .fc-min { width: 36px; height: 36px; border: 1px solid var(--ui-line); border-radius: 9px; box-shadow: none; }
+#float-console .board-course-console-link { display: inline-flex; align-items: center; text-decoration: none; }
+table th { background: #edf0f4 !important; color: #3d4654 !important; font-weight: 600; }
+table td { border-bottom: 1px solid var(--ui-line) !important; }
+.overlay { background: rgba(22,30,46,.38); }
+.overlay .modal { background: #fff !important; border: 1px solid var(--ui-line) !important; border-radius: 24px !important;
+  box-shadow: 0 24px 80px #16213433 !important; padding: clamp(18px,3vw,30px); }
+.goal-bar, .boss-bar, .hpbar, .char-card .bar { border-width: 1px !important; border-color: var(--ui-line) !important; border-radius: 8px !important; }
+.stat-chip, .stat-pill { background: var(--ui-subtle) !important; border: 0 !important; border-radius: 10px !important; box-shadow: none !important; font-weight: 600; }
+.stat-pill.lvp { background: var(--ui-blue-soft) !important; }
+
+/* Login uses natural flow, never scales the text to fit a short screen. */
+body.home-menu-mode { height: auto; min-height: 100dvh; overflow: auto; }
+body.home-menu-mode main#app { height: auto !important; overflow: visible; max-width: 1180px; }
+.home-classroom { min-height: calc(100dvh - 110px); border: 0; box-shadow: none; border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 0,#e6effd 0,transparent 55%); padding: clamp(30px,6vw,76px) 16px 30px; gap: 16px; overflow: visible; }
+.home-classroom .crest { width: 80px; height: 80px; margin: 0; border: 1px solid #fff; border-radius: 24px;
+  background: rgba(255,255,255,.8); box-shadow: 0 8px 32px #4b638418; font-size: 44px; text-shadow: none; }
+.home-classroom h2 { border: 0; box-shadow: none; text-shadow: none; background: none; color: var(--ui-ink);
+  font-size: clamp(28px,5vw,44px); letter-spacing: -.04em; font-weight: 700; padding: 0; }
+.home-pane-viewport { flex: none; overflow: visible; }
+.home-pane-scale { position: static; width: 100%; transform: none !important; }
+.home-login-pane { gap: 20px; }
+.home-login-pane > p { background: none; border: 0; box-shadow: none; color: var(--ui-muted); font-weight: 400; font-size: 16px; }
+.home-classroom .role-grid { width: 100%; max-width: 900px; padding: 0; gap: 16px; border: 0; background: none; box-shadow: none; }
+.home-login-pane .role-card, .home-login-pane .role-card.teacher { padding: 26px 18px; min-height: 180px; gap: 12px; }
+.home-login-pane .role-card.teacher { background: #fff !important; }
+.home-classroom .role-card:hover { transform: none; border-color: #8eb6eb !important; background: #fafcff !important; }
+.home-login-pane .role-card .face, .home-login-pane .role-card.teacher .face { font-size: 34px; }
+.home-login-pane .role-card .nm { font-size: 18px; font-weight: 650; color: var(--ui-ink); }
+.home-login-pane .role-card .sub { font-size: 13px; color: var(--ui-muted); white-space: normal; line-height: 1.6; }
+.home-footer-credit { background: none; border: 0; color: var(--ui-muted); font-size: 11px; line-height: 1.8; padding-top: 16px; }
+#studentQuickLogin { border: 1px solid #c4d7f0; border-radius: 16px; background: #f4f8ff; color: #254066; padding: 16px; }
+#studentQuickLogin .student-quick-account, #studentQuickLogin .student-quick-hint { font-size: 13px; }
+
+/* Character is the focal point; controls and gear slots sit around its own stage. */
+.stu-layout { gap: 24px; grid-template-columns: minmax(300px,380px) minmax(0,1fr); align-items: start; }
+.stu-layout > div { min-width: 0; }
+.char-card { padding: 18px !important; overflow: hidden; }
+.char-card .student-id-watermark { opacity: .025; pointer-events: none; }
+.char-card #baseTuneBtn { min-width: 0 !important; min-height: 36px !important; padding: 6px 10px !important; border-width: 1px !important; box-shadow: none !important; font-size: 11px !important; }
+.char-card #studentShareClassQr { min-height: 36px; padding: 6px 9px !important; font-size: 11px !important; }
+.char-equip-row { padding-top: 44px; grid-template-columns: 64px minmax(100px,1fr) 64px; gap: 10px; }
+.char-equip-row .char-center { position: relative; isolation: isolate; min-height: 225px; justify-content: center;
+  border-radius: 80px; background: radial-gradient(ellipse at 50% 58%,#e9f0fa,transparent 72%); }
+.char-equip-row .char-center>svg { max-width: 190px; filter: drop-shadow(0 9px 5px #293e5520); image-rendering: pixelated; }
+.char-center.doll-tier-2::before, .char-center.doll-tier-3::before { width: 130px; height: 130px; box-shadow: none; animation: none; opacity: .5; }
+.equip-col { gap: 8px; }
+.equip-col .slot, .equip-slots .slot { min-height: 46px !important; border: 1px solid var(--ui-line) !important; border-radius: 10px !important;
+  box-shadow: none !important; background: #f7f8fa !important; font-size: 10px; padding: 5px 3px !important; }
+.equip-col .slot.filled { background: #f5f8fd !important; border-color: #bfcee2 !important; outline: 0; }
+.char-card .cname { font-size: 21px; font-weight: 700; -webkit-text-stroke: 0; margin-top: 10px; }
+.char-card .cjob { font-size: 13px; }
+.char-card .lv-inline, .char-card .lv-badge { border: 0; background: #edf4ff !important; color: #165baa !important; }
+.doll-growth { border-top: 1px solid var(--ui-line); margin-top: 18px; padding-top: 14px; }
+.doll-growth-stage b { white-space: nowrap; }
+.doll-skill-chip { border-width: 1px; box-shadow: none; border-radius: 10px; }
+.doll-skill-chip.empty { background: #f2f4f7; border: 1px dashed #c2cbd7; color: #657186; }
+.doll-skill-chip.tier3 { animation: none; }
+.stat-line-row { gap: 7px; margin-top: 14px; }
+.stat-pill { padding: 7px 10px; font-size: 12px; }
+.stu-optional { border: 1px solid var(--ui-line); border-radius: 14px; background: #fff; padding: 10px; margin-top: 12px; }
+.stu-optional summary { min-height: 36px; align-content: center; }
+
+/* Shop and studio: quiet display plinths keep the existing artwork prominent. */
+.shop-grid { gap: 14px; }
+.stu-layout .shop-grid { grid-template-columns: repeat(auto-fill,minmax(145px,1fr)); }
+.item-card { padding: 14px; gap: 10px; }
+.item-card:hover { transform: none; border-color: #a9bdd8 !important; }
+.item-card.equipped { border-color: #28805e !important; box-shadow: inset 0 0 0 1px #28805e !important; }
+.item-card .iic { background: #f4f6f9; border: 0; border-radius: 14px; min-height: 88px; }
+.item-card .inm { font-size: 14px; line-height: 1.4; }
+.item-card .istats { color: var(--ui-muted); line-height: 1.6; }
+.item-card .rar.Common { color: #646e80; }
+.item-card .rar.Rare { color: #176abd; }
+.item-card .price { color: #82601b; }
+.equipment-art-plate { box-shadow: inset 0 1px 0 #fff,0 3px 10px #22334812; }
+.forge-settings, .forge-seeds { background: #f8f9fb; border-color: var(--ui-line); border-radius: 16px; padding: 14px; }
+.forge-steps { color: #355477; gap: 8px; }
+.forge-steps span { background: var(--ui-blue-soft); border: 0; font-weight: 600; }
+.forge-seeds .seed-card { border: 1px solid var(--ui-line); border-radius: 14px; background: #fff; box-shadow: none; }
+.forge-seeds .seed-pixel { background: #f4f6f9; border: 0; }
+.forge-work-heading { color: var(--ui-ink); }
+.studio-canvas, .studio-preview { border-color: var(--ui-line) !important; border-width: 1px !important; border-radius: 16px !important; box-shadow: none !important; }
+.student-forge details { border-width: 1px !important; border-color: var(--ui-line) !important; border-radius: 14px; background: #f8f9fb !important; }
+.after-school-intro, .after-school-card, .after-school-class { border: 1px solid var(--ui-line) !important; background: #fff !important; border-radius: 20px !important; box-shadow: var(--ui-shadow) !important; }
+.after-school-review-actions { background: var(--ui-blue-soft); }
+.dungeon-homework { background: #f9fbff !important; border-color: #d7e2f0 !important; color: var(--ui-ink); }
+.dungeon-homework .mini { color: var(--ui-muted) !important; }
+.dungeon-homework label, .dungeon-homework .dungeon-progress span { color: var(--ui-ink); }
+.dungeon-homework .dungeon-progress b { color: #155da9; }
+.dungeon-homework .dungeon-progress span { border: 1px solid #d5dfec; background: #fff; }
+.dungeon-homework .dungeon-reward-note { color: #75581f; background: #fff7e5; border: 1px solid #ede0bd; border-radius: 12px; }
+.dungeon-homework .dungeon-doll { border: 1px solid #d7e2f0; border-radius: 20px; background: #edf3fc; box-shadow: none; }
+.dungeon-task-quick { border-color: var(--ui-line) !important; border-width: 1px !important; box-shadow: none !important; }
+/* Only the frame changes: red/blue teams, damage, cooldowns and drawing pixels keep their semantics. */
+.boss-stage, .boss-showcase, .boss-sprite, .ga-result-modal { border-width: 1px; border-radius: 18px; box-shadow: var(--ui-shadow); }
+.boss-stage::before { opacity: .08; }
+.ga-result-modal { background: #f5f5f7; }
+.moba-question-detail { background: #fff !important; }
+@media (max-width: 800px) { .stu-layout { grid-template-columns: minmax(0,1fr); } .char-card { max-width: 460px; margin-inline: auto; } }
+@media (max-width: 600px) {
+  .home-classroom { padding: 26px 0 20px; min-height: 0; }
+  .home-login-pane .role-grid { grid-template-columns: 1fr; max-width: 440px; }
+  .home-login-pane .role-card, .home-login-pane .role-card.teacher { min-height: 114px; padding: 20px; gap: 6px; }
+  .home-login-pane .role-card .face, .home-login-pane .role-card.teacher .face { font-size: 28px; }
+  .panel { border-radius: 16px !important; }
+  .char-equip-row { grid-template-columns: 58px minmax(90px,1fr) 58px; gap: 8px; }
+  .char-equip-row .char-center>svg { max-width: 180px; }
+  .board-launcher-panel .tab { white-space: normal; padding: 10px 8px !important; }
+  .item-card { padding: 10px; }
+  .item-card .btn { padding: 9px 6px !important; font-size: 13px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .char-center::before, .boss-sprite, .doll-skill-chip { animation: none !important; }
+}

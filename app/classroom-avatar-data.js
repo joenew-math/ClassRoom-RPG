@@ -585,9 +585,9 @@ const BASE_TUNE_REFERENCE = "male2";
 
 const BASE_VARIANT_SPEC = {
   male0:{w:164,h:280,footY:280,label:"生理男・原始素體"},
-  male1:{w:164,h:280,footY:280,label:"生理男・側分短髮"}, male2:{w:164,h:280,footY:280,label:"生理男・刺蝟短髮"}, male3:{w:164,h:280,footY:280,label:"生理男・平瀏海"},
+  male1:{w:164,h:280,footY:278,label:"生理男・側分短髮"}, male2:{w:164,h:280,footY:278,label:"生理男・刺蝟短髮"}, male3:{w:164,h:280,footY:278,label:"生理男・平瀏海"},
   female0:{w:166,h:280,footY:280,label:"生理女・原始素體"},
-  female1:{w:166,h:280,footY:280,label:"生理女・齊瀏海短髮"}, female2:{w:166,h:280,footY:280,label:"生理女・雙馬尾"}, female3:{w:166,h:280,footY:280,label:"生理女・丸子頭"}
+  female1:{w:166,h:280,footY:278,label:"生理女・齊瀏海短髮"}, female2:{w:166,h:280,footY:278,label:"生理女・雙馬尾"}, female3:{w:166,h:280,footY:278,label:"生理女・丸子頭"}
 };
 
 const BASE_DYE_COLORS = {brown:"棕髮",black:"黑髮",silver:"銀灰髮",blue:"藍髮"};
@@ -599,4 +599,3 @@ const TOON_STYLE = 'filter:saturate(1.4) contrast(1.15) '
 const TOON_OPEN = '<g style="'+TOON_STYLE+'">';
 
 const TOON_CLOSE = '</g>';
-

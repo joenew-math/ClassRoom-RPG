@@ -1,0 +1,53 @@
+/* Shared course / question-bank shell. Mathematical diagrams retain their colours. */
+body { font-family: var(--ui-font); background: var(--ui-bg) !important; color: var(--ui-ink); }
+.topbar, .top { background: #fff !important; color: var(--ui-ink) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: none !important; }
+.topbar .wrap { min-height: 64px; height: auto; padding-block: 10px; flex-wrap: wrap; }
+.top h1, .brand { color: var(--ui-ink) !important; }
+.topbar .brand { color: var(--ui-ink) !important; letter-spacing: -.02em; }
+.topbar .brand b, .topbar .brand i { color: var(--ui-blue) !important; }
+.topbar .crumb, .credit { color: var(--ui-muted) !important; }
+.eyebrow { background: none; color: var(--ui-muted) !important; transform: none; padding: 0; letter-spacing: .12em; font-weight: 600 !important; }
+#lbBtn { border: 1px solid var(--ui-line) !important; border-radius: 10px !important; background: #fff !important; box-shadow: none !important; min-height: 44px; }
+.hero::before { display: none; }
+.hero h1 { text-shadow: none; }
+.portal { max-width: 780px; padding-top: 40px; }
+.portal-hd h1, .hero h1 { letter-spacing: -.04em; font-weight: 700; }
+.portal-hd h1 em, .hero h1 em { color: var(--ui-blue); }
+.card, .ch, .stage, .qcard, .lb-list, .keybox, .note, .hint, .chap, .stat {
+  background: #fff !important; border: 1px solid var(--ui-line) !important; border-radius: 18px !important; box-shadow: var(--ui-shadow) !important;
+}
+.card:hover, .ch:hover { transform: none !important; border-color: #99b9e2 !important; }
+.card h3, .ch h3 { font-weight: 650 !important; }
+.card .go, .ch .go { background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--ui-blue) !important; }
+.vol-h, .vol:not(.closed) .vol-h, .vol.closed .vol-h { background: #fff; color: var(--ui-ink); border: 1px solid var(--ui-line); border-radius: 16px; box-shadow: none; padding: 18px; }
+.vol:not(.closed) .vol-h { background: var(--ui-blue-soft); border-color: #b4cdec; }
+.vol-h .vn, .vol:not(.closed) .vol-h .vn, .chap-h .v { background: var(--ui-blue-soft); color: var(--ui-blue); border: 0; border-radius: 7px; }
+.vol-items { padding: 12px 0 18px 16px; gap: 10px; }
+.mi { border: 1px solid var(--ui-line); border-radius: 12px; box-shadow: none; min-height: 56px; }
+.mi:hover { background: #f6f9fe; transform: none; box-shadow: none; }
+.mi .badge, .mi .idx { border-width: 1px; border-radius: 6px; box-shadow: none; }
+.tabs { gap: 8px; }
+.btn, .tab, .backbtn, .assessbtn, .pvbtn, .qchk { background: #fff; color: var(--ui-ink); border: 1px solid #c8d0dc !important;
+  border-radius: 10px !important; box-shadow: none !important; min-height: 44px; padding: 10px 14px; font-weight: 600; }
+.btn.main, .tab.on, .qchk.on { background: var(--ui-blue) !important; color: #fff !important; border-color: var(--ui-blue) !important; }
+.assessbtn { background: var(--ui-blue); color: #fff; display: inline-flex; align-items: center; }
+.chap { overflow: hidden; }
+.chap-h { background: #eef2f7; color: #273649; padding: 16px; }
+.unit-h { border-left: 3px solid #bfd2ec; }
+.trow { border-top: 1px solid var(--ui-line); padding: 14px 16px; }
+.pvq { background: #f7f8fa; border: 1px solid var(--ui-line); border-radius: 12px; padding: 14px; }
+.pv { border-left: 2px solid #bfd2ec; }
+.thead .badge, .cnt, .tag { border: 0; border-radius: 8px; }
+.cnt { background: var(--ui-blue-soft); color: var(--ui-blue); }
+.note { color: var(--ui-muted); padding: 16px; }
+input:not([type=checkbox]):not([type=radio]), select, textarea { border: 1px solid #b7c0cd !important; border-radius: 10px; min-height: 44px; font: 16px var(--ui-font); }
+#meBtn { color: #44536b !important; border: 1px solid var(--ui-line) !important; background: #fff !important; border-radius: 10px; min-height: 44px; box-shadow: none !important; }
+@media (max-width: 600px) {
+  .wrap { padding-inline: 14px; }
+  .portal { padding-top: 26px; }
+  .vol-h { gap: 7px; font-size: 15px; }
+  .vol-items { padding-left: 6px; }
+  .credit { white-space: normal; }
+  .thead { flex-wrap: wrap; }
+  .topbar .crumb { flex-basis: 100%; }
+}
