@@ -24,8 +24,36 @@
     if(!panel.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))panel.classList.remove('open');
   });
 
+  const gameOrigin = 'https://longgang-grade7-math.joenew74056.chatgpt.site';
+  let linkedProfile = null, gameRows = [], gameBoard = false, pendingRequest = '', gameConnected = false;
+  function requestGameAccount(includeBoard = false) {
+    if (!window.opener) return;
+    pendingRequest = crypto.randomUUID();
+    window.opener.postMessage({ type: 'longgang-course-account', requestId: pendingRequest, includeBoard }, gameOrigin);
+  }
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (event.origin !== gameOrigin || event.source !== window.opener || data?.type !== 'longgang-course-account-result' || data.requestId !== pendingRequest) return;
+    gameConnected = true;
+    linkedProfile = data.profile ?? null;
+    gameRows = Array.isArray(data.rows) ? data.rows : [];
+    if (linkedProfile) meBtn.textContent = '👤 ' + linkedProfile.name + ' · ' + linkedProfile.className + '班' + linkedProfile.seat + '號';
+    else meBtn.textContent = '👤 登入旅途帳號';
+    if (panel.classList.contains('open')) void render();
+  });
+  window.addEventListener('focus', () => requestGameAccount(panel.classList.contains('open') && gameBoard));
+  requestGameAccount();
+
   /* 設定姓名與班級 */
   meBtn.addEventListener('click',async()=>{
+    if (linkedProfile) {
+      requestGameAccount(gameBoard);
+      return;
+    }
+    if (gameConnected && window.opener) {
+      window.opener.postMessage({ type: 'longgang-course-login' }, gameOrigin);
+      return;
+    }
     let cur={name:'',cls:''};
     try{ if(window.storage){const r=await window.storage.get('me_id',false); if(r)cur=JSON.parse(r.value);} }catch(e){}
     const nm=prompt('請輸入你的姓名：',cur.name||'');
@@ -39,11 +67,39 @@
   });
   (async()=>{
     try{ if(window.storage){const r=await window.storage.get('me_id',false);
-      if(r){const m=JSON.parse(r.value); if(m.name)meBtn.innerHTML='👤 '+m.name;} } }catch(e){}
+      if(r&&!linkedProfile){const m=JSON.parse(r.value); if(m.name)meBtn.textContent='👤 '+m.name;} } }catch(e){}
   })();
 
   let scope='全校';
   async function render(){
+    if (gameBoard) {
+      const sc = panel.querySelector('#lbScope');
+      sc.replaceChildren();
+      const course = document.createElement('button');
+      course.textContent = '課程完成度';
+      course.onclick = () => { gameBoard = false; void render(); };
+      sc.appendChild(course);
+      const box = panel.querySelector('#lbRows');
+      box.replaceChildren();
+      for (const row of gameRows.slice(0, 20)) {
+        const element = document.createElement('div');
+        element.className = 'r';
+        const rank = document.createElement('span');
+        rank.className = 'rk';
+        rank.textContent = row.rank;
+        const name = document.createElement('span');
+        name.textContent = row.displayName;
+        if (linkedProfile && String(row.className) === String(linkedProfile.className) && Number(row.seat) === Number(linkedProfile.seat)) name.textContent += '（我）';
+        const points = document.createElement('span');
+        points.className = 'sc';
+        points.textContent = row.points + ' 分';
+        element.append(rank, name, points);
+        box.appendChild(element);
+      }
+      if (!gameRows.length) box.textContent = '等待全校排行載入，請從旅途遊戲登入後開啟課程目錄。';
+      panel.querySelector('#lbFoot').textContent = '旅途遊戲 · 全校積分';
+      return;
+    }
     let list=[];
     try{ if(window.storage){const r=await window.storage.get('prog_lb',true); if(r)list=JSON.parse(r.value)||[];} }catch(e){}
     const agg={};
@@ -59,6 +115,12 @@
     });
     const classes=[...new Set(rows0.map(e=>e.cls).filter(Boolean))].sort();
     const sc=panel.querySelector('#lbScope'); sc.innerHTML='';
+    if (linkedProfile) {
+      const game = document.createElement('button');
+      game.textContent = '旅途全校排行';
+      game.onclick = () => { gameBoard = true; requestGameAccount(true); void render(); };
+      sc.appendChild(game);
+    }
     ['全校',...classes].forEach(o=>{
       const b=document.createElement('button');
       b.textContent=o==='全校'?'🏫 全校':o;
